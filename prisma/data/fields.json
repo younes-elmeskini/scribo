@@ -1,0 +1,18 @@
+[
+  { "icon": "≡", "fieldName": "Zone de texte", "type": "textarea" },
+  { "icon": "≡", "fieldName": "Champ de texte", "type": "text" },
+  { "icon": "✉️", "fieldName": "Adresse email", "type": "email" },
+  { "icon": "🔗", "fieldName": "URL", "type": "url" },
+  { "icon": "📞", "fieldName": "Numéro de téléphone", "type": "tel" },
+  { "icon": "#", "fieldName": "Valeur numérique", "type": "number" },
+  { "icon": "⚪", "fieldName": "Boutons radio", "type": "radio" },
+  { "icon": "☑️", "fieldName": "Cases à cocher", "type": "checkbox" },
+  { "icon": "▾", "fieldName": "Menu déroulant", "type": "select" },
+  { "icon": "📅", "fieldName": "Date", "type": "date" },
+  { "icon": "🕒", "fieldName": "Heure", "type": "time" },
+  { "icon": "📆", "fieldName": "Date et heure", "type": "datetime" },
+  { "icon": "📎", "fieldName": "Fichier", "type": "file" },
+  { "icon": "🖼️", "fieldName": "Image", "type": "image" },
+  { "icon": "📍", "fieldName": "Google Map", "type": "map" },
+  { "icon": "🔗", "fieldName": "Plage de valeurs", "type": "range" }
+]

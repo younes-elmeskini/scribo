@@ -1,0 +1,232 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MEMBER
+  VISTOR
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+enum Mode {
+  DARK
+  LIGHT
+}
+
+model User {
+  id          String   @id @default(cuid())
+  firstName   String
+  lastName    String
+  email       String   @unique
+  password    String
+  profilImage String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Client {
+  id          String        @id @default(cuid())
+  firstName   String
+  lastName    String
+  email       String        @unique
+  password    String
+  profilImage String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  ownedTeams  TeamMenber[]  @relation("OwnerRelation")
+  memberTeams TeamMenber[]  @relation("MemberRelation")
+  Compagne    Compagne[]
+  Call        Call[]
+  Email       Email[]
+  Notes       Notes[]
+  Task        Task[]
+  appointment Appointment[]
+}
+
+model TeamMenber {
+  id           String         @id @default(cuid())
+  owenrId      String
+  membreId     String
+  owner        Client         @relation("OwnerRelation", fields: [owenrId], references: [id])
+  member       Client         @relation("MemberRelation", fields: [membreId], references: [id])
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  clientId     String?
+  TeamCompagne TeamCompagne[]
+}
+
+model TeamCompagne {
+  id           String     @id @default(cuid())
+  teamMenbreId String
+  compagneId   String
+  role         Role
+  teamMember   TeamMenber @relation(fields: [teamMenbreId], references: [id])
+  compagne     Compagne   @relation(fields: [compagneId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Compagne {
+  id           String         @id @default(cuid())
+  compagneName String
+  status       Status         @default(ACTIVE)
+  favrite      Boolean        @default(false)
+  clientId     String
+  client       Client         @relation(fields: [clientId], references: [id])
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  Form         Form[]
+  TeamCompagne TeamCompagne[]
+  soumission   Soumission[]
+  Call         Call[]
+  Email        Email[]
+  Notes        Notes[]
+  Task         Task[]
+  appointment  Appointment[]
+}
+
+model Fields {
+  id        String      @id @default(cuid())
+  icon      String
+  fieldName String      @unique
+  type      String
+  FormField FormField[]
+}
+
+model Form {
+  id             String      @id @default(cuid())
+  title          String?
+  Description    String?
+  coverColor     String?
+  coverImage     String?
+  mode           Mode        @default(LIGHT)
+  messageSucces  String?
+  compagneId     String
+  compagne       Compagne    @relation(fields: [compagneId], references: [id])
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  desactivatedAt DateTime?
+  FormField      FormField[]
+}
+
+model FormField {
+  id          String   @id @default(cuid())
+  formId      String
+  fieldId     String
+  label       String?
+  requird     Boolean?
+  disable     Boolean  @default(false)
+  style       String[] @default([])
+  message     String?
+  ordre       Int
+  placeholdre String?
+  options     String[] @default([])
+  form        Form     @relation(fields: [formId], references: [id])
+  fields      Fields   @relation(fields: [fieldId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Answer      Answer[]
+}
+
+model Soumission {
+  id          String        @id @default(cuid())
+  compagneId  String
+  compagne    Compagne      @relation(fields: [compagneId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  answer      Answer[]
+  Call        Call[]
+  Email       Email[]
+  Notes       Notes[]
+  Task        Task[]
+  appointment Appointment[]
+}
+
+model Answer {
+  id           String     @id @default(cuid())
+  valeu        String
+  formFieldId  String
+  formField    FormField  @relation(fields: [formFieldId], references: [id])
+  soumissionId String
+  soumission   Soumission @relation(fields: [soumissionId], references: [id])
+}
+
+model Call {
+  id           String     @id @default(cuid())
+  call         String
+  compagneId   String
+  compagne     Compagne   @relation(fields: [compagneId], references: [id])
+  clientId     String
+  client       Client     @relation(fields: [clientId], references: [id])
+  soumissionId String
+  soumission   Soumission @relation(fields: [soumissionId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Email {
+  id           String     @id @default(cuid())
+  email        String
+  compagneId   String
+  compagne     Compagne   @relation(fields: [compagneId], references: [id])
+  clientId     String
+  client       Client     @relation(fields: [clientId], references: [id])
+  soumissionId String
+  soumission   Soumission @relation(fields: [soumissionId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Notes {
+  id           String     @id @default(cuid())
+  notes        String
+  compagneId   String
+  compagne     Compagne   @relation(fields: [compagneId], references: [id])
+  clientId     String
+  client       Client     @relation(fields: [clientId], references: [id])
+  soumissionId String
+  soumission   Soumission @relation(fields: [soumissionId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Task {
+  id           String     @id @default(cuid())
+  task         String
+  compagneId   String
+  compagne     Compagne   @relation(fields: [compagneId], references: [id])
+  clientId     String
+  client       Client     @relation(fields: [clientId], references: [id])
+  soumissionId String
+  soumission   Soumission @relation(fields: [soumissionId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Appointment {
+  id           String     @id @default(cuid())
+  date         DateTime
+  compagneId   String
+  compagne     Compagne   @relation(fields: [compagneId], references: [id])
+  clientId     String
+  client       Client     @relation(fields: [clientId], references: [id])
+  soumissionId String
+  soumission   Soumission @relation(fields: [soumissionId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
