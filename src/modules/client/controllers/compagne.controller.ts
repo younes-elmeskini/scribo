@@ -125,7 +125,52 @@ export default class CompagneController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
-  atatic async getsc
+  static async getsideBarData(req: Request, res: Response): Promise<void> {
+    try {
+      const clientId = req.client?.id;
+      if (!clientId) {
+        res.status(400).json({ message: "Unauthorized" });
+        return;
+      }
+
+      const campagnes = await prisma.compagne.findMany({
+        where: {
+          OR: [
+            {
+              clientId: clientId.toString(), // Owner
+            },
+            {
+              clientId: clientId.toString(), // Member
+            },
+          ],
+        },
+        select: {
+          id: true,
+          favrite: true,
+        },
+      });
+
+      const formattedResult = campagnes.map((campagne) => ({
+        id: campagne.id,
+        favrite: campagne.favrite,
+      }));
+
+      const favriteCampagnes = formattedResult.filter(
+        (campagne) => campagne.favrite
+      );
+      const notFavriteCampagnes = formattedResult.filter(
+        (campagne) => !campagne.favrite
+      );
+
+      res.status(200).json({
+        favriteCampagnes,
+        notFavriteCampagnes,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
 
   static async getCompagneById(req: Request, res: Response): Promise<void> {
     try {
