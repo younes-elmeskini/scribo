@@ -20,7 +20,8 @@ enum Role {
 
 enum Status {
   ACTIVE
-  INACTIVE
+  DESACTIVE
+  ARCHIVED
 }
 
 enum Mode {
