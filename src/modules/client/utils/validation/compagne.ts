@@ -5,9 +5,15 @@ export default class CompagneValidation {
     compagneName: z
       .string()
       .min(3, { message: "Compagne name must be at least 3 characters long." }),
-    fields: z.array(z.string(), {
-      message: "fields must be an array of strings.",
-    }),
+    fields: z.array(
+      z.object({
+        id: z.string({ message: "Field id is required." }),
+        quantity: z.number().int().positive().optional().default(1)
+      }), 
+      {
+        message: "fields must be an array of objects with id and optional quantity.",
+      }
+    ),
   });
   static updateformSchema = z.object({
     desactivatedAt: z

@@ -326,47 +326,72 @@ export default class CompagneController {
         res.status(400).json({ message: "Unauthorized" });
         return;
       }
+      
+      // Extract fieldIds from the fields array
+      const fieldIds = parsedData.fields.map(field => field.id);
+      
       const fields = await prisma.fields.findMany({
         where: {
           id: {
-            in: parsedData.fields,
+            in: fieldIds,
           },
         },
       });
-      if (fields.length !== parsedData.fields.length) {
+      
+      if (fields.length !== fieldIds.length) {
         res.status(400).json({ message: "Invalid fields" });
         return;
       }
+      
       const compagne = await prisma.compagne.create({
         data: {
           compagneName: parsedData.compagneName,
           clientId: clientId.toString(),
         },
       });
+      
       if (!compagne) {
         res.status(400).json({ message: "Compagne not created" });
         return;
       }
+      
       const form = await prisma.form.create({
         data: {
           compagneId: compagne.id,
         },
       });
+      
       if (!form) {
         res.status(400).json({ message: "Form not created" });
         return;
       }
+      
+      // Create form fields based on quantities
+      const formFieldsData = [];
+      let orderIndex = 0;
+      
+      for (const field of parsedData.fields) {
+        const quantity = field.quantity || 1;
+        
+        for (let i = 0; i < quantity; i++) {
+          formFieldsData.push({
+            formId: form.id,
+            fieldId: field.id,
+            ordre: orderIndex++,
+            label: `${fields.find(f => f.id === field.id)?.fieldName} ${i + 1}`
+          });
+        }
+      }
+      
       const formFields = await prisma.formField.createMany({
-        data: parsedData.fields.map((field: string) => ({
-          formId: form.id,
-          fieldId: field,
-          ordre: parsedData.fields.indexOf(field),
-        })),
+        data: formFieldsData,
       });
+      
       if (!formFields) {
         res.status(400).json({ message: "Form fields not created" });
         return;
       }
+      
       res.status(201).json({ message: "Compagne created successfully" });
     } catch (error) {
       console.error(error);
