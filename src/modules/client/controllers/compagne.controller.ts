@@ -4,10 +4,8 @@ import { z } from "zod";
 import CompagneValidation from "../utils/validation/compagne";
 import { validationResult } from "../../../utils/validation/validationResult";
 import { Role } from "@prisma/client";
-import { ExcelFieldAnalyzer, FieldAnalysis } from "../utils/excelAnalyzer";
 import multer from "multer";
-import path from "path";
-import * as ExcelJS from 'exceljs';
+import GestionForm from "../utils/gestionfrom";
 
 type createCompagne = z.infer<typeof CompagneValidation.createCompagneSchema>;
 
@@ -38,63 +36,6 @@ type createCompagneFromExcel = {
   compagneName: string;
 };
 export default class CompagneController {
-  static async createCompagne(req: Request, res: Response): Promise<void> {
-    try {
-      validationResult(CompagneValidation.createCompagneSchema, req, res);
-      const parsedData: createCompagne =
-        CompagneValidation.createCompagneSchema.parse(req.body);
-      const clientId = req.client?.id;
-      if (!clientId) {
-        res.status(400).json({ message: "Unauthorized" });
-        return;
-      }
-      const fields = await prisma.fields.findMany({
-        where: {
-          id: {
-            in: parsedData.fields,
-          },
-        },
-      });
-      if (fields.length !== parsedData.fields.length) {
-        res.status(400).json({ message: "Invalid fields" });
-        return;
-      }
-      const compagne = await prisma.compagne.create({
-        data: {
-          compagneName: parsedData.compagneName,
-          clientId: clientId.toString(),
-        },
-      });
-      if (!compagne) {
-        res.status(400).json({ message: "Compagne not created" });
-        return;
-      }
-      const form = await prisma.form.create({
-        data: {
-          compagneId: compagne.id,
-        },
-      });
-      if (!form) {
-        res.status(400).json({ message: "Form not created" });
-        return;
-      }
-      const formFields = await prisma.formField.createMany({
-        data: parsedData.fields.map((field: string) => ({
-          formId: form.id,
-          fieldId: field,
-          ordre: parsedData.fields.indexOf(field),
-        })),
-      });
-      if (!formFields) {
-        res.status(400).json({ message: "Form fields not created" });
-        return;
-      }
-      res.status(201).json({ message: "Compagne created successfully" });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
-    }
-  }
   static async getAllCompagne(req: Request, res: Response): Promise<void> {
     try {
       const clientId = req.client?.id;
@@ -375,209 +316,62 @@ export default class CompagneController {
   }
 }
 
-
-  // Nouvelle méthode pour analyser le fichier Excel
-  static async analyzeExcelFile(req: Request, res: Response): Promise<void> {
+  static async createCompagne(req: Request, res: Response): Promise<void> {
     try {
-      if (!req.file) {
-        res.status(400).json({ message: "Aucun fichier Excel fourni" });
-        return;
-      }
-
-      const analyzer = new ExcelFieldAnalyzer();
-      const fields = await analyzer.analyzeExcelFile(req.file.buffer);
-
-      res.status(200).json({
-        message: "Fichier Excel analysé avec succès",
-        fields,
-        totalFields: fields.length,
-      });
-    } catch (error) {
-      console.error("Erreur lors de l'analyse du fichier Excel:", error);
-      res.status(500).json({
-        message: "Erreur lors de l'analyse du fichier Excel",
-        error: error instanceof Error ? error.message : "Erreur inconnue",
-      });
-    }
-  }
-
-  // Méthode pour créer une campagne à partir d'un fichier Excel
-  static async createCompagneFromExcel(
-    req: Request,
-    res: Response
-  ): Promise<void> {
-    try {
-      if (!req.file) {
-        res.status(400).json({ message: "Aucun fichier Excel fourni" });
-        return;
-      }
-
-      const  {compagneName}  = req.body;
-      if (!compagneName) {
-        res.status(400).json({ message: "Nom de campagne requis" });
-        return;
-      }
-
+      validationResult(CompagneValidation.createCompagneSchema, req, res);
+      const parsedData: createCompagne =
+        CompagneValidation.createCompagneSchema.parse(req.body);
       const clientId = req.client?.id;
       if (!clientId) {
         res.status(400).json({ message: "Unauthorized" });
         return;
       }
-
-      // Analyser le fichier Excel
-      const analyzer = new ExcelFieldAnalyzer();
-      const analyzedFields = await analyzer.analyzeExcelFile(req.file.buffer);
-
-      if (analyzedFields.length === 0) {
-        res
-          .status(400)
-          .json({ message: "Aucun champ détecté dans le fichier Excel" });
+      const fields = await prisma.fields.findMany({
+        where: {
+          id: {
+            in: parsedData.fields,
+          },
+        },
+      });
+      if (fields.length !== parsedData.fields.length) {
+        res.status(400).json({ message: "Invalid fields" });
         return;
       }
-
-      // Créer la campagne
       const compagne = await prisma.compagne.create({
         data: {
-          compagneName,
+          compagneName: parsedData.compagneName,
           clientId: clientId.toString(),
         },
       });
-
-      // Créer le formulaire
+      if (!compagne) {
+        res.status(400).json({ message: "Compagne not created" });
+        return;
+      }
       const form = await prisma.form.create({
         data: {
           compagneId: compagne.id,
-          title: compagneName,
-          Description: `Formulaire généré automatiquement à partir du fichier Excel`,
         },
       });
-
-      // Traiter chaque champ analysé
-      const formFieldsData = [];
-      for (let i = 0; i < analyzedFields.length; i++) {
-        const field = analyzedFields[i];
-
-        // Trouver ou créer le type de champ dans la base
-        let fieldRecord = await prisma.fields.findFirst({
-          where: { type: field.type },
-        });
-
-        if (!fieldRecord) {
-          // Créer le type de champ s'il n'existe pas
-          fieldRecord = await prisma.fields.create({
-            data: {
-              icon: CompagneController.getIconForFieldType(field.type),
-              fieldName: CompagneController.getFieldNameForType(field.type),
-              type: field.type,
-            },
-          });
-        }
-
-        // Préparer les données du champ de formulaire
-        formFieldsData.push({
-          formId: form.id,
-          fieldId: fieldRecord.id,
-          label: field.label,
-          requird: field.required,
-          ordre: i,
-          options: field.options,
-          placeholdre: CompagneController.generatePlaceholder(
-            field.type,
-            field.label
-          ),
-          message: field.required ? `${field.label} est requis` : undefined,
-        });
+      if (!form) {
+        res.status(400).json({ message: "Form not created" });
+        return;
       }
-
-      // Créer tous les champs de formulaire
-      await prisma.formField.createMany({
-        data: formFieldsData,
-      });
-
-      res.status(201).json({
-        message: "Campagne créée avec succès à partir du fichier Excel",
-        compagne: {
-          id: compagne.id,
-          name: compagne.compagneName,
-          fieldsCount: analyzedFields.length,
-        },
-        analyzedFields: analyzedFields.map((field) => ({
-          label: field.label,
-          type: field.type,
-          required: field.required,
-          optionsCount: field.options.length,
-          fillRate: field.fillRate,
+      const formFields = await prisma.formField.createMany({
+        data: parsedData.fields.map((field: string) => ({
+          formId: form.id,
+          fieldId: field,
+          ordre: parsedData.fields.indexOf(field),
         })),
       });
+      if (!formFields) {
+        res.status(400).json({ message: "Form fields not created" });
+        return;
+      }
+      res.status(201).json({ message: "Compagne created successfully" });
     } catch (error) {
-      console.error("Erreur lors de la création de la campagne:", error);
-      res.status(500).json({
-        message: "Erreur lors de la création de la campagne",
-        error: error instanceof Error ? error.message : "Erreur inconnue",
-      });
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
     }
-  }
-
-  // Méthode utilitaire pour obtenir l'icône selon le type de champ
-  private static getIconForFieldType(type: string): string {
-    const iconMap: Record<string, string> = {
-      text: "≡",
-      textarea: "≡",
-      email: "✉️",
-      url: "🔗",
-      tel: "📞",
-      number: "#",
-      radio: "⚪",
-      checkbox: "☑️",
-      select: "▾",
-      date: "📅",
-      time: "🕒",
-      datetime: "📆",
-      file: "📎",
-      image: "🖼️",
-      map: "📍",
-      range: "🔗",
-    };
-    return iconMap[type] || "≡";
-  }
-
-  // Méthode utilitaire pour obtenir le nom du champ selon le type
-  private static getFieldNameForType(type: string): string {
-    const nameMap: Record<string, string> = {
-      text: "Champ de texte",
-      textarea: "Zone de texte",
-      email: "Adresse email",
-      url: "URL",
-      tel: "Numéro de téléphone",
-      number: "Valeur numérique",
-      radio: "Boutons radio",
-      checkbox: "Cases à cocher",
-      select: "Menu déroulant",
-      date: "Date",
-      time: "Heure",
-      datetime: "Date et heure",
-      file: "Fichier",
-      image: "Image",
-      map: "Google Map",
-      range: "Plage de valeurs",
-    };
-    return nameMap[type] || "Champ personnalisé";
-  }
-
-  // Méthode utilitaire pour générer un placeholder approprié
-  private static generatePlaceholder(type: string, label: string): string {
-    const placeholderMap: Record<string, string> = {
-      text: `Entrez ${label.toLowerCase()}`,
-      textarea: `Décrivez ${label.toLowerCase()}`,
-      email: "exemple@email.com",
-      url: "https://exemple.com",
-      tel: "+33 1 23 45 67 89",
-      number: "Entrez un nombre",
-      date: "jj/mm/aaaa",
-      time: "hh:mm",
-      datetime: "jj/mm/aaaa hh:mm",
-    };
-    return placeholderMap[type] || `Entrez ${label.toLowerCase()}`;
   }
 
   static async createCompagneFromFieldCountsExcel(req: Request, res: Response): Promise<void> {
@@ -601,7 +395,7 @@ export default class CompagneController {
       }
 
       // Analyser le fichier Excel
-      const fieldCounts = await CompagneController.extractFieldCountsFromExcel(req.file.buffer);
+      const fieldCounts = await GestionForm.extractFieldCountsFromExcel(req.file.buffer);
       
       if (fieldCounts.length === 0) {
         res.status(400).json({ message: "Aucun champ valide trouvé dans le fichier Excel" });
@@ -631,7 +425,7 @@ export default class CompagneController {
         const availableFields = await tx.fields.findMany();
         
         // Générer les données des champs de formulaire
-        const fieldsData = CompagneController.generateFormFieldsData(
+        const fieldsData = GestionForm.generateFormFieldsData(
           fieldCounts, 
           availableFields, 
           newForm.id
@@ -665,66 +459,4 @@ export default class CompagneController {
     }
   }
 
-  // Méthode utilitaire pour extraire les comptages de champs du fichier Excel
-  private static async extractFieldCountsFromExcel(buffer: Buffer): Promise<Array<{fieldName: string, count: number}>> {
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(buffer);
-    const worksheet = workbook.getWorksheet(1);
-    
-    if (!worksheet) {
-      return [];
-    }
-
-    const fieldCounts = [];
-    let rowIndex = 2; // Commencer à la ligne 2 (après les en-têtes)
-    
-    while (rowIndex <= worksheet.rowCount) {
-      const fieldNameCell = worksheet.getCell(`A${rowIndex}`);
-      const countCell = worksheet.getCell(`B${rowIndex}`);
-      
-      const fieldName = fieldNameCell.value?.toString().trim();
-      const count = parseInt(countCell.value?.toString() || '0');
-      
-      if (fieldName && count > 0) {
-        fieldCounts.push({ fieldName, count });
-      }
-      
-      rowIndex++;
-    }
-
-    return fieldCounts;
-  }
-
-  // Méthode utilitaire pour générer les données des champs de formulaire
-  private static generateFormFieldsData(
-    fieldCounts: Array<{fieldName: string, count: number}>,
-    availableFields: any[],
-    formId: string
-  ): any[] {
-    const formFieldsData = [];
-    let currentOrder = 0;
-    
-    for (const { fieldName, count } of fieldCounts) {
-      const fieldRecord = availableFields.find(f => f.fieldName === fieldName);
-      
-      if (!fieldRecord) continue;
-      
-      for (let i = 0; i < count; i++) {
-        const label = `${fieldRecord.fieldName} ${i + 1}`;
-        const isSelectType = ['radio', 'checkbox', 'select'].includes(fieldRecord.type);
-        
-        formFieldsData.push({
-          formId,
-          fieldId: fieldRecord.id,
-          label,
-          requird: false,
-          ordre: currentOrder++,
-          options: isSelectType ? ['Option 1', 'Option 2', 'Option 3'] : [],
-          placeholdre: CompagneController.generatePlaceholder(fieldRecord.type, label),
-        });
-      }
-    }
-    
-    return formFieldsData;
-  }
 }
