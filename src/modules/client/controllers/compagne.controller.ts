@@ -189,7 +189,8 @@ export default class CompagneController {
         data: formattedResult,
         pagination: {
           currentPage: page,
-          totalPages,
+          totalPages: totalPages,
+          totalCompagnes: totalCount
         },
       });
     } catch (error) {
