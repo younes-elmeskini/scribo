@@ -175,20 +175,22 @@ export default class CompagneController {
         },
         select: {
           id: true,
-          favrite: true,
+          compagneName: true,
+          favrite:true
         },
       });
 
       const formattedResult = campagnes.map((campagne) => ({
         id: campagne.id,
-        favrite: campagne.favrite,
+        favorite: campagne.favrite,
+        name: campagne.compagneName,
       }));
 
       const favriteCampagnes = formattedResult.filter(
-        (campagne) => campagne.favrite
+        (campagne) => campagne.favorite
       );
       const notFavriteCampagnes = formattedResult.filter(
-        (campagne) => !campagne.favrite
+        (campagne) => !campagne.favorite
       );
 
       res.status(200).json({
@@ -355,8 +357,8 @@ export default class CompagneController {
           // Créer le type de champ s'il n'existe pas
           fieldRecord = await prisma.fields.create({
             data: {
-              icon: this.getIconForFieldType(field.type),
-              fieldName: this.getFieldNameForType(field.type),
+              icon: CompagneController.getIconForFieldType(field.type),
+              fieldName: CompagneController.getFieldNameForType(field.type),
               type: field.type,
             },
           });
@@ -370,7 +372,7 @@ export default class CompagneController {
           requird: field.required,
           ordre: i,
           options: field.options,
-          placeholdre: this.generatePlaceholder(field.type, field.label),
+          placeholdre: CompagneController.generatePlaceholder(field.type, field.label),
           message: field.required ? `${field.label} est requis` : undefined,
         });
       }
