@@ -1,18 +1,124 @@
+
 [
-  { "icon": "≡", "fieldName": "Zone de texte", "type": "textarea" },
-  { "icon": "≡", "fieldName": "Champ de texte", "type": "text" },
-  { "icon": "✉️", "fieldName": "Adresse email", "type": "email" },
-  { "icon": "🔗", "fieldName": "URL", "type": "url" },
-  { "icon": "📞", "fieldName": "Numéro de téléphone", "type": "tel" },
-  { "icon": "#", "fieldName": "Valeur numérique", "type": "number" },
-  { "icon": "⚪", "fieldName": "Boutons radio", "type": "radio" },
-  { "icon": "☑️", "fieldName": "Cases à cocher", "type": "checkbox" },
-  { "icon": "▾", "fieldName": "Menu déroulant", "type": "select" },
-  { "icon": "📅", "fieldName": "Date", "type": "date" },
-  { "icon": "🕒", "fieldName": "Heure", "type": "time" },
-  { "icon": "📆", "fieldName": "Date et heure", "type": "datetime" },
-  { "icon": "📎", "fieldName": "Fichier", "type": "file" },
-  { "icon": "🖼️", "fieldName": "Image", "type": "image" },
-  { "icon": "📍", "fieldName": "Google Map", "type": "map" },
-  { "icon": "🔗", "fieldName": "Plage de valeurs", "type": "range" }
+  {
+    "id": "cmb9d2t4o0011jnuin9esevh3",
+    "fieldName": "Zone de texte",
+    "icon": "text_fields",
+    "type": "text"
+  },
+  {
+    "id": "cmb9d2t4o0022jnuin9esevh5",
+    "fieldName": "Adresse email",
+    "icon": "email",
+    "type": "email"
+  },
+  {
+    "id": "cmb9d2t4o0033jnuin9esevh6",
+    "fieldName": "Numéro de téléphone",
+    "icon": "phone",
+    "type": "tel"
+  },
+  {
+    "id": "cmb9d2t4o0044jnuin9esevh7",
+    "fieldName": "Boutons radio",
+    "icon": "radio_button_checked",
+    "type": "radio"
+  },
+  {
+    "id": "cmb9d2t4o0055jnuin9esevh8",
+    "fieldName": "Menu déroulant",
+    "icon": "arrow_drop_down",
+    "type": "select"
+  },
+  {
+    "id": "cmb9d2t4o0066jnuin9esevh9",
+    "fieldName": "Heure",
+    "icon": "access_time",
+    "type": "time"
+  },
+  {
+    "id": "cmb9d2t4o0077jnuin9esev10",
+    "fieldName": "Fichier",
+    "icon": "attach_file",
+    "type": "file"
+  },
+  {
+    "id": "cmb9d2t4o0088jnuin9esev11",
+    "fieldName": "Google Map",
+    "icon": "location_on",
+    "type": "map"
+  },
+  {
+    "id": "cmb9d2t4o0099jnuin9esev12",
+    "fieldName": "Booléen - Vrai / Faux",
+    "icon": "toggle_on",
+    "type": "boolean"
+  },
+  {
+    "id": "cmb9d2t4o0101jnuin9esev13",
+    "fieldName": "Champ de texte",
+    "icon": "short_text",
+    "type": "text"
+  },
+  {
+    "id": "cmb9d2t4o0111jnuin9esev14",
+    "fieldName": "URL",
+    "icon": "link",
+    "type": "url"
+  },
+  {
+    "id": "cmb9d2t4o0122jnuin9esev15",
+    "fieldName": "Valeur numérique",
+    "icon": "pin",
+    "type": "number"
+  },
+  {
+    "id": "cmb9d2t4o0133jnuin9esev16",
+    "fieldName": "Cases à cocher",
+    "icon": "check_box",
+    "type": "checkbox"
+  },
+  {
+    "id": "cmb9d2t4o0144jnuin9esev17",
+    "fieldName": "Date",
+    "icon": "event",
+    "type": "date"
+  },
+  {
+    "id": "cmb9d2t4o0155jnuin9esev18",
+    "fieldName": "Date et heure",
+    "icon": "schedule",
+    "type": "datetime"
+  },
+  {
+    "id": "cmb9d2t4o0166jnuin9esev19",
+    "fieldName": "Image",
+    "icon": "image",
+    "type": "image"
+  },
+  {
+    "id": "cmb9d2t4o0177jnuin9esev20",
+    "fieldName": "Plage de valeurs",
+    "icon": "tune",
+    "type": "range"
+  },
+  {
+    "id": "cmb9d2t4o0188jnuin9esev21",
+    "fieldName": "Couleur",
+    "icon": "palette",
+    "type": "color"
+  },
+  {
+    "id": "cmb9d2t4o0199jnuin9esev22",
+    "fieldName": "Acceptation légale",
+    "icon": "gavel",
+    "type": "legal"
+  },
+  {
+    "id": "cmb9d2t4o0200jnuin9esev23",
+    "fieldName": "Bloc de text",
+    "icon": "notes",
+    "type": "textarea"
+  }
 ]
+
