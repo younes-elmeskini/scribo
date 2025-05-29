@@ -1,0 +1,10 @@
+[
+  {
+    "id": "catg_edu",
+    "categotyName": "Education"
+  },
+  {
+    "id": "catg_commerce",
+    "categotyName": "Commerce"
+  }
+]

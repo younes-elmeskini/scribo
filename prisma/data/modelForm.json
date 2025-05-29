@@ -1,0 +1,62 @@
+[
+  {
+    "id": "form_prim_school",
+    "title": "Inscription école primaire",
+    "Description": "Formulaire pour l'inscription d'un élève à l'école primaire",
+    "coverColor": "#FFEB3B",
+    "coverImage": null,
+    "mode": "LIGHT",
+    "messageSucces": "Inscription réussie",
+    "categotyId": "catg_edu"
+  },
+  {
+    "id": "form_uni",
+    "title": "Inscription formation universitaire",
+    "Description": "Inscription aux formations universitaires",
+    "coverColor": "#2196F3",
+    "coverImage": null,
+    "mode": "LIGHT",
+    "messageSucces": "Formulaire soumis avec succès",
+    "categotyId": "catg_edu"
+  },
+  {
+    "id": "form_prof",
+    "title": "Inscription formation professionnelle",
+    "Description": "Inscription à une formation professionnelle",
+    "coverColor": "#4CAF50",
+    "coverImage": null,
+    "mode": "LIGHT",
+    "messageSucces": "Demande enregistrée",
+    "categotyId": "catg_edu"
+  },
+  {
+    "id": "form_cmd",
+    "title": "Commande de produit",
+    "Description": "Commander un produit de notre catalogue",
+    "coverColor": "#E91E63",
+    "coverImage": null,
+    "mode": "LIGHT",
+    "messageSucces": "Commande validée",
+    "categotyId": "catg_commerce"
+  },
+  {
+    "id": "form_devis",
+    "title": "Demande de devis",
+    "Description": "Formulaire pour demander un devis personnalisé",
+    "coverColor": "#9C27B0",
+    "coverImage": null,
+    "mode": "LIGHT",
+    "messageSucces": "Demande envoyée",
+    "categotyId": "catg_commerce"
+  },
+  {
+    "id": "form_survey",
+    "title": "Enquête de satisfaction client",
+    "Description": "Aidez-nous à améliorer nos services",
+    "coverColor": "#607D8B",
+    "coverImage": null,
+    "mode": "LIGHT",
+    "messageSucces": "Merci pour votre retour",
+    "categotyId": "catg_commerce"
+  }
+]
