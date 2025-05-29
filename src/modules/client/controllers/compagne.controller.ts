@@ -105,7 +105,6 @@ export default class CompagneController {
       // Parse pagination parameters
       const page = parseInt(req.query.page as string) || 1;
       const limit = 3;
-      const skip = (page - 1) * limit;
 
       // Validate pagination parameters
       if (page < 1) {
@@ -162,8 +161,7 @@ export default class CompagneController {
           Task: true,
           appointment: true,
         },
-        skip: skip,
-        take: limit,
+        take: page *limit,
         orderBy: {
           id: "desc", // Optional: order by most recent first
         },
