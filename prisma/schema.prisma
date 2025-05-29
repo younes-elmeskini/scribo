@@ -102,11 +102,12 @@ model Compagne {
 }
 
 model Fields {
-  id        String      @id @default(cuid())
-  icon      String
-  fieldName String      @unique
-  type      String
-  FormField FormField[]
+  id             String           @id @default(cuid())
+  icon           String
+  fieldName      String           @unique
+  type           String
+  FormField      FormField[]
+  ModelFormField ModelFormField[]
 }
 
 model Form {
@@ -230,4 +231,44 @@ model Appointment {
   soumission   Soumission @relation(fields: [soumissionId], references: [id])
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+}
+
+model ModelForm {
+  id             String           @id @default(cuid())
+  title          String?
+  Description    String?
+  coverColor     String?
+  coverImage     String?
+  mode           Mode             @default(LIGHT)
+  messageSucces  String?
+  categotyId     String
+  categoty       Categoty         @relation(fields: [categotyId], references: [id])
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  desactivatedAt DateTime?
+  modelFormField ModelFormField[]
+}
+
+model ModelFormField {
+  id          String    @id @default(cuid())
+  modelFormId String
+  fieldId     String
+  label       String?
+  requird     Boolean?
+  disable     Boolean   @default(false)
+  style       String[]  @default([])
+  message     String?
+  ordre       Int
+  placeholdre String?
+  options     String[]  @default([])
+  modelForm   ModelForm @relation(fields: [modelFormId], references: [id])
+  fields      Fields    @relation(fields: [fieldId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Categoty {
+  id           String      @id @default(cuid())
+  categotyName String
+  ModelForm    ModelForm[]
 }
