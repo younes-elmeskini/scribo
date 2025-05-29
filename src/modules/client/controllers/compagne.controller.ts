@@ -353,16 +353,10 @@ export default class CompagneController {
       return;
     }
 
-    // Check if already favorited
-    if (compagne.favrite) {
-      res.status(400).json({ message: "Compagne is already favorited" });
-      return;
-    }
-
     // Update favorite status
     const updatedCompagne = await prisma.compagne.update({
       where: { id: compagneId },
-      data: { favrite: true },
+      data: { favrite: compagne.favrite? false : true },
       select: {
         id: true,
         compagneName: true,
@@ -380,73 +374,6 @@ export default class CompagneController {
   }
 }
 
-static async unfavoriteCompagne(req: Request, res: Response): Promise<void> {
-  try {
-    const compagneId = req.params.id;
-    const clientId = req.client?.id;
-
-    if (!clientId) {
-      res.status(401).json({ message: "Unauthorized" });
-      return;
-    }
-
-    if (!compagneId) {
-      res.status(400).json({ message: "Compagne ID is required" });
-      return;
-    }
-
-    // Check if the compagne exists and user has access to it
-    const compagne = await prisma.compagne.findFirst({
-      where: {
-        id: compagneId,
-        OR: [
-          {
-            clientId: clientId.toString(), // Owner
-          },
-          {
-            TeamCompagne: {
-              some: {
-                teamMember: {
-                  membreId: clientId.toString(), // Team member
-                },
-              },
-            },
-          },
-        ],
-      },
-    });
-
-    if (!compagne) {
-      res.status(404).json({ message: "Compagne not found or access denied" });
-      return;
-    }
-
-    // Check if not favorited
-    if (!compagne.favrite) {
-      res.status(400).json({ message: "Compagne is not favorited" });
-      return;
-    }
-
-    // Update favorite status
-    const updatedCompagne = await prisma.compagne.update({
-      where: { id: compagneId },
-      data: { favrite: false },
-      select: {
-        id: true,
-        compagneName: true,
-        favrite: true,
-      },
-    });
-
-    res.status(200).json({
-      message: "Compagne removed from favorites successfully",
-      data: updatedCompagne,
-    });
-  } catch (error) {
-    console.error("Error unfavoriting compagne:", error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-}
 
   // Nouvelle méthode pour analyser le fichier Excel
   static async analyzeExcelFile(req: Request, res: Response): Promise<void> {

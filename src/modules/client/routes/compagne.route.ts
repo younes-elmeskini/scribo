@@ -7,7 +7,6 @@ const router = express.Router();
 
 router.post("/", authenticate, CompagneController.createCompagne);
 router.put("/:id/favorite", authenticate, CompagneController.favoriteCompagne);
-router.put("/:id/unfavorite", authenticate, CompagneController.unfavoriteCompagne);
 router.post(
   "/analyze-excel", 
   authenticate, 
