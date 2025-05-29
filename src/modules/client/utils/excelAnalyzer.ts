@@ -1,5 +1,4 @@
 import * as ExcelJS from 'exceljs';
-import { FieldAnalysis, FieldType } from '../../../types/excel';
 
 export class ExcelFieldAnalyzer {
   private workbook: ExcelJS.Workbook;
