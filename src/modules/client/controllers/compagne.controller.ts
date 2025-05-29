@@ -4,9 +4,38 @@ import { z } from "zod";
 import CompagneValidation from "../utils/validation/compagne";
 import { validationResult } from "../../../utils/validation/validationResult";
 import { Role } from "@prisma/client";
+import { ExcelFieldAnalyzer, FieldAnalysis } from "../utils/excelAnalyzer";
+import multer from "multer";
+import path from "path";
 
 type createCompagne = z.infer<typeof CompagneValidation.createCompagneSchema>;
 
+// Configuration Multer pour l'upload de fichiers Excel
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB max
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+      "application/vnd.ms-excel", // .xls
+    ];
+
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Format de fichier non supporté. Utilisez .xlsx ou .xls"));
+    }
+  },
+});
+
+export const uploadExcelMiddleware = upload.single("excelFile");
+
+type createCompagneFromExcel = {
+  compagneName: string;
+};
 export default class CompagneController {
   static async createCompagne(req: Request, res: Response): Promise<void> {
     try {
@@ -171,7 +200,6 @@ export default class CompagneController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
-
   static async getCompagneById(req: Request, res: Response): Promise<void> {
     try {
       const compagneId = req.params.id;
@@ -236,5 +264,205 @@ export default class CompagneController {
       console.error(error);
       res.status(500).json({ message: "Internal Server Error" });
     }
+  }
+  // Nouvelle méthode pour analyser le fichier Excel
+  static async analyzeExcelFile(req: Request, res: Response): Promise<void> {
+    try {
+      if (!req.file) {
+        res.status(400).json({ message: "Aucun fichier Excel fourni" });
+        return;
+      }
+
+      const analyzer = new ExcelFieldAnalyzer();
+      const fields = await analyzer.analyzeExcelFile(req.file.buffer);
+
+      res.status(200).json({
+        message: "Fichier Excel analysé avec succès",
+        fields,
+        totalFields: fields.length,
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'analyse du fichier Excel:", error);
+      res.status(500).json({
+        message: "Erreur lors de l'analyse du fichier Excel",
+        error: error instanceof Error ? error.message : "Erreur inconnue",
+      });
+    }
+  }
+
+  // Méthode pour créer une campagne à partir d'un fichier Excel
+  static async createCompagneFromExcel(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    try {
+      if (!req.file) {
+        res.status(400).json({ message: "Aucun fichier Excel fourni" });
+        return;
+      }
+
+      const { compagneName } = req.body;
+      if (!compagneName) {
+        res.status(400).json({ message: "Nom de campagne requis" });
+        return;
+      }
+
+      const clientId = req.client?.id;
+      if (!clientId) {
+        res.status(400).json({ message: "Unauthorized" });
+        return;
+      }
+
+      // Analyser le fichier Excel
+      const analyzer = new ExcelFieldAnalyzer();
+      const analyzedFields = await analyzer.analyzeExcelFile(req.file.buffer);
+
+      if (analyzedFields.length === 0) {
+        res
+          .status(400)
+          .json({ message: "Aucun champ détecté dans le fichier Excel" });
+        return;
+      }
+
+      // Créer la campagne
+      const compagne = await prisma.compagne.create({
+        data: {
+          compagneName,
+          clientId: clientId.toString(),
+        },
+      });
+
+      // Créer le formulaire
+      const form = await prisma.form.create({
+        data: {
+          compagneId: compagne.id,
+          title: compagneName,
+          Description: `Formulaire généré automatiquement à partir du fichier Excel`,
+        },
+      });
+
+      // Traiter chaque champ analysé
+      const formFieldsData = [];
+      for (let i = 0; i < analyzedFields.length; i++) {
+        const field = analyzedFields[i];
+
+        // Trouver ou créer le type de champ dans la base
+        let fieldRecord = await prisma.fields.findFirst({
+          where: { type: field.type },
+        });
+
+        if (!fieldRecord) {
+          // Créer le type de champ s'il n'existe pas
+          fieldRecord = await prisma.fields.create({
+            data: {
+              icon: this.getIconForFieldType(field.type),
+              fieldName: this.getFieldNameForType(field.type),
+              type: field.type,
+            },
+          });
+        }
+
+        // Préparer les données du champ de formulaire
+        formFieldsData.push({
+          formId: form.id,
+          fieldId: fieldRecord.id,
+          label: field.label,
+          requird: field.required,
+          ordre: i,
+          options: field.options,
+          placeholdre: this.generatePlaceholder(field.type, field.label),
+          message: field.required ? `${field.label} est requis` : undefined,
+        });
+      }
+
+      // Créer tous les champs de formulaire
+      await prisma.formField.createMany({
+        data: formFieldsData,
+      });
+
+      res.status(201).json({
+        message: "Campagne créée avec succès à partir du fichier Excel",
+        compagne: {
+          id: compagne.id,
+          name: compagne.compagneName,
+          fieldsCount: analyzedFields.length,
+        },
+        analyzedFields: analyzedFields.map((field) => ({
+          label: field.label,
+          type: field.type,
+          required: field.required,
+          optionsCount: field.options.length,
+          fillRate: field.fillRate,
+        })),
+      });
+    } catch (error) {
+      console.error("Erreur lors de la création de la campagne:", error);
+      res.status(500).json({
+        message: "Erreur lors de la création de la campagne",
+        error: error instanceof Error ? error.message : "Erreur inconnue",
+      });
+    }
+  }
+
+  // Méthode utilitaire pour obtenir l'icône selon le type de champ
+  private static getIconForFieldType(type: string): string {
+    const iconMap: Record<string, string> = {
+      text: "≡",
+      textarea: "≡",
+      email: "✉️",
+      url: "🔗",
+      tel: "📞",
+      number: "#",
+      radio: "⚪",
+      checkbox: "☑️",
+      select: "▾",
+      date: "📅",
+      time: "🕒",
+      datetime: "📆",
+      file: "📎",
+      image: "🖼️",
+      map: "📍",
+      range: "🔗",
+    };
+    return iconMap[type] || "≡";
+  }
+
+  // Méthode utilitaire pour obtenir le nom du champ selon le type
+  private static getFieldNameForType(type: string): string {
+    const nameMap: Record<string, string> = {
+      text: "Champ de texte",
+      textarea: "Zone de texte",
+      email: "Adresse email",
+      url: "URL",
+      tel: "Numéro de téléphone",
+      number: "Valeur numérique",
+      radio: "Boutons radio",
+      checkbox: "Cases à cocher",
+      select: "Menu déroulant",
+      date: "Date",
+      time: "Heure",
+      datetime: "Date et heure",
+      file: "Fichier",
+      image: "Image",
+      map: "Google Map",
+      range: "Plage de valeurs",
+    };
+    return nameMap[type] || "Champ personnalisé";
+  }
+
+  // Méthode utilitaire pour générer un placeholder approprié
+  private static generatePlaceholder(type: string, label: string): string {
+    const placeholderMap: Record<string, string> = {
+      text: `Entrez ${label.toLowerCase()}`,
+      textarea: `Décrivez ${label.toLowerCase()}`,
+      email: "exemple@email.com",
+      url: "https://exemple.com",
+      tel: "+33 1 23 45 67 89",
+      number: "Entrez un nombre",
+      date: "jj/mm/aaaa",
+      time: "hh:mm",
+      datetime: "jj/mm/aaaa hh:mm",
+    };
+    return placeholderMap[type] || `Entrez ${label.toLowerCase()}`;
   }
 }
