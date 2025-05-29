@@ -102,6 +102,37 @@ export default class CompagneController {
         return;
       }
 
+      // Parse pagination parameters
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = 3;
+      const skip = (page - 1) * limit;
+
+      // Validate pagination parameters
+      if (page < 1) {
+        res.status(400).json({ message: "Invalid pagination parameters" });
+        return;
+      }
+
+      // Get total count for pagination metadata
+      const totalCount = await prisma.compagne.count({
+        where: {
+          OR: [
+            {
+              clientId: clientId.toString(), // Owner
+            },
+            {
+              TeamCompagne: {
+                some: {
+                  teamMember: {
+                    membreId: clientId.toString(), // Membre
+                  },
+                },
+              },
+            },
+          ],
+        },
+      });
+
       const campagnes = await prisma.compagne.findMany({
         where: {
           OR: [
@@ -131,6 +162,11 @@ export default class CompagneController {
           Task: true,
           appointment: true,
         },
+        skip: skip,
+        take: limit,
+        orderBy: {
+          id: "desc", // Optional: order by most recent first
+        },
       });
 
       const formattedResult = campagnes.map((campagne) => ({
@@ -148,7 +184,16 @@ export default class CompagneController {
           campagne.appointment.length,
       }));
 
-      res.status(200).json(formattedResult);
+      // Calculate pagination metadata
+      const totalPages = Math.ceil(totalCount / limit);
+
+      res.status(200).json({
+        data: formattedResult,
+        pagination: {
+          currentPage: page,
+          totalPages,
+        },
+      });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Internal Server Error" });
@@ -176,7 +221,7 @@ export default class CompagneController {
         select: {
           id: true,
           compagneName: true,
-          favrite:true
+          favrite: true,
         },
       });
 
@@ -372,7 +417,10 @@ export default class CompagneController {
           requird: field.required,
           ordre: i,
           options: field.options,
-          placeholdre: CompagneController.generatePlaceholder(field.type, field.label),
+          placeholdre: CompagneController.generatePlaceholder(
+            field.type,
+            field.label
+          ),
           message: field.required ? `${field.label} est requis` : undefined,
         });
       }
