@@ -7,6 +7,7 @@ import { Role } from "@prisma/client";
 import { ExcelFieldAnalyzer, FieldAnalysis } from "../utils/excelAnalyzer";
 import multer from "multer";
 import path from "path";
+import * as ExcelJS from 'exceljs';
 
 type createCompagne = z.infer<typeof CompagneValidation.createCompagneSchema>;
 
@@ -577,5 +578,153 @@ export default class CompagneController {
       datetime: "jj/mm/aaaa hh:mm",
     };
     return placeholderMap[type] || `Entrez ${label.toLowerCase()}`;
+  }
+
+  static async createCompagneFromFieldCountsExcel(req: Request, res: Response): Promise<void> {
+    try {
+      // Validation des entrées
+      if (!req.file) {
+        res.status(400).json({ message: "Aucun fichier Excel fourni" });
+        return;
+      }
+
+      const { compagneName } = req.body;
+      if (!compagneName) {
+        res.status(400).json({ message: "Nom de campagne requis" });
+        return;
+      }
+
+      const clientId = req.client?.id;
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      // Analyser le fichier Excel
+      const fieldCounts = await CompagneController.extractFieldCountsFromExcel(req.file.buffer);
+      
+      if (fieldCounts.length === 0) {
+        res.status(400).json({ message: "Aucun champ valide trouvé dans le fichier Excel" });
+        return;
+      }
+
+      // Créer la campagne et le formulaire en une seule transaction
+      const { compagne, form, formFieldsData } = await prisma.$transaction(async (tx) => {
+        // Créer la campagne
+        const newCompagne = await tx.compagne.create({
+          data: {
+            compagneName,
+            clientId: clientId.toString(),
+          },
+        });
+
+        // Créer le formulaire
+        const newForm = await tx.form.create({
+          data: {
+            compagneId: newCompagne.id,
+            title: compagneName,
+            Description: `Formulaire généré à partir des comptages de champs Excel`,
+          },
+        });
+
+        // Récupérer tous les types de champs disponibles
+        const availableFields = await tx.fields.findMany();
+        
+        // Générer les données des champs de formulaire
+        const fieldsData = CompagneController.generateFormFieldsData(
+          fieldCounts, 
+          availableFields, 
+          newForm.id
+        );
+        
+        // Créer tous les champs de formulaire
+        if (fieldsData.length > 0) {
+          await tx.formField.createMany({
+            data: fieldsData,
+          });
+        }
+
+        return { compagne: newCompagne, form: newForm, formFieldsData: fieldsData };
+      });
+
+      res.status(201).json({
+        message: "Campagne créée avec succès à partir du fichier Excel",
+        compagne: {
+          id: compagne.id,
+          name: compagne.compagneName,
+          fieldsCount: formFieldsData.length,
+        },
+        fieldCounts
+      });
+    } catch (error) {
+      console.error("Erreur lors de la création de la campagne:", error);
+      res.status(500).json({
+        message: "Erreur lors de la création de la campagne",
+        error: error instanceof Error ? error.message : "Erreur inconnue",
+      });
+    }
+  }
+
+  // Méthode utilitaire pour extraire les comptages de champs du fichier Excel
+  private static async extractFieldCountsFromExcel(buffer: Buffer): Promise<Array<{fieldName: string, count: number}>> {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(buffer);
+    const worksheet = workbook.getWorksheet(1);
+    
+    if (!worksheet) {
+      return [];
+    }
+
+    const fieldCounts = [];
+    let rowIndex = 2; // Commencer à la ligne 2 (après les en-têtes)
+    
+    while (rowIndex <= worksheet.rowCount) {
+      const fieldNameCell = worksheet.getCell(`A${rowIndex}`);
+      const countCell = worksheet.getCell(`B${rowIndex}`);
+      
+      const fieldName = fieldNameCell.value?.toString().trim();
+      const count = parseInt(countCell.value?.toString() || '0');
+      
+      if (fieldName && count > 0) {
+        fieldCounts.push({ fieldName, count });
+      }
+      
+      rowIndex++;
+    }
+
+    return fieldCounts;
+  }
+
+  // Méthode utilitaire pour générer les données des champs de formulaire
+  private static generateFormFieldsData(
+    fieldCounts: Array<{fieldName: string, count: number}>,
+    availableFields: any[],
+    formId: string
+  ): any[] {
+    const formFieldsData = [];
+    let currentOrder = 0;
+    
+    for (const { fieldName, count } of fieldCounts) {
+      const fieldRecord = availableFields.find(f => f.fieldName === fieldName);
+      
+      if (!fieldRecord) continue;
+      
+      for (let i = 0; i < count; i++) {
+        const label = `${fieldRecord.fieldName} ${i + 1}`;
+        const isSelectType = ['radio', 'checkbox', 'select'].includes(fieldRecord.type);
+        
+        formFieldsData.push({
+          formId,
+          fieldId: fieldRecord.id,
+          label,
+          requird: false,
+          ordre: currentOrder++,
+          options: isSelectType ? ['Option 1', 'Option 2', 'Option 3'] : [],
+          placeholdre: CompagneController.generatePlaceholder(fieldRecord.type, label),
+        });
+      }
+    }
+    
+    return formFieldsData;
   }
 }

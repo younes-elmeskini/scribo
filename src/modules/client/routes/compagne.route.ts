@@ -20,6 +20,12 @@ router.post(
   uploadExcelMiddleware, 
   CompagneController.createCompagneFromExcel
 );
+router.post(
+  "/create-from-field-counts-excel",
+  authenticate,
+  uploadExcelMiddleware,
+  CompagneController.createCompagneFromFieldCountsExcel
+);
 router.get("/", authenticate, CompagneController.getAllCompagne);
 router.get("/sidebar",authenticate, CompagneController.getsideBarData);
 router.get("/:id",authenticate, CompagneController.getCompagneById);
