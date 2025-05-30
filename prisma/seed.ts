@@ -7,17 +7,26 @@ const prisma = new PrismaClient();
 function getFieldNameFromId(fieldId: string): string {
   // This is a mapping based on your data files
   const fieldMap: Record<string, string> = {
-    cmb9d2t4o0011jnuin9esevh3: "Zone de texte",
-    cmb9d2t4o0022jnuin9esevh5: "Adresse email",
-    cmb9d2t4o0033jnuin9esevh6: "Numéro de téléphone",
-    cmb9d2t4o0044jnuin9esevh7: "Boutons radio",
-    cmb9d2t4o0055jnuin9esevh8: "Menu déroulant",
-    cmb9d2t4o0066jnuin9esevh9: "Heure",
-    cmb9d2t4o0077jnuin9esev10: "Fichier",
-    cmb9d2t4o0101jnuin9esev13: "Zone de texte", // Assuming this is text field
-    cmb9d2t4o0144jnuin9esev17: "Date", // Assuming this is date field
-    cmb9d2t4o0177jnuin9esev20: "Nombre", // Assuming this is number field
-    cmb9d2t4o0200jnuin9esev23: "Zone de texte longue", // Assuming this is textarea
+    cmb9iy1l70000jn6kkuyts2ok: "Zone de texte",
+    cmb9iy1yy0001jn6kjec5vt9m: "Adresse email",
+    cmb9iy2730002jn6k8cvjzv3: "Numéro de téléphone",
+    cmb9iy2ft0003jn6kac286iix: "Boutons radio",
+    cmb9iy2o20004jn6k5x3h1gex: "Menu déroulant",
+    cmb9iy2wb0005jn6kqzrtqhcu: "Heure",
+    cmb9iy34k0006jn6knnkwtbaz: "Fichier",
+    cmb9iy3ct0007jn6k666j5bd1: "Google Map",
+    cmb9iy3l70008jn6k4q304jr5: "Booléen – Vrai / Faux",
+    cmb9iy3tf0009jn6ksioqguo6: "Champ de texte",
+    cmb9iy41q000ajn6kp4kagu06: "URL",
+    cmb9iy4a1000bjn6kkpzesuby: "Valeur numérique",
+    cmb9iy4i1000cjn6ken83x4ek: "Cases à cocher",
+    cmb9iy4qa000djn6kgvxteyuh: "Date",
+    cmb9iy4yj000ejn6kalv6whfe: "Date et heure",
+    cmb9iy56r000fjn6kjx03je6y: "Image",
+    cmb9iy5ey000gjn6k3qj181ci: "Plage de valeurs",
+    cmb9iy5n5000hjn6kdp1er4hr: "Couleur",
+    cmb9iy5vr000ijn6krybt0ru0: "Acceptation légale",
+    cmb9iy63p000jjn6kordm8p4i: "Bloc de text",
   };
 
   return fieldMap[fieldId] || "Zone de texte"; // Default to text field
@@ -78,7 +87,9 @@ async function main() {
   for (const form of modelForms) {
     await prisma.modelForm.upsert({
       where: { id: form.id },
-      update: {},
+      update: {
+        coverImage: form.coverImage,
+      },
       create: form,
     });
   }

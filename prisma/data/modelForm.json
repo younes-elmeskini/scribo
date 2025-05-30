@@ -4,7 +4,7 @@
     "title": "Inscription école primaire",
     "Description": "Formulaire pour l'inscription d'un élève à l'école primaire",
     "coverColor": "#FFEB3B",
-    "coverImage": null,
+    "coverImage":"education_primire.png",
     "mode": "LIGHT",
     "messageSucces": "Inscription réussie",
     "categotyId": "catg_edu"
@@ -14,7 +14,7 @@
     "title": "Inscription formation universitaire",
     "Description": "Inscription aux formations universitaires",
     "coverColor": "#2196F3",
-    "coverImage": null,
+    "coverImage": "education_university.png",
     "mode": "LIGHT",
     "messageSucces": "Formulaire soumis avec succès",
     "categotyId": "catg_edu"
@@ -24,7 +24,7 @@
     "title": "Inscription formation professionnelle",
     "Description": "Inscription à une formation professionnelle",
     "coverColor": "#4CAF50",
-    "coverImage": null,
+    "coverImage": "education_formation.png",
     "mode": "LIGHT",
     "messageSucces": "Demande enregistrée",
     "categotyId": "catg_edu"
@@ -34,7 +34,7 @@
     "title": "Commande de produit",
     "Description": "Commander un produit de notre catalogue",
     "coverColor": "#E91E63",
-    "coverImage": null,
+    "coverImage": "commande_produit.png",
     "mode": "LIGHT",
     "messageSucces": "Commande validée",
     "categotyId": "catg_commerce"
@@ -44,7 +44,7 @@
     "title": "Demande de devis",
     "Description": "Formulaire pour demander un devis personnalisé",
     "coverColor": "#9C27B0",
-    "coverImage": null,
+    "coverImage": "demande_devis.png",
     "mode": "LIGHT",
     "messageSucces": "Demande envoyée",
     "categotyId": "catg_commerce"
@@ -54,7 +54,7 @@
     "title": "Enquête de satisfaction client",
     "Description": "Aidez-nous à améliorer nos services",
     "coverColor": "#607D8B",
-    "coverImage": null,
+    "coverImage": "satisfaction_client.png",
     "mode": "LIGHT",
     "messageSucces": "Merci pour votre retour",
     "categotyId": "catg_commerce"

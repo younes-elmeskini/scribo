@@ -5,6 +5,9 @@ import { authenticate } from "../middleware/auth";
 const router = express.Router();
 
 router.get("/fields", FormController.getAllfields);
+router.get("/model", FormController.getAllModelForms);
 
 
 export default router;
+
+

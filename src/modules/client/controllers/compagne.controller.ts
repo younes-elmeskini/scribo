@@ -497,4 +497,106 @@ export default class CompagneController {
     }
   }
 
+  static async createCompagneFromModel(req: Request, res: Response): Promise<void> {
+    try {
+      const { compagneName, modelFormId } = req.body;
+      
+      if (!compagneName || !modelFormId) {
+        res.status(400).json({ message: "Nom de campagne et ID du modèle requis" });
+        return;
+      }
+
+      const clientId = req.client?.id;
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      // Vérifier si le modèle existe
+      const modelForm = await prisma.modelForm.findUnique({
+        where: { id: modelFormId },
+        include: {
+          modelFormField: {
+            include: {
+              fields: true
+            },
+            orderBy: {
+              ordre: 'asc'
+            }
+          }
+        }
+      });
+
+      if (!modelForm) {
+        res.status(404).json({ message: "Modèle de formulaire non trouvé" });
+        return;
+      }
+
+      // Créer la campagne et le formulaire en une seule transaction
+      const result = await prisma.$transaction(async (tx) => {
+        // Créer la campagne
+        const newCompagne = await tx.compagne.create({
+          data: {
+            compagneName,
+            clientId: clientId.toString(),
+          },
+        });
+
+        // Créer le formulaire avec les propriétés du modèle
+        const newForm = await tx.form.create({
+          data: {
+            compagneId: newCompagne.id,
+            title: modelForm.title || compagneName,
+            Description: modelForm.Description,
+            coverColor: modelForm.coverColor,
+            coverImage: modelForm.coverImage,
+            mode: modelForm.mode,
+            messageSucces: modelForm.messageSucces,
+          },
+        });
+        
+        // Créer les champs de formulaire basés sur le modèle
+        const formFieldsData = modelForm.modelFormField.map(modelField => ({
+          formId: newForm.id,
+          fieldId: modelField.fieldId,
+          label: modelField.label,
+          requird: modelField.requird,
+          disable: modelField.disable,
+          style: modelField.style,
+          message: modelField.message,
+          ordre: modelField.ordre,
+          placeholdre: modelField.placeholdre,
+          options: modelField.options,
+        }));
+        
+        if (formFieldsData.length > 0) {
+          await tx.formField.createMany({
+            data: formFieldsData,
+          });
+        }
+
+        return { 
+          compagne: newCompagne, 
+          form: newForm, 
+          fieldsCount: formFieldsData.length 
+        };
+      });
+
+      res.status(201).json({
+        message: "Campagne créée avec succès à partir du modèle",
+        compagne: {
+          id: result.compagne.id,
+          name: result.compagne.compagneName,
+          fieldsCount: result.fieldsCount,
+        }
+      });
+    } catch (error) {
+      console.error("Erreur lors de la création de la campagne:", error);
+      res.status(500).json({
+        message: "Erreur lors de la création de la campagne",
+        error: error instanceof Error ? error.message : "Erreur inconnue",
+      });
+    }
+  }
+
 }
