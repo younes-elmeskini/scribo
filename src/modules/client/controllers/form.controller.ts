@@ -109,7 +109,7 @@ export default class FormController {
               },
             },
             orderBy: {
-              ordre: "asc",
+              ordre:"asc",
             },
           },
         },
