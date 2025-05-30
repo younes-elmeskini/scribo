@@ -368,7 +368,7 @@ export default class CompagneController {
       
       // Create form fields based on quantities
       const formFieldsData = [];
-      let orderIndex = 0;
+      let orderIndex = 1;
       
       for (const field of parsedData.fields) {
         const quantity = field.quantity || 1;

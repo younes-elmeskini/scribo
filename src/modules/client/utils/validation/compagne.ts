@@ -8,7 +8,7 @@ export default class CompagneValidation {
     fields: z.array(
       z.object({
         id: z.string({ message: "Field id is required." }),
-        quantity: z.number().int().positive().optional().default(1)
+        quantity: z.number({ message: "Quantity must be a number." }).int({ message: "Quantity must be an integer." }).positive({ message: "Quantity must be positive." }).optional().default(1)
       }), 
       {
         message: "fields must be an array of objects with id and optional quantity.",
