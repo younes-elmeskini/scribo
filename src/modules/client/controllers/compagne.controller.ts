@@ -427,6 +427,22 @@ export default class CompagneController {
         return;
       }
 
+      // Vérifier si tous les noms de champs existent dans la base de données
+      const availableFields = await prisma.fields.findMany();
+      const fieldNames = availableFields.map(field => field.fieldName);
+      
+      const invalidFields = fieldCounts.filter(
+        field => !fieldNames.includes(field.fieldName)
+      );
+      
+      if (invalidFields.length > 0) {
+         res.status(400).json({
+          message: "Certains champs dans votre fichier Excel n'existent pas dans notre système",
+          invalidFields: invalidFields.map(f => f.fieldName)
+        });
+        return;
+      }
+
       // Créer la campagne et le formulaire en une seule transaction
       const { compagne, form, formFieldsData } = await prisma.$transaction(async (tx) => {
         // Créer la campagne
@@ -445,9 +461,6 @@ export default class CompagneController {
             Description: `Formulaire généré à partir des comptages de champs Excel`,
           },
         });
-
-        // Récupérer tous les types de champs disponibles
-        const availableFields = await tx.fields.findMany();
         
         // Générer les données des champs de formulaire
         const fieldsData = GestionForm.generateFormFieldsData(

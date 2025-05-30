@@ -55,7 +55,7 @@ export default class GestionForm {
     formId: string
   ): any[] {
     const formFieldsData = [];
-    let currentOrder = 0;
+    let currentOrder = 1;
 
     for (const { fieldName, count } of fieldCounts) {
       const fieldRecord = availableFields.find(
