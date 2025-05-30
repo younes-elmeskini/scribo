@@ -37,8 +37,10 @@ app.use(limiter);
 // Routes
 import authClient from "./modules/client/routes/auth.route";
 import compagneClient from "./modules/client/routes/compagne.route";
+import formClient from "./modules/client/routes/from.route";
 
 app.use("/client/auth", authClient);
 app.use("/client/compagne", compagneClient);
+app.use("/client/form", formClient);
 
 export default app;
