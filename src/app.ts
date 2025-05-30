@@ -1,6 +1,6 @@
 import express from "express";
 import cookieParser from "cookie-parser";
-
+import path from "path";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -39,6 +39,7 @@ import authClient from "./modules/client/routes/auth.route";
 import compagneClient from "./modules/client/routes/compagne.route";
 import formClient from "./modules/client/routes/from.route";
 
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/client/auth", authClient);
 app.use("/client/compagne", compagneClient);
 app.use("/client/form", formClient);
