@@ -3,121 +3,121 @@
   {
     "id": "cmb9d2t4o0011jnuin9esevh3",
     "fieldName": "Zone de texte",
-    "icon": "./uploads/icons/textblock.png",
+    "icon": "textbloc.png",
     "type": "text"
   },
   {
     "id": "cmb9d2t4o0022jnuin9esevh5",
     "fieldName": "Adresse email",
-    "icon": "./uploads/icons/email.png",
+    "icon": "email.png",
     "type": "email"
   },
   {
     "id": "cmb9d2t4o0033jnuin9esevh6",
     "fieldName": "Numéro de téléphone",
-    "icon": "./uploads/icons/phone.png",
+    "icon": "phone.png",
     "type": "tel"
   },
   {
     "id": "cmb9d2t4o0044jnuin9esevh7",
     "fieldName": "Boutons radio",
-    "icon": "./uploads/icons/radio.png",
+    "icon": "radio.png",
     "type": "radio"
   },
   {
     "id": "cmb9d2t4o0055jnuin9esevh8",
     "fieldName": "Menu déroulant",
-    "icon": "./uploads/icons/select.png",
+    "icon": "select.png",
     "type": "select"
   },
   {
     "id": "cmb9d2t4o0066jnuin9esevh9",
     "fieldName": "Heure",
-    "icon": "./uploads/icons/time.png",
+    "icon": "time.png",
     "type": "time"
   },
   {
     "id": "cmb9d2t4o0077jnuin9esev10",
     "fieldName": "Fichier",
-    "icon": "./uploads/icons/file.png",
+    "icon": "file.png",
     "type": "file"
   },
   {
     "id": "cmb9d2t4o0088jnuin9esev11",
     "fieldName": "Google Map",
-    "icon": "./uploads/icons/map.png",
+    "icon": "map.png",
     "type": "map"
   },
   {
     "id": "cmb9d2t4o0099jnuin9esev12",
     "fieldName": "Booléen - Vrai / Faux",
-    "icon": "./uploads/icons/boolean.png",
+    "icon": "boolean.png",
     "type": "boolean"
   },
   {
     "id": "cmb9d2t4o0101jnuin9esev13",
     "fieldName": "Champ de texte",
-    "icon": "./uploads/icons/text.png",
+    "icon": "text.png",
     "type": "text"
   },
   {
     "id": "cmb9d2t4o0111jnuin9esev14",
     "fieldName": "URL",
-    "icon": "./uploads/icons/link.png",
+    "icon": "link.png",
     "type": "url"
   },
   {
     "id": "cmb9d2t4o0122jnuin9esev15",
     "fieldName": "Valeur numérique",
-    "icon": "./uploads/icons/number.png",
+    "icon": "number.png",
     "type": "number"
   },
   {
     "id": "cmb9d2t4o0133jnuin9esev16",
     "fieldName": "Cases à cocher",
-    "icon": "./uploads/icons/checkbox.png",
+    "icon": "checkbox.png",
     "type": "checkbox"
   },
   {
     "id": "cmb9d2t4o0144jnuin9esev17",
     "fieldName": "Date",
-    "icon": "./uploads/icons/calendar.png",
+    "icon": "calendar.png",
     "type": "date"
   },
   {
     "id": "cmb9d2t4o0155jnuin9esev18",
     "fieldName": "Date et heure",
-    "icon": "./uploads/icons/calendar.png",
+    "icon": "calendar.png",
     "type": "datetime"
   },
   {
     "id": "cmb9d2t4o0166jnuin9esev19",
     "fieldName": "Image",
-    "icon": "/uploads/icons/image.png",
+    "icon": "image.png",
     "type": "image"
   },
   {
     "id": "cmb9d2t4o0177jnuin9esev20",
     "fieldName": "Plage de valeurs",
-    "icon": "/uploads/icons/range.png",
+    "icon": "range.png",
     "type": "range"
   },
   {
     "id": "cmb9d2t4o0188jnuin9esev21",
     "fieldName": "Couleur",
-    "icon": "/uploads/icons/color.png",
+    "icon": "color.png",
     "type": "color"
   },
   {
     "id": "cmb9d2t4o0199jnuin9esev22",
     "fieldName": "Acceptation légale",
-    "icon": "/uploads/icons/legal.png",
+    "icon": "legal.png",
     "type": "legal"
   },
   {
     "id": "cmb9d2t4o0200jnuin9esev23",
     "fieldName": "Bloc de text",
-    "icon": "/uploads/icons/textarea.png",
+    "icon": "textarea.png",
     "type": "textarea"
   }
 ]
