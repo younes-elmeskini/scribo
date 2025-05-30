@@ -58,5 +58,65 @@
     "mode": "LIGHT",
     "messageSucces": "Merci pour votre retour",
     "categotyId": "catg_commerce"
+  },
+  {
+    "id": "form_contact",
+    "title": "Formulaire de contact",
+    "Description": "Contactez notre équipe pour toute question",
+    "coverColor": "#FF9800",
+    "coverImage": "contact_form.png",
+    "mode": "LIGHT",
+    "messageSucces": "Message envoyé avec succès",
+    "categotyId": "catg_commerce"
+  },
+  {
+    "id": "form_newsletter",
+    "title": "Inscription newsletter",
+    "Description": "Restez informé de nos dernières actualités",
+    "coverColor": "#03A9F4",
+    "coverImage": "newsletter.png",
+    "mode": "LIGHT",
+    "messageSucces": "Inscription confirmée",
+    "categotyId": "catg_edu"
+  },
+  {
+    "id": "form_event",
+    "title": "Inscription événement",
+    "Description": "Réservez votre place pour notre prochain événement",
+    "coverColor": "#673AB7",
+    "coverImage": "event_registration.png",
+    "mode": "LIGHT",
+    "messageSucces": "Inscription confirmée",
+    "categotyId": "catg_commerce"
+  },
+  {
+    "id": "form_feedback",
+    "title": "Retour d'expérience",
+    "Description": "Partagez votre expérience avec nos services",
+    "coverColor": "#795548",
+    "coverImage": "feedback.png",
+    "mode": "LIGHT",
+    "messageSucces": "Merci pour votre retour",
+    "categotyId": "catg_commerce"
+  },
+  {
+    "id": "form_job",
+    "title": "Candidature emploi",
+    "Description": "Postulez à nos offres d'emploi",
+    "coverColor": "#009688",
+    "coverImage": "job_application.png",
+    "mode": "LIGHT",
+    "messageSucces": "Candidature reçue",
+    "categotyId": "catg_edu"
+  },
+  {
+    "id": "form_intern",
+    "title": "Demande de stage",
+    "Description": "Postulez pour un stage dans notre entreprise",
+    "coverColor": "#8BC34A",
+    "coverImage": "internship.png",
+    "mode": "LIGHT",
+    "messageSucces": "Demande reçue",
+    "categotyId": "catg_edu"
   }
 ]

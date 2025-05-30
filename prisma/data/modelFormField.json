@@ -1,10 +1,9 @@
 [
-
   {
     "id": "field_001",
     "modelFormId": "form_prim_school",
     "fieldId": "cmb9d2t4o0101jnuin9esev13",
-    "label": "Nom de l’élève",
+    "label": "Nom de l'élève",
     "ordre": 1,
     "requird": true
   },
@@ -57,7 +56,7 @@
     "id": "field_008",
     "modelFormId": "form_uni",
     "fieldId": "cmb9d2t4o0055jnuin9esevh8",
-    "label": "Domaine d’étude",
+    "label": "Domaine d'étude",
     "ordre": 3,
     "options": ["Informatique", "Médecine", "Économie", "Lettres"]
   },
@@ -157,7 +156,7 @@
     "id": "field_021",
     "modelFormId": "form_devis",
     "fieldId": "cmb9d2t4o0101jnuin9esev13",
-    "label": "Nom de l’entreprise",
+    "label": "Nom de l'entreprise",
     "ordre": 1
   },
   {
@@ -202,7 +201,7 @@
     "id": "field_027",
     "modelFormId": "form_survey",
     "fieldId": "cmb9d2t4o0144jnuin9esev17",
-    "label": "Date de l’achat",
+    "label": "Date de l'achat",
     "ordre": 2
   },
   {
@@ -226,5 +225,112 @@
     "label": "Recommanderiez-vous notre service ?",
     "ordre": 5,
     "options": ["Oui", "Non"]
+  },
+  
+  {
+    "id": "field_031",
+    "modelFormId": "form_contact",
+    "fieldId": "cmb9d2t4o0101jnuin9esev13",
+    "label": "Nom complet",
+    "ordre": 1,
+    "requird": true
+  },
+  {
+    "id": "field_032",
+    "modelFormId": "form_contact",
+    "fieldId": "cmb9d2t4o0022jnuin9esevh5",
+    "label": "Adresse e-mail",
+    "ordre": 2,
+    "requird": true
+  },
+  {
+    "id": "field_033",
+    "modelFormId": "form_contact",
+    "fieldId": "cmb9d2t4o0033jnuin9esevh6",
+    "label": "Téléphone",
+    "ordre": 3
+  },
+  {
+    "id": "field_034",
+    "modelFormId": "form_contact",
+    "fieldId": "cmb9d2t4o0055jnuin9esevh8",
+    "label": "Sujet",
+    "ordre": 4,
+    "options": ["Information", "Support technique", "Réclamation", "Autre"]
+  },
+  {
+    "id": "field_035",
+    "modelFormId": "form_contact",
+    "fieldId": "cmb9d2t4o0200jnuin9esev23",
+    "label": "Message",
+    "ordre": 5,
+    "requird": true
+  },
+  
+  {
+    "id": "field_036",
+    "modelFormId": "form_newsletter",
+    "fieldId": "cmb9d2t4o0101jnuin9esev13",
+    "label": "Nom",
+    "ordre": 1
+  },
+  {
+    "id": "field_037",
+    "modelFormId": "form_newsletter",
+    "fieldId": "cmb9d2t4o0022jnuin9esevh5",
+    "label": "Adresse e-mail",
+    "ordre": 2,
+    "requird": true
+  },
+  {
+    "id": "field_038",
+    "modelFormId": "form_newsletter",
+    "fieldId": "cmb9d2t4o0044jnuin9esevh7",
+    "label": "Centres d'intérêt",
+    "ordre": 3,
+    "options": ["Actualités", "Promotions", "Événements", "Nouveaux produits"]
+  },
+  
+  {
+    "id": "field_039",
+    "modelFormId": "form_event",
+    "fieldId": "cmb9d2t4o0101jnuin9esev13",
+    "label": "Nom",
+    "ordre": 1
+  },
+  {
+    "id": "field_040",
+    "modelFormId": "form_event",
+    "fieldId": "cmb9d2t4o0144jnuin9esev17",
+    "label": "Date de l'événement",
+    "ordre": 2
+  },
+  {
+    "id": "field_041",
+    "modelFormId": "form_event",
+    "fieldId": "cmb9d2t4o0022jnuin9esevh5",
+    "label": "Adresse e-mail",
+    "ordre": 3
+  },
+  {
+    "id": "field_042",
+    "modelFormId": "form_event",
+    "fieldId": "cmb9d2t4o0033jnuin9esevh6",
+    "label": "Téléphone",
+    "ordre": 4
+  },
+  {
+    "id": "field_043",
+    "modelFormId": "form_event",
+    "fieldId": "cmb9d2t4o0055jnuin9esevh8",
+    "label": "Nombre de participants",
+    "ordre": 5
+  },
+  {
+    "id": "field_044",
+    "modelFormId": "form_event",
+    "fieldId": "cmb9d2t4o0200jnuin9esev23",
+    "label": "Commentaire",
+    "ordre": 6
   }
 ]
