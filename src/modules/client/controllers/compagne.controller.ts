@@ -399,7 +399,7 @@ export default class CompagneController {
     }
   }
 
-  static async createCompagneFromFieldCountsExcel(req: Request, res: Response): Promise<void> {
+  static async createCompagneFromExcel(req: Request, res: Response): Promise<void> {
     try {
       // Validation des entrées
       if (!req.file) {
