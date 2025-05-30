@@ -12,7 +12,7 @@ export default class FormController {
           type: true,
         },
       });
-      res.status(200).json(fields);
+      res.status(200).json({data:fields});
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Internal Server Error" });
@@ -65,7 +65,7 @@ export default class FormController {
       // Convert map to array
       const result = Object.values(categoriesMap);
       
-      res.status(200).json(result);
+      res.status(200).json({data:result});
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Internal Server Error" });

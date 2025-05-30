@@ -103,7 +103,7 @@ export default class CompagneController {
           Task: true,
           appointment: true,
         },
-        take: page *limit,
+        take: page * limit,
         orderBy: {
           id: "desc", // Optional: order by most recent first
         },
@@ -132,7 +132,7 @@ export default class CompagneController {
         pagination: {
           currentPage: page,
           totalPages: totalPages,
-          totalCompagnes: totalCount
+          totalCompagnes: totalCount,
         },
       });
     } catch (error) {
@@ -180,8 +180,7 @@ export default class CompagneController {
       );
 
       res.status(200).json({
-        favriteCampagnes,
-        notFavriteCampagnes,
+        data: { favriteCampagnes, notFavriteCampagnes },
       });
     } catch (error) {
       console.error(error);
@@ -255,66 +254,68 @@ export default class CompagneController {
   }
 
   static async favoriteCompagne(req: Request, res: Response): Promise<void> {
-  try {
-    const compagneId = req.params.id;
-    const clientId = req.client?.id;
+    try {
+      const compagneId = req.params.id;
+      const clientId = req.client?.id;
 
-    if (!clientId) {
-      res.status(401).json({ message: "Unauthorized" });
-      return;
-    }
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
 
-    if (!compagneId) {
-      res.status(400).json({ message: "Compagne ID is required" });
-      return;
-    }
+      if (!compagneId) {
+        res.status(400).json({ message: "Compagne ID is required" });
+        return;
+      }
 
-    // Check if the compagne exists and user has access to it
-    const compagne = await prisma.compagne.findFirst({
-      where: {
-        id: compagneId,
-        OR: [
-          {
-            clientId: clientId.toString(), // Owner
-          },
-          {
-            TeamCompagne: {
-              some: {
-                teamMember: {
-                  membreId: clientId.toString(), // Team member
+      // Check if the compagne exists and user has access to it
+      const compagne = await prisma.compagne.findFirst({
+        where: {
+          id: compagneId,
+          OR: [
+            {
+              clientId: clientId.toString(), // Owner
+            },
+            {
+              TeamCompagne: {
+                some: {
+                  teamMember: {
+                    membreId: clientId.toString(), // Team member
+                  },
                 },
               },
             },
-          },
-        ],
-      },
-    });
+          ],
+        },
+      });
 
-    if (!compagne) {
-      res.status(404).json({ message: "Compagne not found or access denied" });
-      return;
+      if (!compagne) {
+        res
+          .status(404)
+          .json({ message: "Compagne not found or access denied" });
+        return;
+      }
+
+      // Update favorite status
+      const updatedCompagne = await prisma.compagne.update({
+        where: { id: compagneId },
+        data: { favrite: compagne.favrite ? false : true },
+        select: {
+          id: true,
+          compagneName: true,
+          favrite: true,
+        },
+      });
+
+      res.status(200).json({
+        message: "Compagne added to favorites successfully",
+        data: updatedCompagne,
+      });
+    } catch (error) {
+      console.error("Error favoriting compagne:", error);
+      res.status(500).json({ message: "Internal Server Error" });
     }
-
-    // Update favorite status
-    const updatedCompagne = await prisma.compagne.update({
-      where: { id: compagneId },
-      data: { favrite: compagne.favrite? false : true },
-      select: {
-        id: true,
-        compagneName: true,
-        favrite: true,
-      },
-    });
-
-    res.status(200).json({
-      message: "Compagne added to favorites successfully",
-      data: updatedCompagne,
-    });
-  } catch (error) {
-    console.error("Error favoriting compagne:", error);
-    res.status(500).json({ message: "Internal Server Error" });
   }
-}
 
   static async createCompagne(req: Request, res: Response): Promise<void> {
     try {
@@ -326,10 +327,10 @@ export default class CompagneController {
         res.status(400).json({ message: "Unauthorized" });
         return;
       }
-      
+
       // Extract fieldIds from the fields array
-      const fieldIds = parsedData.fields.map(field => field.id);
-      
+      const fieldIds = parsedData.fields.map((field) => field.id);
+
       const fields = await prisma.fields.findMany({
         where: {
           id: {
@@ -337,61 +338,63 @@ export default class CompagneController {
           },
         },
       });
-      
+
       if (fields.length !== fieldIds.length) {
         res.status(400).json({ message: "Invalid fields" });
         return;
       }
-      
+
       const compagne = await prisma.compagne.create({
         data: {
           compagneName: parsedData.compagneName,
           clientId: clientId.toString(),
         },
       });
-      
+
       if (!compagne) {
         res.status(400).json({ message: "Compagne not created" });
         return;
       }
-      
+
       const form = await prisma.form.create({
         data: {
           compagneId: compagne.id,
         },
       });
-      
+
       if (!form) {
         res.status(400).json({ message: "Form not created" });
         return;
       }
-      
+
       // Create form fields based on quantities
       const formFieldsData = [];
       let orderIndex = 1;
-      
+
       for (const field of parsedData.fields) {
         const quantity = field.quantity || 1;
-        
+
         for (let i = 0; i < quantity; i++) {
           formFieldsData.push({
             formId: form.id,
             fieldId: field.id,
             ordre: orderIndex++,
-            label: `${fields.find(f => f.id === field.id)?.fieldName} ${i + 1}`
+            label: `${fields.find((f) => f.id === field.id)?.fieldName} ${
+              i + 1
+            }`,
           });
         }
       }
-      
+
       const formFields = await prisma.formField.createMany({
         data: formFieldsData,
       });
-      
+
       if (!formFields) {
         res.status(400).json({ message: "Form fields not created" });
         return;
       }
-      
+
       res.status(201).json({ message: "Compagne created successfully" });
     } catch (error) {
       console.error(error);
@@ -399,7 +402,10 @@ export default class CompagneController {
     }
   }
 
-  static async createCompagneFromExcel(req: Request, res: Response): Promise<void> {
+  static async createCompagneFromExcel(
+    req: Request,
+    res: Response
+  ): Promise<void> {
     try {
       // Validation des entrées
       if (!req.file) {
@@ -420,64 +426,75 @@ export default class CompagneController {
       }
 
       // Analyser le fichier Excel
-      const fieldCounts = await GestionForm.extractFieldCountsFromExcel(req.file.buffer);
-      
+      const fieldCounts = await GestionForm.extractFieldCountsFromExcel(
+        req.file.buffer
+      );
+
       if (fieldCounts.length === 0) {
-        res.status(400).json({ message: "Aucun champ valide trouvé dans le fichier Excel" });
+        res
+          .status(400)
+          .json({ message: "Aucun champ valide trouvé dans le fichier Excel" });
         return;
       }
 
       // Vérifier si tous les noms de champs existent dans la base de données
       const availableFields = await prisma.fields.findMany();
-      const fieldNames = availableFields.map(field => field.fieldName);
-      
+      const fieldNames = availableFields.map((field) => field.fieldName);
+
       const invalidFields = fieldCounts.filter(
-        field => !fieldNames.includes(field.fieldName)
+        (field) => !fieldNames.includes(field.fieldName)
       );
-      
+
       if (invalidFields.length > 0) {
-         res.status(400).json({
-          message: "Certains champs dans votre fichier Excel n'existent pas dans notre système",
-          invalidFields: invalidFields.map(f => f.fieldName)
+        res.status(400).json({
+          message:
+            "Certains champs dans votre fichier Excel n'existent pas dans notre système",
+          invalidFields: invalidFields.map((f) => f.fieldName),
         });
         return;
       }
 
       // Créer la campagne et le formulaire en une seule transaction
-      const { compagne, form, formFieldsData } = await prisma.$transaction(async (tx) => {
-        // Créer la campagne
-        const newCompagne = await tx.compagne.create({
-          data: {
-            compagneName,
-            clientId: clientId.toString(),
-          },
-        });
-
-        // Créer le formulaire
-        const newForm = await tx.form.create({
-          data: {
-            compagneId: newCompagne.id,
-            title: compagneName,
-            Description: `Formulaire généré à partir des comptages de champs Excel`,
-          },
-        });
-        
-        // Générer les données des champs de formulaire
-        const fieldsData = GestionForm.generateFormFieldsData(
-          fieldCounts, 
-          availableFields, 
-          newForm.id
-        );
-        
-        // Créer tous les champs de formulaire
-        if (fieldsData.length > 0) {
-          await tx.formField.createMany({
-            data: fieldsData,
+      const { compagne, form, formFieldsData } = await prisma.$transaction(
+        async (tx) => {
+          // Créer la campagne
+          const newCompagne = await tx.compagne.create({
+            data: {
+              compagneName,
+              clientId: clientId.toString(),
+            },
           });
-        }
 
-        return { compagne: newCompagne, form: newForm, formFieldsData: fieldsData };
-      });
+          // Créer le formulaire
+          const newForm = await tx.form.create({
+            data: {
+              compagneId: newCompagne.id,
+              title: compagneName,
+              Description: `Formulaire généré à partir des comptages de champs Excel`,
+            },
+          });
+
+          // Générer les données des champs de formulaire
+          const fieldsData = GestionForm.generateFormFieldsData(
+            fieldCounts,
+            availableFields,
+            newForm.id
+          );
+
+          // Créer tous les champs de formulaire
+          if (fieldsData.length > 0) {
+            await tx.formField.createMany({
+              data: fieldsData,
+            });
+          }
+
+          return {
+            compagne: newCompagne,
+            form: newForm,
+            formFieldsData: fieldsData,
+          };
+        }
+      );
 
       res.status(201).json({
         message: "Campagne créée avec succès à partir du fichier Excel",
@@ -486,7 +503,7 @@ export default class CompagneController {
           name: compagne.compagneName,
           fieldsCount: formFieldsData.length,
         },
-        fieldCounts
+        fieldCounts,
       });
     } catch (error) {
       console.error("Erreur lors de la création de la campagne:", error);
@@ -497,12 +514,17 @@ export default class CompagneController {
     }
   }
 
-  static async createCompagneFromModel(req: Request, res: Response): Promise<void> {
+  static async createCompagneFromModel(
+    req: Request,
+    res: Response
+  ): Promise<void> {
     try {
       const { compagneName, modelFormId } = req.body;
-      
+
       if (!compagneName || !modelFormId) {
-        res.status(400).json({ message: "Nom de campagne et ID du modèle requis" });
+        res
+          .status(400)
+          .json({ message: "Nom de campagne et ID du modèle requis" });
         return;
       }
 
@@ -518,13 +540,13 @@ export default class CompagneController {
         include: {
           modelFormField: {
             include: {
-              fields: true
+              fields: true,
             },
             orderBy: {
-              ordre: 'asc'
-            }
-          }
-        }
+              ordre: "asc",
+            },
+          },
+        },
       });
 
       if (!modelForm) {
@@ -554,9 +576,9 @@ export default class CompagneController {
             messageSucces: modelForm.messageSucces,
           },
         });
-        
+
         // Créer les champs de formulaire basés sur le modèle
-        const formFieldsData = modelForm.modelFormField.map(modelField => ({
+        const formFieldsData = modelForm.modelFormField.map((modelField) => ({
           formId: newForm.id,
           fieldId: modelField.fieldId,
           label: modelField.label,
@@ -568,17 +590,17 @@ export default class CompagneController {
           placeholdre: modelField.placeholdre,
           options: modelField.options,
         }));
-        
+
         if (formFieldsData.length > 0) {
           await tx.formField.createMany({
             data: formFieldsData,
           });
         }
 
-        return { 
-          compagne: newCompagne, 
-          form: newForm, 
-          fieldsCount: formFieldsData.length 
+        return {
+          compagne: newCompagne,
+          form: newForm,
+          fieldsCount: formFieldsData.length,
         };
       });
 
@@ -588,7 +610,7 @@ export default class CompagneController {
           id: result.compagne.id,
           name: result.compagne.compagneName,
           fieldsCount: result.fieldsCount,
-        }
+        },
       });
     } catch (error) {
       console.error("Erreur lors de la création de la campagne:", error);
@@ -598,5 +620,4 @@ export default class CompagneController {
       });
     }
   }
-
 }
