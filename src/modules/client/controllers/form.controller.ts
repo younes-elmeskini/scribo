@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import prisma from "../../../utils/client";
-import { z } from "zod";
 export default class FormController {
   static async getAllfields(req: Request, res: Response): Promise<void> {
     try {
@@ -12,7 +11,7 @@ export default class FormController {
           type: true,
         },
       });
-      res.status(200).json({data:fields});
+      res.status(200).json({ data: fields });
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Internal Server Error" });
@@ -38,34 +37,84 @@ export default class FormController {
           },
         },
       });
-      
+
       // Group by category
       const categoriesMap: Record<string, any> = {};
-      
-      modelForms.forEach(modelForm => {
+
+      modelForms.forEach((modelForm) => {
         const categoryName = modelForm.categoty.categotyName;
-        
+
         if (!categoriesMap[categoryName]) {
           categoriesMap[categoryName] = {
             categoryName,
             quantiyformModel: 0,
-            formModel: []
+            formModel: [],
           };
         }
-        
+
         categoriesMap[categoryName].formModel.push({
           id: modelForm.id,
           title: modelForm.title,
-          coverImage: modelForm.coverImage
+          coverImage: modelForm.coverImage,
         });
-        
-        categoriesMap[categoryName].quantiyformModel = categoriesMap[categoryName].formModel.length;
+
+        categoriesMap[categoryName].quantiyformModel =
+          categoriesMap[categoryName].formModel.length;
       });
-      
+
       // Convert map to array
       const result = Object.values(categoriesMap);
-      
-      res.status(200).json({data:result});
+
+      res.status(200).json({ data: result });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+  static async getformByCompagneId(req: Request, res: Response): Promise<void> {
+    try {
+      const compagneId = req.params.id;
+      const form = await prisma.form.findFirst({
+        where: {
+          compagneId: compagneId.toString(),
+        },
+        select: {
+          id: true,
+          title: true,
+          Description: true,
+          coverColor: true,
+          coverImage: true,
+          mode: true,
+          messageSucces: true,
+          desactivatedAt: true,
+          FormField: {
+            select: {
+              id: true,
+              fieldId: true,
+              label: true,
+              requird: true,
+              disable: true,
+              style: true,
+              message: true,
+              ordre: true,
+              placeholdre: true,
+              options: true,
+              fields: {
+                select: {
+                  id: true,
+                  icon: true,
+                  fieldName: true,
+                  type: true,
+                },
+              },
+            },
+            orderBy: {
+              ordre: "asc",
+            },
+          },
+        },
+      });
+      res.status(200).json({ data: form });
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Internal Server Error" });
