@@ -85,6 +85,7 @@ model TeamCompagne {
 model Compagne {
   id           String         @id @default(cuid())
   compagneName String
+  description  String?
   status       Status         @default(ACTIVE)
   favrite      Boolean        @default(false)
   clientId     String

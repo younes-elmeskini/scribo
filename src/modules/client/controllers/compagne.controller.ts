@@ -190,6 +190,16 @@ export default class CompagneController {
   static async getCompagneById(req: Request, res: Response): Promise<void> {
     try {
       const compagneId = req.params.id;
+      const compagne = await prisma.compagne.findUnique({
+        where: { id: compagneId },
+        select: {
+          description: true,
+        },
+      });
+      if (!compagne) {
+        res.status(404).json({ message: "Compagne not found" });
+        return;
+      }
 
       // Get soumissions by date
       const soumissions = await prisma.soumission.findMany({
@@ -224,9 +234,9 @@ export default class CompagneController {
       const answersStats = formFields.map((field) => {
         const optionCount: Record<string, number> = {};
         const optionPorcentage: Record<string, number> = {};
-        
+
         // Initialize counts for all options
-        field.options.forEach(option => {
+        field.options.forEach((option) => {
           optionCount[option] = 0;
         });
 
@@ -236,11 +246,12 @@ export default class CompagneController {
             optionCount[answer.valeu]++;
           }
         });
-        
+
         // Calculate percentages
         if (field.Answer.length > 0) {
-          Object.keys(optionCount).forEach(option => {
-            optionPorcentage[option] = (optionCount[option] / field.Answer.length) * 100;
+          Object.keys(optionCount).forEach((option) => {
+            optionPorcentage[option] =
+              (optionCount[option] / field.Answer.length) * 100;
           });
         }
 
@@ -253,8 +264,11 @@ export default class CompagneController {
       });
 
       res.status(200).json({
-        soumissionsByDay,
-        answersStats,
+        data: {
+          description: compagne.description,
+          soumissionsByDay,
+          answersStats,
+        },
       });
     } catch (error) {
       console.error(error);
