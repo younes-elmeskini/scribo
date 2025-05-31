@@ -222,24 +222,33 @@ export default class CompagneController {
       });
 
       const answersStats = formFields.map((field) => {
-        const optionCount = field.options.reduce(
-          (acc: Record<string, number>, option) => {
-            acc[option] = 0;
-            return acc;
-          },
-          {}
-        );
+        const optionCount: Record<string, number> = {};
+        const optionPorcentage: Record<string, number> = {};
+        
+        // Initialize counts for all options
+        field.options.forEach(option => {
+          optionCount[option] = 0;
+        });
 
+        // Count answers
         field.Answer.forEach((answer) => {
           if (optionCount[answer.valeu] !== undefined) {
             optionCount[answer.valeu]++;
           }
         });
+        
+        // Calculate percentages
+        if (field.Answer.length > 0) {
+          Object.keys(optionCount).forEach(option => {
+            optionPorcentage[option] = (optionCount[option] / field.Answer.length) * 100;
+          });
+        }
 
         return {
           fieldId: field.id,
           label: field.label,
           stats: optionCount,
+          porcentage: optionPorcentage,
         };
       });
 
