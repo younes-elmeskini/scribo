@@ -290,6 +290,7 @@ export default class CompagneController {
       });
       res.status(200).json({
         data: {
+          totalsoumissions:soumissions.length,
           description: compagne.description,
           soumissionsByDay,
           answersStats,
