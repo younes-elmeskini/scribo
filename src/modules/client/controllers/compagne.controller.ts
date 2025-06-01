@@ -263,11 +263,43 @@ export default class CompagneController {
         };
       });
 
+      const calls = await prisma.call.count({
+        where: {
+          compagneId,
+        },
+      });
+      const notes = await prisma.notes.count({
+        where: {
+          compagneId,
+        },
+      });
+      const emails = await prisma.email.count({
+        where: {
+          compagneId,
+        },
+      });
+      const tasks = await prisma.task.findMany({
+        where: {
+          compagneId,
+        },
+      });
+      const appointment = await prisma.appointment.findMany({
+        where: {
+          compagneId,
+        },
+      });
       res.status(200).json({
         data: {
           description: compagne.description,
           soumissionsByDay,
           answersStats,
+          action:{
+            calls,
+            notes,
+            emails,
+            tasks,
+            appointment
+          },
         },
       });
     } catch (error) {
