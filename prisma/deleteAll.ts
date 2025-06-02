@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function deleteAllData() {
@@ -7,16 +7,20 @@ async function deleteAllData() {
     await prisma.soumission.deleteMany({});
     await prisma.formField.deleteMany({});
     await prisma.form.deleteMany({});
-    await prisma.fields.deleteMany({});
     await prisma.teamCompagne.deleteMany({});
     await prisma.teamMenber.deleteMany({});
     await prisma.compagne.deleteMany({});
     await prisma.client.deleteMany({});
     await prisma.user.deleteMany({});
+    await prisma.modelFormField.deleteMany({});
+    await prisma.modelForm.deleteMany({});
+    await prisma.fields.deleteMany({});
+    await prisma.categoty.deleteMany({});
+    await prisma.textStyle.deleteMany({});
 
-    console.log('✅ All data has been deleted.');
+    console.log("✅ All data has been deleted.");
   } catch (error) {
-    console.error('❌ Error deleting data:', error);
+    console.error("❌ Error deleting data:", error);
   } finally {
     await prisma.$disconnect();
   }

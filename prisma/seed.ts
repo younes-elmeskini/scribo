@@ -140,6 +140,26 @@ async function main() {
   }
 
   console.log("✅ Champs de formulaire modèles insérés avec succès");
+  const textStylePath = path.join(__dirname, "data", "textStyle.json");
+  const textStyleData = fs.readFileSync(textStylePath, "utf-8");
+  const textStyle = JSON.parse(textStyleData);
+
+  for (const style of textStyle) {
+    // First check if a style with this name already exists
+    const existingStyle = await prisma.textStyle.findFirst({
+      where: { styleName: style.styleName }
+    });
+    if (existingStyle) {
+      // If it exists, update it (though there's nothing to update in this case)
+      console.log(`Style "${style.styleName}" already exists, skipping...`);
+    } else {
+      // If it doesn't exist, create a new one (Prisma will generate the ID)
+      await prisma.textStyle.create({
+        data: { styleName: style.styleName }
+      });
+    }
+  }
+  console.log("✅ Styles de texte insérés avec succès");
 }
 
 main()
