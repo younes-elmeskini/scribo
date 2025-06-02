@@ -112,19 +112,23 @@ model Fields {
 }
 
 model Form {
-  id             String      @id @default(cuid())
-  title          String?
-  Description    String?
-  coverColor     String?
-  coverImage     String?
-  mode           Mode        @default(LIGHT)
-  messageSucces  String?
-  compagneId     String
-  compagne       Compagne    @relation(fields: [compagneId], references: [id])
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  desactivatedAt DateTime?
-  FormField      FormField[]
+  id                   String      @id @default(cuid())
+  title                String?
+  titleStyle           String?
+  titleTextStyle       TextStyle?  @relation("TitleTextStyle", fields: [titleStyle], references: [id])
+  formStyle     String?
+  formTextStyle TextStyle?  @relation("formTextStyle", fields: [formStyle], references: [id])
+  Description          String?
+  coverColor           String?
+  coverImage           String?
+  mode                 Mode        @default(LIGHT)
+  messageSucces        String?
+  compagneId           String
+  compagne             Compagne    @relation(fields: [compagneId], references: [id])
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  desactivatedAt       DateTime?
+  FormField            FormField[]
 }
 
 model FormField {
@@ -272,4 +276,11 @@ model Categoty {
   id           String      @id @default(cuid())
   categotyName String
   ModelForm    ModelForm[]
+}
+
+model TextStyle {
+  id        String @id @default(cuid())
+  styleName String
+  TitleForm Form[] @relation("TitleTextStyle")
+  TextForm Form[] @relation("formTextStyle")
 }
