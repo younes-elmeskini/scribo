@@ -7,6 +7,7 @@ const router = express.Router();
 router.get("/fields", FormController.getAllfields);
 router.get("/model", FormController.getAllModelForms);
 router.get("/:id", authenticate, FormController.getformByCompagneId);
+router.put("/:id", authenticate, FormController.updateform);
 
 
 export default router;

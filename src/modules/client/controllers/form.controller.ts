@@ -1,5 +1,11 @@
 import { Request, Response } from "express";
 import prisma from "../../../utils/client";
+import FromValidation from "../utils/validation/form";
+import { validationResult } from "../../../utils/validation/validationResult";
+import { z } from "zod";
+
+type updateform = z.infer<typeof FromValidation.updateformSchema>;
+
 export default class FormController {
   static async getAllfields(req: Request, res: Response): Promise<void> {
     try {
@@ -109,12 +115,39 @@ export default class FormController {
               },
             },
             orderBy: {
-              ordre:"asc",
+              ordre: "asc",
             },
           },
         },
       });
       res.status(200).json({ data: form });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+  static async updateform(req: Request, res: Response): Promise<void> {
+    try {
+      validationResult(FromValidation.updateformSchema, req, res);
+      const { id } = req.params;
+      const parsedData: updateform = FromValidation.updateformSchema.parse(
+        req.body
+      );
+      if (!id) {
+        res.status(400).json({ message: "Form ID is required" });
+        return;
+      }
+      const form = await prisma.form.update({
+        where: { id },
+        data: {
+          ...parsedData,
+        },
+      });
+      if (!form) {
+        res.status(400).json({ message: "Form not updated" });
+        return;
+      }
+      res.status(200).json({ message: "Form updated successfully", data: form });
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Internal Server Error" });
