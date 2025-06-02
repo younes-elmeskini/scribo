@@ -1,0 +1,7 @@
+[
+  { "styleName": "Bold" },
+  { "styleName": "Italic" },
+  { "styleName": "Underline" },
+  { "styleName": "Regular" },
+  { "styleName": "Strikethrough" }
+]
