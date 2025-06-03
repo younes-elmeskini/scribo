@@ -97,6 +97,7 @@ export default class FormController {
             select: {
               id: true,
               fieldId: true,
+              name: true,
               label: true,
               requird: true,
               disable: true,
@@ -105,6 +106,10 @@ export default class FormController {
               ordre: true,
               placeholdre: true,
               options: true,
+              min: true,
+              max: true,
+              fileType: true,
+              instruction: true,
               fields: {
                 select: {
                   id: true,
@@ -126,30 +131,165 @@ export default class FormController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
-  static async updateform(req: Request, res: Response): Promise<void> {
+  static async updateForm(req: Request, res: Response): Promise<void> {
     try {
       validationResult(FromValidation.updateformSchema, req, res);
-      const { id } = req.params;
-      const parsedData: updateform = FromValidation.updateformSchema.parse(
-        req.body
-      );
-      if (!id) {
+      const formId = req.params.id;
+      const clientId = req.client?.id;
+      
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      if (!formId) {
         res.status(400).json({ message: "Form ID is required" });
         return;
       }
-      const form = await prisma.form.update({
-        where: { id },
-        data: {
-          ...parsedData,
-        },
+
+      // Vérifier si le formulaire existe et si l'utilisateur a accès
+      const form = await prisma.form.findFirst({
+        where: {
+          id: formId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() },  
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString() 
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
       });
+
       if (!form) {
-        res.status(400).json({ message: "Form not updated" });
+        res.status(404).json({ message: "Form not found or access denied" });
         return;
       }
-      res.status(200).json({ message: "Form updated successfully", data: form });
+
+      // Vérifier les styles de texte si fournis
+      const parsedData: updateform = FromValidation.updateformSchema.parse(req.body);
+      
+      if (parsedData.titleStyle) {
+        const titleStyleExists = await prisma.textStyle.findUnique({
+          where: { id: parsedData.titleStyle }
+        });
+        
+        if (!titleStyleExists) {
+          res.status(400).json({ message: "Invalid title style" });
+          return;
+        }
+      }
+      
+      if (parsedData.formStyle) {
+        const formStyleExists = await prisma.textStyle.findUnique({
+          where: { id: parsedData.formStyle }
+        });
+        
+        if (!formStyleExists) {
+          res.status(400).json({ message: "Invalid form style" });
+          return;
+        }
+      }
+
+      // Mettre à jour le formulaire avec l'ID explicite
+      const updatedForm = await prisma.form.update({
+        where: { 
+          id: formId 
+        },
+        data: parsedData
+      });
+
+      res.status(200).json({ 
+        message: "Form updated successfully",
+        data: updatedForm
+      });
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+  static async updateFormField(req: Request, res: Response): Promise<void> {
+    try {
+      validationResult(FromValidation.updateFormFieldSchema, req, res);
+      const formFieldId = req.params.id;
+      const clientId = req.client?.id;
+      
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      if (!formFieldId) {
+        res.status(400).json({ message: "Form Field ID is required" });
+        return;
+      }
+
+      // Vérifier si le champ de formulaire existe et si l'utilisateur a accès
+      const formField = await prisma.formField.findFirst({
+        where: {
+          id: formFieldId,
+          form: {
+            compagne: {
+              OR: [
+                { clientId: clientId.toString() }, // Propriétaire
+                {
+                  TeamCompagne: {
+                    some: {
+                      teamMember: {
+                        membreId: clientId.toString() // Membre d'équipe
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        include: {
+          fields: true
+        }
+      });
+
+      if (!formField) {
+        res.status(404).json({ message: "Form field not found or access denied" });
+        return;
+      }
+
+      // Vérifier le fieldId s'il est fourni
+      const parsedData = FromValidation.updateFormFieldSchema.parse(req.body);
+      
+      if (parsedData.fieldId) {
+        const fieldExists = await prisma.fields.findUnique({
+          where: { id: parsedData.fieldId }
+        });
+        
+        if (!fieldExists) {
+          res.status(400).json({ message: "Invalid field type" });
+          return;
+        }
+      }
+
+      const updatedFormField = await prisma.formField.update({
+        where: { id: formFieldId },
+        data: parsedData,
+        include: {
+          fields: true // Inclure les informations de type de champ
+        }
+      });
+
+      res.status(200).json({ 
+        message: "Form field updated successfully",
+        data: updatedFormField
+      });
+    } catch (error) {
+      console.error(error);
       res.status(500).json({ message: "Internal Server Error" });
     }
   }

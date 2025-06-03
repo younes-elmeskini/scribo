@@ -29,6 +29,13 @@ enum Mode {
   LIGHT
 }
 
+enum FileType {
+  PDF
+  DOC
+  DOCX
+  RFT
+}
+
 model User {
   id          String   @id @default(cuid())
   firstName   String
@@ -112,41 +119,46 @@ model Fields {
 }
 
 model Form {
-  id                   String      @id @default(cuid())
-  title                String?
-  titleStyle           String?
-  titleTextStyle       TextStyle?  @relation("TitleTextStyle", fields: [titleStyle], references: [id])
-  formStyle     String?
-  formTextStyle TextStyle?  @relation("formTextStyle", fields: [formStyle], references: [id])
-  Description          String?
-  coverColor           String?
-  coverImage           String?
-  mode                 Mode        @default(LIGHT)
-  messageSucces        String?
-  compagneId           String
-  compagne             Compagne    @relation(fields: [compagneId], references: [id])
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
-  desactivatedAt       DateTime?
-  FormField            FormField[]
+  id             String      @id @default(cuid())
+  title          String?
+  titleStyle     String?
+  titleTextStyle TextStyle?  @relation("TitleTextStyle", fields: [titleStyle], references: [id])
+  formStyle      String?
+  formTextStyle  TextStyle?  @relation("formTextStyle", fields: [formStyle], references: [id])
+  Description    String?
+  coverColor     String?
+  coverImage     String?
+  mode           Mode        @default(LIGHT)
+  messageSucces  String?
+  compagneId     String
+  compagne       Compagne    @relation(fields: [compagneId], references: [id])
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  desactivatedAt DateTime?
+  FormField      FormField[]
 }
 
 model FormField {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   formId      String
   fieldId     String
+  name        String?
   label       String?
   requird     Boolean?
-  disable     Boolean  @default(false)
-  style       String[] @default([])
+  disable     Boolean   @default(false)
+  style       String[]  @default([])
   message     String?
   ordre       Int
   placeholdre String?
-  options     String[] @default([])
-  form        Form     @relation(fields: [formId], references: [id])
-  fields      Fields   @relation(fields: [fieldId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  min         Int?
+  max         Int?
+  fileType    FileType?
+  instruction String?
+  options     String[]  @default([])
+  form        Form      @relation(fields: [formId], references: [id])
+  fields      Fields    @relation(fields: [fieldId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   Answer      Answer[]
 }
 
@@ -282,5 +294,5 @@ model TextStyle {
   id        String @id @default(cuid())
   styleName String
   TitleForm Form[] @relation("TitleTextStyle")
-  TextForm Form[] @relation("formTextStyle")
+  TextForm  Form[] @relation("formTextStyle")
 }

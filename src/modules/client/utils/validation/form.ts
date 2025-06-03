@@ -7,8 +7,8 @@ export default class FormValidation {
   static updateformSchema = z.object({
     title: z.string({ message: "Title is required." }).optional(),
     Description: z.string({ message: "Description is required." }).optional(),
-    titleStyle: z.string({ message: "title Style is required." }).optional(),
-    formStyle: z.string({ message: "form Style is required." }).optional(),
+    titleStyle: z.string({ message: "title Style is required." }).nullish().transform(val => val ?? "cmbf8tgxo0003jjzgt49nod8u"),
+    formStyle: z.string({ message: "form Style is required." }).optional().default("cmbf8tgxo0003jjzgt49nod8u"),
     desactivatedAt: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, {
@@ -22,5 +22,16 @@ export default class FormValidation {
     messageSucces: z
       .string({ message: "message Succes is required." })
       .optional(),
+  });
+
+  static updateFormFieldSchema = z.object({
+    fieldId: z.string({ message: "Field ID is required." }).optional(),
+    label: z.string().optional(),
+    requird: z.boolean().optional(),
+    disable: z.boolean().optional(),
+    style: z.array(z.string()).optional(),
+    message: z.string().optional(),
+    placeholdre: z.string().optional(),
+    options: z.array(z.string()).optional()
   });
 }
