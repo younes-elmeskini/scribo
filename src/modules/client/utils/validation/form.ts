@@ -8,7 +8,7 @@ export default class FormValidation {
     title: z.string({ message: "Title is required." }).optional(),
     Description: z.string({ message: "Description is required." }).optional(),
     titleStyle: z.string({ message: "title Style is required." }).optional(),
-    // formStyle: z.string({ message: "form Style is required." }).optional(),
+    formStyle: z.string({ message: "form Style is required." }).optional(),
     desactivatedAt: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, {
