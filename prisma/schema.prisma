@@ -37,14 +37,15 @@ enum FileType {
 }
 
 model User {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   firstName   String
   lastName    String
-  email       String   @unique
+  email       String    @unique
   password    String
   profilImage String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 }
 
 model Client {
@@ -56,6 +57,7 @@ model Client {
   profilImage String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
   ownedTeams  TeamMenber[]  @relation("OwnerRelation")
   memberTeams TeamMenber[]  @relation("MemberRelation")
   Compagne    Compagne[]
@@ -74,6 +76,7 @@ model TeamMenber {
   member       Client         @relation("MemberRelation", fields: [membreId], references: [id])
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?
   clientId     String?
   TeamCompagne TeamCompagne[]
 }
@@ -87,6 +90,7 @@ model TeamCompagne {
   compagne     Compagne   @relation(fields: [compagneId], references: [id])
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
 }
 
 model Compagne {
@@ -99,6 +103,7 @@ model Compagne {
   client       Client         @relation(fields: [clientId], references: [id])
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?
   Form         Form[]
   TeamCompagne TeamCompagne[]
   soumission   Soumission[]
@@ -114,6 +119,9 @@ model Fields {
   icon           String
   fieldName      String           @unique
   type           String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  deletedAt      DateTime?
   FormField      FormField[]
   ModelFormField ModelFormField[]
 }
@@ -134,6 +142,7 @@ model Form {
   compagne       Compagne    @relation(fields: [compagneId], references: [id])
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
+  deletedAt      DateTime?
   desactivatedAt DateTime?
   FormField      FormField[]
 }
@@ -159,6 +168,7 @@ model FormField {
   fields      Fields    @relation(fields: [fieldId], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
   Answer      Answer[]
 }
 
@@ -168,6 +178,7 @@ model Soumission {
   compagne    Compagne      @relation(fields: [compagneId], references: [id])
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
   answer      Answer[]
   Call        Call[]
   Email       Email[]
@@ -183,6 +194,9 @@ model Answer {
   formField    FormField  @relation(fields: [formFieldId], references: [id])
   soumissionId String
   soumission   Soumission @relation(fields: [soumissionId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
 }
 
 model Call {
@@ -196,6 +210,7 @@ model Call {
   soumission   Soumission @relation(fields: [soumissionId], references: [id])
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
 }
 
 model Email {
@@ -209,6 +224,7 @@ model Email {
   soumission   Soumission @relation(fields: [soumissionId], references: [id])
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
 }
 
 model Notes {
@@ -222,6 +238,7 @@ model Notes {
   soumission   Soumission @relation(fields: [soumissionId], references: [id])
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
 }
 
 model Task {
@@ -235,6 +252,7 @@ model Task {
   soumission   Soumission @relation(fields: [soumissionId], references: [id])
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
 }
 
 model Appointment {
@@ -248,6 +266,7 @@ model Appointment {
   soumission   Soumission @relation(fields: [soumissionId], references: [id])
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
 }
 
 model ModelForm {
@@ -262,6 +281,7 @@ model ModelForm {
   categoty       Categoty         @relation(fields: [categotyId], references: [id])
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+  deletedAt      DateTime?
   desactivatedAt DateTime?
   modelFormField ModelFormField[]
 }
@@ -282,17 +302,24 @@ model ModelFormField {
   fields      Fields    @relation(fields: [fieldId], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 }
 
 model Categoty {
   id           String      @id @default(cuid())
   categotyName String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deletedAt    DateTime?
   ModelForm    ModelForm[]
 }
 
 model TextStyle {
-  id        String @id @default(cuid())
+  id        String    @id @default(cuid())
   styleName String
-  TitleForm Form[] @relation("TitleTextStyle")
-  TextForm  Form[] @relation("formTextStyle")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  TitleForm Form[]    @relation("TitleTextStyle")
+  TextForm  Form[]    @relation("formTextStyle")
 }
