@@ -23,6 +23,8 @@ app.use(
   })
 );
 
+app.use("/api/uploads", express.static(path.join(__dirname, "uploads")));
+
 app.disable("x-powered-by");
 
 app.use(helmet());
@@ -34,14 +36,9 @@ const limiter = rateLimit({
 });
 
 app.use(limiter);
-// Routes
-import authClient from "./modules/client/routes/auth.route";
-import compagneClient from "./modules/client/routes/compagne.route";
-import formClient from "./modules/client/routes/from.route";
+// routes
+import routes from "./routes/route";
+app.use("/api", routes);
 
-app.use("/api/uploads", express.static(path.join(__dirname, "uploads")));
-app.use("/api/client/auth", authClient);
-app.use("/api/client/compagne", compagneClient);
-app.use("/api/client/form", formClient);
 
 export default app;
