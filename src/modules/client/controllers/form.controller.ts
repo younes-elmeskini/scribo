@@ -253,7 +253,8 @@ export default class FormController {
           }
         },
         include: {
-          fields: true
+          fields: true,
+          Answer: true
         }
       });
 
@@ -276,17 +277,27 @@ export default class FormController {
         }
       }
 
-      const updatedFormField = await prisma.formField.update({
-        where: { id: formFieldId },
-        data: parsedData,
-        include: {
-          fields: true // Inclure les informations de type de champ
+      const result = await prisma.$transaction(async (tx) => {
+        if (parsedData.fieldId && parsedData.fieldId !== formField.fieldId) {
+          await tx.answer.deleteMany({
+            where: {
+              formFieldId: formFieldId
+            }
+          });
         }
+        return tx.formField.update({
+          where: { id: formFieldId },
+          data: parsedData,
+          include: {
+            fields: true, 
+            Answer: true  
+          }
+        });
       });
 
       res.status(200).json({ 
         message: "Form field updated successfully",
-        data: updatedFormField
+        data: result
       });
     } catch (error) {
       console.error(error);
