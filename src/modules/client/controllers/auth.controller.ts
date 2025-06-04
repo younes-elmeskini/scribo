@@ -7,7 +7,6 @@ import { generateToken } from "../middleware/auth";
 import AuthValidation from "../utils/validation/auth";
 import { validationResult } from "../../../utils/validation/validationResult";
 
-
 type CreateUserInput = z.infer<typeof AuthValidation.createUserSchema>;
 
 type LoginUserInput = z.infer<typeof AuthValidation.loginSchema>;
@@ -42,7 +41,7 @@ export default class AuthController {
   }
   static async login(req: Request, res: Response): Promise<void> {
     try {
-      validationResult(AuthValidation.loginSchema, req, res); 
+      validationResult(AuthValidation.loginSchema, req, res);
       const parsedData: LoginUserInput = AuthValidation.loginSchema.parse(
         req.body
       );
@@ -68,12 +67,17 @@ export default class AuthController {
         res.status(401).json({ message: "Invalid credentials" });
         return;
       }
+
+      const isProduction = process.env.NODE_ENV === "production";
       res.cookie("token", token, {
         httpOnly: true,
-        secure: false,
-        sameSite: "strict",
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "strict",
         maxAge: 24 * 60 * 60 * 1000,
+        domain: isProduction ? ".scribo.enopps.com.com" : undefined,
+        path: "/",
       });
+
       res.status(200).json({
         message: "Login successful",
       });
