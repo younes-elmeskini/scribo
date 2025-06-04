@@ -10,6 +10,7 @@ router.get("/:id", authenticate, FormController.getformByCompagneId);
 router.put("/:id", authenticate, FormController.updateForm);
 router.put("/field/:id", authenticate, FormController.updateFormField);
 router.put("/field/order/:id", authenticate, FormController.updateOrderFormField);
+router.put("/field/type/:id", authenticate, FormController.updateTypeformField);
 
 export default router;
 

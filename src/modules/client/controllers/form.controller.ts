@@ -288,8 +288,6 @@ export default class FormController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
-
-
   static async updateOrderFormField(
     req: Request,
     res: Response
@@ -336,9 +334,7 @@ export default class FormController {
         orderBy: { ordre: "asc" },
       });
 
-
       await prisma.$transaction(async (tx) => {
-
         await tx.formField.update({
           where: { id: formFieldId },
           data: { ordre: newOrdre },
@@ -387,6 +383,82 @@ export default class FormController {
         data: {
           updatedFields: updatedFormFields,
         },
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+  static async updateTypeformField(req: Request, res: Response): Promise<void> {
+    try {
+      const { formFieldId, fieldId } = req.body;
+      const formId = req.params.id;
+      const clientId = req.client?.id;
+      
+      const fromField = await prisma.formField.findUnique({
+        where: { id: formFieldId, formId: formId },
+        include: {
+          fields: true,
+          Answer: true
+        },
+      });
+      
+      if (!fromField) {
+        res.status(404).json({ message: "Form field not found" });
+        return;
+      }
+
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+      
+      // Check if field exists
+      const newField = await prisma.fields.findUnique({
+        where: { id: fieldId }
+      });
+      
+      if (!newField) {
+        res.status(404).json({ message: "Field type not found" });
+        return;
+      }
+      
+      // Update field type and handle answers
+      await prisma.$transaction(async (tx) => {
+        // Update the form field with new field type
+        const updatedField = await tx.formField.update({
+          where: { id: formFieldId },
+          data: { 
+            fieldId: fieldId,
+            // Reset options if changing to non-option field type
+            options: ["radio", "checkbox", "select"].includes(newField.type) 
+              ? fromField.options 
+              : []
+          },
+          include: {
+            fields: true
+          }
+        });
+        
+        // Clear answers for this field as the type has changed
+        if (fromField.Answer.length > 0) {
+          await tx.answer.deleteMany({
+            where: { formFieldId: formFieldId }
+          });
+        }
+      });
+      
+      // Get updated form field
+      const updatedFormField = await prisma.formField.findUnique({
+        where: { id: formFieldId },
+        include: {
+          fields: true
+        }
+      });
+      
+      res.status(200).json({
+        message: "Form field type updated successfully",
+        data: updatedFormField
       });
     } catch (error) {
       console.error(error);
