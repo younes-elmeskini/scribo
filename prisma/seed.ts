@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import fs from "fs";
 import path from "path";
+const argon2 = require("argon2");
 
 const prisma = new PrismaClient();
 
@@ -174,8 +175,13 @@ async function main() {
     if (existingClient) {
       console.log(`Client with email "${client.email}" already exists, skipping...`);
     } else {
+      const hashedPassword = await argon2.hash(client.password);
+      
       await prisma.client.create({
-        data: client
+        data: {
+          ...client,
+          password: hashedPassword
+        }
       });
     }
   }
