@@ -278,10 +278,16 @@ export default class FormController {
       }
 
       const result = await prisma.$transaction(async (tx) => {
-        if (parsedData.fieldId && parsedData.fieldId !== formField.fieldId) {
+        if (parsedData.options && formField.fields.type in ['select', 'radio', 'checkbox']) {
+          // Supprimer les réponses qui ne correspondent plus aux options disponibles
           await tx.answer.deleteMany({
             where: {
-              formFieldId: formFieldId
+              formFieldId: formFieldId,
+              NOT: {
+                valeu: {
+                  in: parsedData.options
+                }
+              }
             }
           });
         }

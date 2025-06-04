@@ -50,14 +50,14 @@ export default class GestionForm {
 
   // Méthode utilitaire pour générer les données des champs de formulaire
   static generateFormFieldsData(
-    fieldCounts: Array<{ fieldName: string; count: number }>,
+    fieldCounts: Array<{ fieldName: string; count: number; id?: string }>,
     availableFields: any[],
     formId: string
   ): any[] {
     const formFieldsData = [];
     let currentOrder = 1;
 
-    for (const { fieldName, count } of fieldCounts) {
+    for (const { fieldName, id, count } of fieldCounts) {
       const fieldRecord = availableFields.find(
         (f) => f.fieldName === fieldName
       );
@@ -66,6 +66,8 @@ export default class GestionForm {
 
       for (let i = 0; i < count; i++) {
         const label = `${fieldRecord.fieldName} ${i + 1}`;
+        // Générer un nom unique pour le champ
+        const name = `field_${fieldRecord.type}_${fieldName.toLowerCase().replace(/\s+/g, '_')}_${i + 1}`;
         const isSelectType = ["radio", "checkbox", "select"].includes(
           fieldRecord.type
         );
@@ -74,6 +76,7 @@ export default class GestionForm {
           formId,
           fieldId: fieldRecord.id,
           label,
+          name, // Ajouter le nom généré
           requird: false,
           ordre: currentOrder++,
           options: isSelectType ? ["Option 1", "Option 2", "Option 3"] : [],

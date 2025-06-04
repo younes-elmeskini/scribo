@@ -46,7 +46,6 @@ export const authenticate = async (
     const client = await prisma.client.findFirst({
       where: { id: req.client.id.toString() },
     })
-    console.log(client);
     
     if (!client?.id) {
       res.status(401).json({ message: "Access denied. Invalid token." });

@@ -423,24 +423,19 @@ export default class CompagneController {
         return;
       }
 
-      // Create form fields based on quantities
-      const formFieldsData = [];
-      let orderIndex = 1;
+      // Préparer les données pour GestionForm.generateFormFieldsData
+      const fieldCountsData = parsedData.fields.map(field => ({
+        fieldName: fields.find(f => f.id === field.id)?.fieldName || "",
+        id: field.id,
+        count: field.quantity || 1
+      }));
 
-      for (const field of parsedData.fields) {
-        const quantity = field.quantity || 1;
-
-        for (let i = 0; i < quantity; i++) {
-          formFieldsData.push({
-            formId: form.id,
-            fieldId: field.id,
-            ordre: orderIndex++,
-            label: `${fields.find((f) => f.id === field.id)?.fieldName} ${
-              i + 1
-            }`,
-          });
-        }
-      }
+      // Utiliser GestionForm pour générer les champs de formulaire
+      const formFieldsData = GestionForm.generateFormFieldsData(
+        fieldCountsData,
+        fields,
+        form.id
+      );
 
       const formFields = await prisma.formField.createMany({
         data: formFieldsData,
@@ -638,6 +633,7 @@ export default class CompagneController {
           formId: newForm.id,
           fieldId: modelField.fieldId,
           label: modelField.label,
+          name: `field_${modelField.fields.type.toLowerCase()}_${modelField.ordre}`,
           requird: modelField.requird,
           disable: modelField.disable,
           style: modelField.style,
@@ -645,6 +641,10 @@ export default class CompagneController {
           ordre: modelField.ordre,
           placeholdre: modelField.placeholdre,
           options: modelField.options,
+          min: modelField.min,
+          max: modelField.max,
+          fileType: modelField.fileType,
+          instruction: modelField.instruction,
         }));
 
         if (formFieldsData.length > 0) {
