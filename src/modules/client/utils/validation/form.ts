@@ -44,6 +44,14 @@ export default class FormValidation {
     style: z.array(z.string()).optional(),
     message: z.string().optional(),
     placeholdre: z.string().optional(),
-    options: z.array(z.string()).optional(),
+    options: z
+      .array(
+        z.object({
+          ordar: z.number().int(),
+          content: z.string(),
+          desactivatedAt: z.boolean().optional().default(false),
+        })
+      )
+      .optional(),
   });
 }
