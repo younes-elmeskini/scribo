@@ -160,6 +160,26 @@ async function main() {
     }
   }
   console.log("✅ Styles de texte insérés avec succès");
+
+  const clientPath = path.join(__dirname, "data", "client.json");
+  const clientData = fs.readFileSync(clientPath, "utf-8");
+  const clients = JSON.parse(clientData);
+
+  for (const client of clients) {
+    // Check if client with this email already exists
+    const existingClient = await prisma.client.findUnique({
+      where: { email: client.email }
+    });
+    
+    if (existingClient) {
+      console.log(`Client with email "${client.email}" already exists, skipping...`);
+    } else {
+      await prisma.client.create({
+        data: client
+      });
+    }
+  }
+  console.log("✅ Clients insérés avec succès");
 }
 
 main()
