@@ -136,7 +136,7 @@ export default class FormController {
       validationResult(FromValidation.updateformSchema, req, res);
       const formId = req.params.id;
       const clientId = req.client?.id;
-      
+
       if (!clientId) {
         res.status(401).json({ message: "Unauthorized" });
         return;
@@ -153,19 +153,19 @@ export default class FormController {
           id: formId,
           compagne: {
             OR: [
-              { clientId: clientId.toString() },  
+              { clientId: clientId.toString() },
               {
                 TeamCompagne: {
                   some: {
                     teamMember: {
-                      membreId: clientId.toString() 
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        }
+                      membreId: clientId.toString(),
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
       });
 
       if (!form) {
@@ -174,24 +174,26 @@ export default class FormController {
       }
 
       // Vérifier les styles de texte si fournis
-      const parsedData: updateform = FromValidation.updateformSchema.parse(req.body);
-      
+      const parsedData: updateform = FromValidation.updateformSchema.parse(
+        req.body
+      );
+
       if (parsedData.titleStyle) {
         const titleStyleExists = await prisma.textStyle.findUnique({
-          where: { id: parsedData.titleStyle }
+          where: { id: parsedData.titleStyle },
         });
-        
+
         if (!titleStyleExists) {
           res.status(400).json({ message: "Invalid title style" });
           return;
         }
       }
-      
+
       if (parsedData.formStyle) {
         const formStyleExists = await prisma.textStyle.findUnique({
-          where: { id: parsedData.formStyle }
+          where: { id: parsedData.formStyle },
         });
-        
+
         if (!formStyleExists) {
           res.status(400).json({ message: "Invalid form style" });
           return;
@@ -200,15 +202,15 @@ export default class FormController {
 
       // Mettre à jour le formulaire avec l'ID explicite
       const updatedForm = await prisma.form.update({
-        where: { 
-          id: formId 
+        where: {
+          id: formId,
         },
-        data: parsedData
+        data: parsedData,
       });
 
-      res.status(200).json({ 
+      res.status(200).json({
         message: "Form updated successfully",
-        data: updatedForm
+        data: updatedForm,
       });
     } catch (error) {
       console.error(error);
@@ -220,7 +222,7 @@ export default class FormController {
       validationResult(FromValidation.updateFormFieldSchema, req, res);
       const formFieldId = req.params.id;
       const clientId = req.client?.id;
-      
+
       if (!clientId) {
         res.status(401).json({ message: "Unauthorized" });
         return;
@@ -243,67 +245,148 @@ export default class FormController {
                   TeamCompagne: {
                     some: {
                       teamMember: {
-                        membreId: clientId.toString() // Membre d'équipe
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          }
+                        membreId: clientId.toString(), // Membre d'équipe
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
         },
         include: {
-          fields: true,
-          Answer: true
-        }
+          fields: {
+            select: {
+              type: true,
+            },
+          },
+        },
       });
 
       if (!formField) {
-        res.status(404).json({ message: "Form field not found or access denied" });
+        res
+          .status(404)
+          .json({ message: "Form field not found or access denied" });
+        return;
+      }
+      const parsedData = FromValidation.updateFormFieldSchema.parse(req.body);
+      const result = await prisma.formField.update({
+        where: { id: formFieldId },
+        data: {
+          ...parsedData,
+        },
+        include: {
+          fields: true,
+        },
+      });
+      res.status(200).json({
+        message: "Form field updated successfully",
+        data: result,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
+
+  static async updateOrderFormField(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    try {
+      validationResult(FromValidation.updateOrderFormFieldSchema, req, res);
+      const formFieldId = req.params.id;
+      const clientId = req.client?.id;
+      const parsedData = FromValidation.updateOrderFormFieldSchema.parse(
+        req.body
+      );
+
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
         return;
       }
 
-      // Vérifier le fieldId s'il est fourni
-      const parsedData = FromValidation.updateFormFieldSchema.parse(req.body);
-      
-      if (parsedData.fieldId) {
-        const fieldExists = await prisma.fields.findUnique({
-          where: { id: parsedData.fieldId }
-        });
-        
-        if (!fieldExists) {
-          res.status(400).json({ message: "Invalid field type" });
-          return;
-        }
+      if (!formFieldId) {
+        res.status(400).json({ message: "Form Field ID is required" });
+        return;
       }
 
-      const result = await prisma.$transaction(async (tx) => {
-        if (parsedData.options && formField.fields.type in ['select', 'radio', 'checkbox']) {
-          // Supprimer les réponses qui ne correspondent plus aux options disponibles
-          await tx.answer.deleteMany({
-            where: {
-              formFieldId: formFieldId,
-              NOT: {
-                valeu: {
-                  in: parsedData.options
-                }
-              }
-            }
-          });
-        }
-        return tx.formField.update({
-          where: { id: formFieldId },
-          data: parsedData,
-          include: {
-            fields: true, 
-            Answer: true  
-          }
-        });
+      // Get the form field and check access
+      const formField = await prisma.formField.findUnique({
+        where: { id: formFieldId },
+        include: {
+          fields: true,
+          form: true,
+        },
       });
 
-      res.status(200).json({ 
-        message: "Form field updated successfully",
-        data: result
+      if (!formField) {
+        res.status(404).json({ message: "Form field not found" });
+        return;
+      }
+
+      const formId = formField.formId;
+      const oldOrdre = formField.ordre;
+      const newOrdre = parsedData.newordre;
+
+      // Get all form fields to reorder
+      const allFormFields = await prisma.formField.findMany({
+        where: { formId },
+        orderBy: { ordre: "asc" },
+      });
+
+
+      await prisma.$transaction(async (tx) => {
+
+        await tx.formField.update({
+          where: { id: formFieldId },
+          data: { ordre: newOrdre },
+        });
+
+        if (newOrdre > oldOrdre) {
+          // Moving down: decrement orders for fields between old and new position
+          await tx.formField.updateMany({
+            where: {
+              formId,
+              ordre: { gt: oldOrdre, lte: newOrdre },
+              id: { not: formFieldId },
+            },
+            data: { ordre: { decrement: 1 } },
+          });
+        } else if (newOrdre < oldOrdre) {
+          // Moving up: increment orders for fields between new and old position
+          await tx.formField.updateMany({
+            where: {
+              formId,
+              ordre: { gte: newOrdre, lt: oldOrdre },
+              id: { not: formFieldId },
+            },
+            data: { ordre: { increment: 1 } },
+          });
+        }
+      });
+
+      // Get updated fields with new order
+      const updatedFormFields = await prisma.formField.findMany({
+        where: { formId },
+        orderBy: { ordre: "asc" },
+        include: {
+          fields: {
+            select: {
+              id: true,
+              fieldName: true,
+              type: true,
+            },
+          },
+        },
+      });
+
+      res.status(200).json({
+        message: "Form field order updated successfully",
+        data: {
+          updatedFields: updatedFormFields,
+        },
       });
     } catch (error) {
       console.error(error);

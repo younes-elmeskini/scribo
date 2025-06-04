@@ -30,7 +30,6 @@ export default class FormValidation {
   });
 
   static updateFormFieldSchema = z.object({
-    fieldId: z.string({ message: "Field ID is required." }).optional(),
     label: z.string().optional(),
     fileType: z
       .nativeEnum(FileType, { message: "type is required." })
@@ -44,6 +43,8 @@ export default class FormValidation {
     style: z.array(z.string()).optional(),
     message: z.string().optional(),
     placeholdre: z.string().optional(),
+  });
+  static optionsSchema = z.object({
     options: z
       .array(
         z.object({
@@ -53,5 +54,9 @@ export default class FormValidation {
         })
       )
       .optional(),
+  });
+  static updateOrderFormFieldSchema = z.object({
+    newordre: z.number().int(),
+    oldordre: z.number().int(),
   });
 }
