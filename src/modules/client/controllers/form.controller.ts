@@ -282,6 +282,7 @@ export default class FormController {
               type: true,
             },
           },
+          FormFieldMap: true
         },
       });
 
@@ -291,16 +292,51 @@ export default class FormController {
           .json({ message: "Form field not found or access denied" });
         return;
       }
-      const parsedData : updateFormField = FromValidation.updateFormFieldSchema.parse(req.body);
-      const result = await prisma.formField.update({
+      
+      const parsedData: updateFormField = FromValidation.updateFormFieldSchema.parse(req.body);
+      const { mapConfig, ...formFieldData } = parsedData;
+      
+      await prisma.$transaction(async (tx) => {
+        // Update form field data
+        await tx.formField.update({
+          where: { id: formFieldId },
+          data: formFieldData,
+        });
+        
+        // If field is map type and mapConfig is provided, update map configuration
+        if (formField.fields.type === "map" && mapConfig) {
+          // Vérifier explicitement si l'enregistrement existe dans la base de données
+          const mapRecord = await tx.formFieldMap.findUnique({
+            where: { formFieldId }
+          });
+          
+          if (mapRecord) {
+            // L'enregistrement existe, on peut le mettre à jour
+            await tx.formFieldMap.update({
+              where: { formFieldId },
+              data: mapConfig
+            });
+          } else {
+            // L'enregistrement n'existe pas, on doit le créer
+            await tx.formFieldMap.create({
+              data: {
+                formFieldId,
+                ...mapConfig
+              }
+            });
+          }
+        }
+      });
+      
+      // Get updated form field with all related data
+      const result = await prisma.formField.findUnique({
         where: { id: formFieldId },
-        data: {
-          ...parsedData,
-        },
         include: {
           fields: true,
+          FormFieldMap: formField.fields.type === "map" ? true : false
         },
       });
+      
       res.status(200).json({
         message: "Form field updated successfully",
         data: result,

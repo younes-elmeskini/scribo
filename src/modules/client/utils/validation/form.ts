@@ -29,6 +29,15 @@ export default class FormValidation {
       .optional(),
   });
 
+  // Ajoutez ce schéma pour la configuration de la carte
+  static mapConfigSchema = z.object({
+    lat: z.number().min(-90).max(90).optional(),
+    lng: z.number().min(-180).max(180).optional(),
+    zoom: z.number().int().min(1).max(20).optional(),
+    height: z.number().int().min(100).max(1000).optional()
+  });
+
+  // Mettez à jour le schéma updateFormFieldSchema pour inclure mapConfig
   static updateFormFieldSchema = z.object({
     label: z.string().optional(),
     fileType: z
@@ -43,6 +52,7 @@ export default class FormValidation {
     style: z.array(z.string()).optional(),
     message: z.string().optional(),
     placeholdre: z.string().optional(),
+    mapConfig: FormValidation.mapConfigSchema.optional()
   });
   static optionsSchema = z.object({
     options: z

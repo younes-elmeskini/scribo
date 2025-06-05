@@ -180,6 +180,7 @@ model FormField {
   updatedAt     DateTime         @updatedAt
   Answer        Answer[]
   FormFieldOption FormFieldOption[]
+  FormFieldMap  FormFieldMap[]
 }
 
 model Soumission {
@@ -337,4 +338,16 @@ model TextStyle {
   deletedAt DateTime?
   TitleForm Form[]    @relation("TitleTextStyle")
   TextForm  Form[]    @relation("formTextStyle")
+}
+
+model FormFieldMap {
+  id          String    @id @default(cuid())
+  formFieldId String    @unique
+  lat         Float     @default(48.8566)
+  lng         Float     @default(2.3522)
+  zoom        Int       @default(13)
+  height      Int       @default(400)
+  formField   FormField @relation(fields: [formFieldId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
