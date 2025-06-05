@@ -594,7 +594,6 @@ export default class FormController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
-  
   static async updateFormFieldOption(req: Request, res: Response): Promise<void> {
     try {
       const formFieldId = req.params.id;
@@ -724,7 +723,6 @@ export default class FormController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
-  
   static async deleteFormFieldOption(req: Request, res: Response): Promise<void> {
     try {
       const formFieldId = req.params.id;
@@ -813,6 +811,282 @@ export default class FormController {
       res.status(200).json({
         message: "Option deleted successfully",
         data: updatedField
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+  static async deleteFormField(req: Request, res: Response): Promise<void> {
+    try {
+      const formFieldId = req.params.id;
+      const clientId = req.client?.id;
+      
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+      
+      if (!formFieldId) {
+        res.status(400).json({ message: "Form Field ID is required" });
+        return;
+      }
+      
+      // Get the form field and check access
+      const formField = await prisma.formField.findFirst({
+        where: {
+          id: formFieldId,
+          form: {
+            compagne: {
+              OR: [
+                { clientId: clientId.toString() },
+                {
+                  TeamCompagne: {
+                    some: {
+                      teamMember: {
+                        membreId: clientId.toString(),
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+        include: {
+          form: true,
+          FormFieldOption: true,
+          Answer: true
+        }
+      });
+      
+      if (!formField) {
+        res.status(404).json({ message: "Form field not found or access denied" });
+        return;
+      }
+      
+      const formId = formField.formId;
+      const deletedOrdre = formField.ordre;
+      
+      await prisma.$transaction(async (tx) => {
+        // Delete all options for this field
+        if (formField.FormFieldOption.length > 0) {
+          await tx.formFieldOption.deleteMany({
+            where: { formFieldId }
+          });
+        }
+        
+        // Delete all answers for this field
+        if (formField.Answer.length > 0) {
+          await tx.answer.deleteMany({
+            where: { formFieldId }
+          });
+        }
+        
+        // Delete the form field
+        await tx.formField.delete({
+          where: { id: formFieldId }
+        });
+        
+        // Reorder remaining fields
+        await tx.formField.updateMany({
+          where: {
+            formId,
+            ordre: { gt: deletedOrdre }
+          },
+          data: {
+            ordre: { decrement: 1 }
+          }
+        });
+      });
+      
+      // Get updated form fields
+      const updatedFormFields = await prisma.formField.findMany({
+        where: { formId },
+        orderBy: { ordre: 'asc' },
+        include: {
+          fields: {
+            select: {
+              id: true,
+              fieldName: true,
+              type: true,
+              icon: true
+            }
+          },
+          FormFieldOption: {
+            orderBy: {
+              ordre: 'asc'
+            }
+          }
+        }
+      });
+      
+      res.status(200).json({
+        message: "Form field deleted successfully",
+        data: updatedFormFields
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+  static async duplicateFormField(req: Request, res: Response): Promise<void> {
+    try {
+      const formFieldId = req.params.id;
+      const clientId = req.client?.id;
+      
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+      
+      if (!formFieldId) {
+        res.status(400).json({ message: "Form Field ID is required" });
+        return;
+      }
+      
+      // Get the form field and check access
+      const formField = await prisma.formField.findFirst({
+        where: {
+          id: formFieldId,
+          form: {
+            compagne: {
+              OR: [
+                { clientId: clientId.toString() },
+                {
+                  TeamCompagne: {
+                    some: {
+                      teamMember: {
+                        membreId: clientId.toString(),
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+        include: {
+          fields: true,
+          FormFieldOption: {
+            orderBy: {
+              ordre: 'asc'
+            }
+          }
+        }
+      });
+      
+      if (!formField) {
+        res.status(404).json({ message: "Form field not found or access denied" });
+        return;
+      }
+      
+      // Get all form fields to find the highest order
+      const allFormFields = await prisma.formField.findMany({
+        where: { formId: formField.formId },
+        orderBy: { ordre: 'desc' },
+        take: 1
+      });
+      
+      const highestOrdre = allFormFields.length > 0 ? allFormFields[0].ordre : 0;
+      const newOrdre = highestOrdre + 1;
+      
+      // Generate a new name with "copy" suffix
+      const originalName = formField.name || '';
+      const baseName = originalName.replace(/\s*\(copy\s*\d*\)\s*$/, '');
+      const newName = `${baseName}_copy`;
+      
+      // Generate a new label with "copy" suffix
+      const originalLabel = formField.label || '';
+      const baseLabel = originalLabel.replace(/_copy$/, '');
+      const newLabel = `${baseLabel}_copy_${newOrdre }`;
+      
+      // Create the duplicate field
+      const duplicatedField = await prisma.$transaction(async (tx) => {
+        // Create the new form field
+        const newField = await tx.formField.create({
+          data: {
+            formId: formField.formId,
+            fieldId: formField.fieldId,
+            name: newName,
+            label: newLabel,
+            requird: formField.requird,
+            disable: formField.disable,
+            style: formField.style,
+            message: formField.message,
+            ordre: newOrdre,
+            placeholdre: formField.placeholdre,
+            min: formField.min,
+            max: formField.max,
+            fileType: formField.fileType,
+            instruction: formField.instruction
+          }
+        });
+        
+        // Duplicate options if any
+        if (formField.FormFieldOption.length > 0) {
+          for (const option of formField.FormFieldOption) {
+            await tx.formFieldOption.create({
+              data: {
+                formFieldId: newField.id,
+                ordre: option.ordre,
+                content: option.content,
+                desactivedAt: option.desactivedAt
+              }
+            });
+          }
+        }
+        
+        return newField;
+      });
+      
+      // Get the duplicated field with all its data
+      const result = await prisma.formField.findUnique({
+        where: { id: duplicatedField.id },
+        include: {
+          fields: {
+            select: {
+              id: true,
+              fieldName: true,
+              type: true,
+              icon: true
+            }
+          },
+          FormFieldOption: {
+            orderBy: {
+              ordre: 'asc'
+            }
+          }
+        }
+      });
+      
+      // Get all form fields with the updated order
+      const allUpdatedFields = await prisma.formField.findMany({
+        where: { formId: formField.formId },
+        orderBy: { ordre: 'asc' },
+        include: {
+          fields: {
+            select: {
+              id: true,
+              fieldName: true,
+              type: true,
+              icon: true
+            }
+          },
+          FormFieldOption: {
+            orderBy: {
+              ordre: 'asc'
+            }
+          }
+        }
+      });
+      
+      res.status(200).json({
+        message: "Form field duplicated successfully",
+        data: {
+          duplicatedField: result,
+          allFields: allUpdatedFields
+        }
       });
     } catch (error) {
       console.error(error);

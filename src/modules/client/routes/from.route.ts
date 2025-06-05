@@ -3,19 +3,20 @@ import FormController from "../controllers/form.controller";
 import { authenticate } from "../middleware/auth";
 
 const router = express.Router();
+router.post("/field/duplicate/:id", authenticate, FormController.duplicateFormField);
+router.post("/field/option/:id", authenticate, FormController.addFormFieldOption);
 
 router.get("/fields", FormController.getAllfields);
 router.get("/model", FormController.getAllModelForms);
 router.get("/:id", authenticate, FormController.getformByCompagneId);
+
 router.put("/:id", authenticate, FormController.updateForm);
 router.put("/field/:id", authenticate, FormController.updateFormField);
 router.put("/field/order/:id", authenticate, FormController.updateOrderFormField);
 router.put("/field/type/:id", authenticate, FormController.updateTypeformField);
 
-// New routes for managing options
-router.post("/field/option/:id", authenticate, FormController.addFormFieldOption);
-router.put("/field/option/:id", authenticate, FormController.updateFormFieldOption);
 router.delete("/field/option/:id", authenticate, FormController.deleteFormFieldOption);
+router.delete("/field/:id", authenticate, FormController.deleteFormField);
 
 export default router;
 
