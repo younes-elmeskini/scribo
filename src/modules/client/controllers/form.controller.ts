@@ -1,17 +1,18 @@
 import { Request, Response } from "express";
 import prisma from "../../../utils/client";
-import FromValidation from "../utils/validation/form";
+import FormValidation from "../utils/validation/form";
 import { validationResult } from "../../../utils/validation/validationResult";
 import { z } from "zod";
 import GestionForm from "../utils/gestionfrom";
 
-type updateform = z.infer<typeof FromValidation.updateformSchema>;
-type updateFormField = z.infer<typeof FromValidation.updateFormFieldSchema>;
+type updateform = z.infer<typeof FormValidation.updateformSchema>;
+type updateFormField = z.infer<typeof FormValidation.updateFormFieldSchema>;
 type updateOrderFormField = z.infer<
-  typeof FromValidation.updateOrderFormFieldSchema
+  typeof FormValidation.updateOrderFormFieldSchema
 >;
-type updateOption = z.infer<typeof FromValidation.updateOptionSchema>;
-type deleteOption = z.infer<typeof FromValidation.deleteOptionSchema>;
+type updateOption = z.infer<typeof FormValidation.updateOptionSchema>;
+type deleteOption = z.infer<typeof FormValidation.deleteOptionSchema>;
+type FormConfiguration = z.infer<typeof FormValidation.formConfigurationSchema>;
 
 interface FormFieldOption {
   ordre: number;
@@ -156,7 +157,7 @@ export default class FormController {
   }
   static async updateForm(req: Request, res: Response): Promise<void> {
     try {
-      validationResult(FromValidation.updateformSchema, req, res);
+      validationResult(FormValidation.updateformSchema, req, res);
       const formId = req.params.id;
       const clientId = req.client?.id;
 
@@ -197,7 +198,7 @@ export default class FormController {
       }
 
       // Vérifier les styles de texte si fournis
-      const parsedData: updateform = FromValidation.updateformSchema.parse(
+      const parsedData: updateform = FormValidation.updateformSchema.parse(
         req.body
       );
 
@@ -242,7 +243,7 @@ export default class FormController {
   }
   static async updateFormField(req: Request, res: Response): Promise<void> {
     try {
-      validationResult(FromValidation.updateFormFieldSchema, req, res);
+      validationResult(FormValidation.updateFormFieldSchema, req, res);
       const formFieldId = req.params.id;
       const clientId = req.client?.id;
 
@@ -294,7 +295,7 @@ export default class FormController {
         return;
       }
       
-      const parsedData: updateFormField = FromValidation.updateFormFieldSchema.parse(req.body);
+      const parsedData: updateFormField = FormValidation.updateFormFieldSchema.parse(req.body);
       const { mapConfig, ...formFieldData } = parsedData;
       
       await prisma.$transaction(async (tx) => {
@@ -352,10 +353,10 @@ export default class FormController {
     res: Response
   ): Promise<void> {
     try {
-      validationResult(FromValidation.updateOrderFormFieldSchema, req, res);
+      validationResult(FormValidation.updateOrderFormFieldSchema, req, res);
       const formFieldId = req.params.id;
       const clientId = req.client?.id;
-      const parsedData = FromValidation.updateOrderFormFieldSchema.parse(
+      const parsedData = FormValidation.updateOrderFormFieldSchema.parse(
         req.body
       );
 
@@ -635,7 +636,7 @@ export default class FormController {
     try {
       const formFieldId = req.params.id;
       const clientId = req.client?.id;
-      const updateData: updateOption  = FromValidation.updateOptionSchema.parse(req.body);
+      const updateData: updateOption  = FormValidation.updateOptionSchema.parse(req.body);
       
       if (!clientId) {
         res.status(401).json({ message: "Unauthorized" });
@@ -1146,8 +1147,8 @@ export default class FormController {
       }
       
       // Validate request body
-      validationResult(FromValidation.addFormFieldSchema, req, res);
-      const { fieldId, name, label } = FromValidation.addFormFieldSchema.parse(req.body);
+      validationResult(FormValidation.addFormFieldSchema, req, res);
+      const { fieldId, name, label } = FormValidation.addFormFieldSchema.parse(req.body);
       
       // Check if form exists and user has access
       const form = await prisma.form.findFirst({
@@ -1431,6 +1432,210 @@ export default class FormController {
       res.status(200).json({
         message: "Form field message updated successfully",
         data: updatedField
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
+  /**
+   * Met à jour les configurations d'un formulaire
+   */
+  static async updateFormConfiguration(req: Request, res: Response): Promise<void> {
+    try {
+      // Valider les données avec le schéma
+      if (!validationResult(FormValidation.formConfigurationSchema, req, res)) {
+        return;
+      }
+      
+      const formId = req.params.id;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      // Récupérer les données validées
+      const configData = FormValidation.formConfigurationSchema.parse(req.body);
+      
+      // Vérifier si le formulaire existe et si l'utilisateur a accès
+      const form = await prisma.form.findFirst({
+        where: {
+          id: formId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() },
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(),
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+        include: {
+          FormField: {
+            select: {
+              id: true,
+              name: true,
+              fields: {
+                select: {
+                  type: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!form) {
+        res.status(404).json({ message: "Form not found or access denied" });
+        return;
+      }
+
+      // Vérifier que le champ email unique existe et est de type email
+      if (configData.uniqueEmailUsage && configData.uniqueEmailField) {
+        const emailField = form.FormField.find(field => 
+          field.id === configData.uniqueEmailField && 
+          field.fields.type === 'email'
+        );
+        
+        if (!emailField) {
+          res.status(400).json({ 
+            message: "Le champ sélectionné doit être un champ email" 
+          });
+          return;
+        }
+      }
+
+      // Vérifier que le champ par défaut existe
+      if (configData.defaultFieldId) {
+        const defaultField = form.FormField.find(field => 
+          field.id === configData.defaultFieldId
+        );
+        
+        if (!defaultField) {
+          res.status(400).json({ 
+            message: "Le champ par défaut sélectionné n'existe pas" 
+          });
+          return;
+        }
+      }
+
+      // Mettre à jour la configuration du formulaire
+      const updatedForm = await prisma.form.update({
+        where: { id: formId },
+        data: {
+          sendCopyToUser: configData.sendCopyToUser ?? form.sendCopyToUser,
+          uniqueEmailUsage: configData.uniqueEmailUsage ?? form.uniqueEmailUsage,
+          uniqueEmailField: configData.uniqueEmailUsage ? configData.uniqueEmailField : null,
+          isDeactivated: configData.isDeactivated ?? form.isDeactivated,
+          desactivatedAt: configData.desactivatedAt || null,
+          defaultFieldId: configData.defaultFieldId || null
+        }
+      });
+
+      res.status(200).json({
+        message: "Configuration du formulaire mise à jour avec succès",
+        data: {
+          id: updatedForm.id,
+          sendCopyToUser: updatedForm.sendCopyToUser,
+          uniqueEmailUsage: updatedForm.uniqueEmailUsage,
+          uniqueEmailField: updatedForm.uniqueEmailField,
+          isDeactivated: updatedForm.isDeactivated,
+          desactivatedAt: updatedForm.desactivatedAt,
+          defaultFieldId: updatedForm.defaultFieldId
+        }
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
+
+  /**
+   * Récupère la configuration d'un formulaire
+   */
+  static async getFormConfiguration(req: Request, res: Response): Promise<void> {
+    try {
+      const formId = req.params.id;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      // Vérifier si le formulaire existe et si l'utilisateur a accès
+      const form = await prisma.form.findFirst({
+        where: {
+          id: formId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() },
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(),
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+        include: {
+          FormField: {
+            where: {
+              fields: {
+                type: 'email'
+              }
+            },
+            select: {
+              id: true,
+              name: true,
+              label: true
+            }
+          }
+        }
+      });
+
+      if (!form) {
+        res.status(404).json({ message: "Form not found or access denied" });
+        return;
+      }
+
+      // Récupérer tous les champs pour le sélecteur de champ par défaut
+      const allFields = await prisma.formField.findMany({
+        where: {
+          formId
+        },
+        select: {
+          id: true,
+          name: true,
+          label: true
+        }
+      });
+
+      res.status(200).json({
+        data: {
+          id: form.id,
+          sendCopyToUser: form.sendCopyToUser,
+          uniqueEmailUsage: form.uniqueEmailUsage,
+          uniqueEmailField: form.uniqueEmailField,
+          isDeactivated: form.isDeactivated,
+          deactivationDate: form.desactivatedAt,
+          defaultFieldId: form.defaultFieldId,
+          emailFields: form.FormField, // Champs email disponibles pour l'option d'unicité
+          allFields: allFields // Tous les champs pour l'option de champ par défaut
+        }
       });
     } catch (error) {
       console.error(error);

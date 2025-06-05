@@ -21,6 +21,9 @@ router.put("/field/message/:id", authenticate, FormController.updateFormFieldMes
 router.delete("/field/option/:id", authenticate, FormController.deleteFormFieldOption);
 router.delete("/field/:id", authenticate, FormController.deleteFormField);
 
+// Routes pour la configuration du formulaire
+router.get("/configuration/:id", authenticate, FormController.getFormConfiguration);
+router.put("/configuration/:id", authenticate, FormController.updateFormConfiguration);
 
 export default router;
 

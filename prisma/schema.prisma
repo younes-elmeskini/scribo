@@ -144,6 +144,11 @@ model Form {
   updatedAt      DateTime    @updatedAt
   deletedAt      DateTime?
   desactivatedAt DateTime?
+  sendCopyToUser    Boolean       @default(false)
+  uniqueEmailUsage  Boolean       @default(false)
+  uniqueEmailField  String?       // ID du champ email à usage unique
+  isDeactivated     Boolean       @default(false)    // Date de désactivation automatique
+  defaultFieldId    String?       // ID du champ à utiliser comme identifiant par défaut
   FormField      FormField[]
 }
 

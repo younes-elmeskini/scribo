@@ -14,13 +14,6 @@ export default class FormValidation {
       .string({ message: "form Style is required." })
       .optional()
       .default("cmbf8tgxo0003jjzgt49nod8u"),
-    desactivatedAt: z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, {
-        message: "desactivatedAt must be a valid date in YYYY-MM-DD format.",
-      })
-      .transform((val) => new Date(val))
-      .optional(),
     coverColor: z.string({ message: "cover Color is required." }).optional(),
     coverImage: z.string({ message: "cover Image is required." }).optional(),
     mode: z.nativeEnum(Mode, { message: "mode is required." }).optional(),
@@ -81,5 +74,22 @@ export default class FormValidation {
     fieldId: z.string({ message: "Field type ID is required" }),
     name: z.string().optional(),
     label: z.string().optional(),
+  });
+
+  // Ajoutez ce schéma pour la validation des configurations de formulaire
+  static formConfigurationSchema = z.object({
+    sendCopyToUser: z.boolean().optional(),
+    uniqueEmailUsage: z.boolean().optional(),
+    uniqueEmailField: z.string().optional().nullable(),
+    isDeactivated: z.boolean().optional(),
+       desactivatedAt: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, {
+        message: "desactivatedAt must be a valid date in YYYY-MM-DD format.",
+      })
+      .transform((val) => new Date(val))
+      .optional()
+      .nullish(),
+    defaultFieldId: z.string().optional().nullable()
   });
 }
