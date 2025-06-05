@@ -39,9 +39,24 @@
     "label": "Niveau demandé",
     "name": "field_select_niveau_5",
     "ordre": 5,
-    "options": ["CP", "CE1", "CE2", "CM1", "CM2"]
+    "options": [
+      {
+        "ordre": 1,
+        "content": "CP",
+        "desactivatedAt": false
+      },
+      {
+        "ordre": 2,
+        "content": "CE",
+        "desactivatedAt": false
+      },
+      {
+        "ordre": 3,
+        "content": "C3",
+        "desactivatedAt": false
+      }
+    ]
   },
-
 
   {
     "id": "field_006",
@@ -66,7 +81,23 @@
     "label": "Domaine d'étude",
     "name": "field_select_domaine_etude_3",
     "ordre": 3,
-    "options": ["Informatique", "Médecine", "Économie", "Lettres"]
+        "options": [
+      {
+        "ordre": 1,
+        "content": "Informatique",
+        "desactivatedAt": false
+      },
+      {
+        "ordre": 2,
+        "content": "Médecine",
+        "desactivatedAt": false
+      },
+      {
+        "ordre": 3,
+        "content": "Économie",
+        "desactivatedAt": false
+      }
+    ]
   },
   {
     "id": "field_009",
@@ -85,7 +116,6 @@
     "ordre": 5
   },
 
-
   {
     "id": "field_011",
     "modelFormId": "form_prof",
@@ -101,7 +131,28 @@
     "label": "Formation souhaitée",
     "name": "field_select_formation_2",
     "ordre": 2,
-    "options": ["Bureautique", "Développement Web", "Gestion", "Langues"]
+    "options": [
+      {
+        "ordre": 1,
+        "content": "Bureautique",
+        "desactivatedAt": false
+      },
+      {
+        "ordre": 2,
+        "content": "Développement Web",
+        "desactivatedAt": false
+      },
+      {
+        "ordre": 3,
+        "content": "Gestion",
+        "desactivatedAt": false
+      },
+      {
+        "ordre": 4,
+        "content": "Langues",
+        "desactivatedAt": false
+      }
+    ]
   },
   {
     "id": "field_013",
@@ -128,7 +179,6 @@
     "ordre": 5
   },
 
-
   {
     "id": "field_016",
     "modelFormId": "form_cmd",
@@ -144,7 +194,23 @@
     "label": "Produit sélectionné",
     "name": "field_select_produit_2",
     "ordre": 2,
-    "options": ["Produit A", "Produit B", "Produit C"]
+    "options": [
+      {
+        "ordre": 1,
+        "content": "Produit A",
+        "desactivatedAt": false
+      },
+      {
+        "ordre": 2,
+        "content": "Produit B",
+        "desactivatedAt": false
+      },
+      {
+        "ordre": 3,
+        "content": "Produit C",
+        "desactivatedAt": false
+      }
+    ]
   },
   {
     "id": "field_018",
@@ -170,7 +236,6 @@
     "name": "field_date_livraison_5",
     "ordre": 5
   },
-
 
   {
     "id": "field_021",
@@ -203,7 +268,23 @@
     "label": "Service demandé",
     "name": "field_select_service_4",
     "ordre": 4,
-    "options": ["Design", "Développement", "Marketing"]
+    "options": [
+      {
+        "ordre": 1,
+        "content": "Design",
+        "desactivatedAt": false
+      },
+      {
+        "ordre": 2,
+        "content": "Développement",
+        "desactivatedAt": false
+      },
+      {
+        "ordre": 3,
+        "content": "Marketing",
+        "desactivatedAt": false
+      }
+    ]
   },
   {
     "id": "field_025",
@@ -213,7 +294,6 @@
     "name": "field_number_budget_5",
     "ordre": 5
   },
-
 
   {
     "id": "field_026",
@@ -254,9 +334,20 @@
     "label": "Recommanderiez-vous notre service ?",
     "name": "field_radio_recommandation_5",
     "ordre": 5,
-    "options": ["Oui", "Non"]
+    "options": [
+      {
+        "ordre": 1,
+        "content": "Oui",
+        "desactivatedAt": false
+      },
+      {
+        "ordre": 2,
+        "content": "Non",
+        "desactivatedAt": false
+      }
+    ]
   },
-  
+
   {
     "id": "field_031",
     "modelFormId": "form_contact",
@@ -301,7 +392,7 @@
     "ordre": 5,
     "requird": true
   },
-  
+
   {
     "id": "field_036",
     "modelFormId": "form_newsletter",
@@ -326,9 +417,30 @@
     "label": "Centres d'intérêt",
     "name": "field_radio_interets_3",
     "ordre": 3,
-    "options": ["Actualités", "Promotions", "Événements", "Nouveaux produits"]
+    "options": [
+      {
+        "ordre": 1,
+        "content": "Actualités",
+        "desactivatedAt": false
+      },
+      {
+        "ordre": 2,
+        "content": "Promotions",
+        "desactivatedAt": false
+      },
+      {
+        "ordre": 3,
+        "content": "Événements",
+        "desactivatedAt": false
+      },
+      {
+        "ordre": 4,
+        "content": "Nouveaux produits",
+        "desactivatedAt": false
+      }
+    ]
   },
-  
+
   {
     "id": "field_039",
     "modelFormId": "form_event",

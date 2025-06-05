@@ -118,15 +118,15 @@ async function main() {
 
       // Update the fieldId to match the actual ID in the database
       return {
-        ...formField,
-        fieldId: field.id,
-      };
+          ...formField,
+          fieldId: field.id,
+        };
     })
     .filter(Boolean); // Filtrer les entrées nulles
 
   for (const formField of modelFormFields) {
     try {
-      await prisma.modelFormField.upsert({
+       await prisma.modelFormField.upsert({
         where: { id: formField.id },
         update: {},
         create: formField,
