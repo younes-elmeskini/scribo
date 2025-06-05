@@ -3,6 +3,7 @@ import prisma from "../../../utils/client";
 import FromValidation from "../utils/validation/form";
 import { validationResult } from "../../../utils/validation/validationResult";
 import { z } from "zod";
+import GestionForm from "../utils/gestionfrom";
 
 type updateform = z.infer<typeof FromValidation.updateformSchema>;
 type updateFormField = z.infer<typeof FromValidation.updateFormFieldSchema>;
@@ -1212,7 +1213,7 @@ export default class FormController {
             requird: false,
             disable: false,
             style: [],
-            message: "",
+            message: GestionForm.generateDefaultErrorMessage(field.type, fieldName, false),
             ordre: nextOrdre,
             placeholdre: field.type === "text" ? `Enter ${fieldName.toLowerCase()}` : "",
           }
@@ -1288,6 +1289,148 @@ export default class FormController {
           newField: result,
           allFields
         }
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
+  static async getFormFieldMessages(req: Request, res: Response): Promise<void> {
+    try {
+      const formFieldId = req.params.id;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      if (!formFieldId) {
+        res.status(400).json({ message: "Form Field ID is required" });
+        return;
+      }
+
+      // Vérifier si le champ de formulaire existe et si l'utilisateur a accès
+      const formField = await prisma.formField.findFirst({
+        where: {
+          id: formFieldId,
+          form: {
+            compagne: {
+              OR: [
+                { clientId: clientId.toString() },
+                {
+                  TeamCompagne: {
+                    some: {
+                      teamMember: {
+                        membreId: clientId.toString(),
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+        include: {
+          fields: true
+        }
+      });
+
+      if (!formField) {
+        res.status(404).json({ message: "Form field not found or access denied" });
+        return;
+      }
+
+      // Générer un message par défaut si aucun message n'est défini
+      let fieldMessage = formField.message || "";
+      
+      if (!fieldMessage) {
+        fieldMessage = GestionForm.generateDefaultErrorMessage(
+          formField.fields.type,
+          formField.fields.fieldName,
+          formField.requird?? false
+        );
+      }
+
+      res.status(200).json({
+        data: { message: fieldMessage }
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
+  static async updateFormFieldMessages(req: Request, res: Response): Promise<void> {
+    try {
+      const formFieldId = req.params.id;
+      const clientId = req.client?.id;
+      const { message } = req.body;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      if (!formFieldId) {
+        res.status(400).json({ message: "Form Field ID is required" });
+        return;
+      }
+
+      if (typeof message !== 'string') {
+        res.status(400).json({ message: "Message must be a string" });
+        return;
+      }
+
+      // Vérifier si le champ de formulaire existe et si l'utilisateur a accès
+      const formField = await prisma.formField.findFirst({
+        where: {
+          id: formFieldId,
+          form: {
+            compagne: {
+              OR: [
+                { clientId: clientId.toString() },
+                {
+                  TeamCompagne: {
+                    some: {
+                      teamMember: {
+                        membreId: clientId.toString(),
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        }
+      });
+
+      if (!formField) {
+        res.status(404).json({ message: "Form field not found or access denied" });
+        return;
+      }
+
+      // Mettre à jour le champ de formulaire
+      const updatedField = await prisma.formField.update({
+        where: { id: formFieldId },
+        data: {
+          message: message
+        },
+        include: {
+          fields: {
+            select: {
+              id: true,
+              fieldName: true,
+              type: true
+            }
+          }
+        }
+      });
+
+      res.status(200).json({
+        message: "Form field message updated successfully",
+        data: updatedField
       });
     } catch (error) {
       console.error(error);

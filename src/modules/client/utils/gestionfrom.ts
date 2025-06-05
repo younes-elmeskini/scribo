@@ -101,9 +101,66 @@ export default class GestionForm {
               ]
             : [],
           placeholdre: GestionForm.generatePlaceholder(fieldRecord.type, label),
+          message: GestionForm.generateDefaultErrorMessage(fieldRecord.type, fieldRecord.fieldName, false)
         });
       }
     }
     return formFieldsData;
+  }
+
+  /**
+   * Génère un message d'erreur par défaut en fonction du type de champ et de son statut obligatoire
+   * @param fieldType Type du champ
+   * @param fieldName Nom du champ
+   * @param isRequired Indique si le champ est obligatoire
+   * @returns Message d'erreur approprié
+   */
+  static generateDefaultErrorMessage(fieldType: string, fieldName: string, isRequired: boolean): string {
+    // Message pour champ obligatoire
+    if (isRequired) {
+      return `Le champ ${fieldName.toLowerCase()} est obligatoire`;
+    }
+    
+    // Messages spécifiques par type de champ
+    switch (fieldType) {
+      case "text":
+        return `Veuillez entrer un texte valide`;
+      case "textarea":
+        return `Veuillez entrer une description valide`;
+      case "email":
+        return `Veuillez entrer une adresse email valide`;
+      case "tel":
+        return `Veuillez entrer un numéro de téléphone valide`;
+      case "number":
+        return `Veuillez entrer un nombre valide`;
+      case "date":
+        return `Veuillez entrer une date valide`;
+      case "time":
+        return `Veuillez entrer une heure valide`;
+      case "datetime":
+        return `Veuillez entrer une date et heure valides`;
+      case "file":
+        return `Veuillez sélectionner un fichier valide`;
+      case "image":
+        return `Veuillez sélectionner une image valide`;
+      case "url":
+        return `Veuillez entrer une URL valide`;
+      case "radio":
+        return `Veuillez sélectionner une option`;
+      case "checkbox":
+        return `Veuillez cocher au moins une option`;
+      case "select":
+        return `Veuillez sélectionner une option dans la liste`;
+      case "map":
+        return `Veuillez sélectionner un emplacement sur la carte`;
+      case "range":
+        return `Veuillez sélectionner une valeur dans la plage`;
+      case "color":
+        return `Veuillez sélectionner une couleur`;
+      case "boolean":
+        return `Veuillez indiquer votre choix`;
+      default:
+        return `Veuillez remplir ce champ correctement`;
+    }
   }
 }
