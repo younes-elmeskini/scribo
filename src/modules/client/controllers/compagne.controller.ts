@@ -222,12 +222,13 @@ export default class CompagneController {
           form: {
             compagneId,
           },
-          options: {
-            isEmpty: false,
+          FormFieldOption: {
+            some: {} // This replaces the options.isEmpty check
           },
         },
         include: {
           Answer: true,
+          FormFieldOption: true
         },
       });
 
@@ -236,8 +237,8 @@ export default class CompagneController {
         const optionPorcentage: Record<string, number> = {};
 
         // Initialize counts for all options
-        field.options.forEach((option) => {
-          optionCount[option] = 0;
+        field.FormFieldOption.forEach((option) => {
+          optionCount[option.content] = 0;
         });
 
         // Count answers
@@ -437,14 +438,34 @@ export default class CompagneController {
         form.id
       );
 
-      const formFields = await prisma.formField.createMany({
-        data: formFieldsData,
+      // Replace the createMany call with a transaction that handles options separately
+      await prisma.$transaction(async (tx) => {
+        // First create the form fields without options
+        for (const fieldData of formFieldsData) {
+          // Extract options to handle separately
+          const { options, ...fieldWithoutOptions } = fieldData;
+          
+          // Create the form field
+          const createdField = await tx.formField.create({
+            data: fieldWithoutOptions
+          });
+          
+          // If this field has options and is of a type that supports options
+          if (options && options.length > 0) {
+            // Create options for this field
+            for (const option of options) {
+              await tx.formFieldOption.create({
+                data: {
+                  formFieldId: createdField.id,
+                  ordre: option.ordre,
+                  content: option.content,
+                  desactivedAt: option.desactivatedAt || false
+                }
+              });
+            }
+          }
+        }
       });
-
-      if (!formFields) {
-        res.status(400).json({ message: "Form fields not created" });
-        return;
-      }
 
       res.status(201).json({ message: "Compagne created successfully" });
     } catch (error) {
@@ -534,9 +555,31 @@ export default class CompagneController {
 
           // Créer tous les champs de formulaire
           if (fieldsData.length > 0) {
-            await tx.formField.createMany({
-              data: fieldsData,
-            });
+            // Process each field individually to handle options
+            for (const fieldData of fieldsData) {
+              // Extract options to handle separately
+              const { options, ...fieldWithoutOptions } = fieldData as any;
+              
+              // Create the form field
+              const createdField = await tx.formField.create({
+                data: fieldWithoutOptions
+              });
+              
+              // If this field has options and is of a type that supports options
+              if (options && Array.isArray(options) && options.length > 0) {
+                // Create options for this field
+                for (const option of options) {
+                  await tx.formFieldOption.create({
+                    data: {
+                      formFieldId: createdField.id,
+                      ordre: option.ordre,
+                      content: option.content,
+                      desactivedAt: option.desactivatedAt || false
+                    }
+                  });
+                }
+              }
+            }
           }
 
           return {
@@ -647,10 +690,30 @@ export default class CompagneController {
           instruction: modelField.instruction,
         }));
 
-        if (formFieldsData.length > 0) {
-          await tx.formField.createMany({
-            data: formFieldsData,
+        // Process each field individually to handle options
+        for (const fieldData of formFieldsData) {
+          // Extract options to handle separately
+          const { options, ...fieldWithoutOptions } = fieldData as any;
+          
+          // Create the form field
+          const createdField = await tx.formField.create({
+            data: fieldWithoutOptions
           });
+          
+          // If this field has options and is of a type that supports options
+          if (options && Array.isArray(options) && options.length > 0) {
+            // Create options for this field
+            for (const option of options) {
+              await tx.formFieldOption.create({
+                data: {
+                  formFieldId: createdField.id,
+                  ordre: option.ordre,
+                  content: option.content,
+                  desactivedAt: option.desactivatedAt || false
+                }
+              });
+            }
+          }
         }
 
         return {
