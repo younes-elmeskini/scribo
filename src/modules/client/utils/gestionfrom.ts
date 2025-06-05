@@ -57,7 +57,7 @@ export default class GestionForm {
     const formFieldsData = [];
     let currentOrder = 1;
 
-    for (const { fieldName, id, count } of fieldCounts) {
+    for (const { fieldName, count } of fieldCounts) {
       const fieldRecord = availableFields.find(
         (f) => f.fieldName === fieldName
       );
@@ -67,7 +67,9 @@ export default class GestionForm {
       for (let i = 0; i < count; i++) {
         const label = `${fieldRecord.fieldName} ${i + 1}`;
         // Générer un nom unique pour le champ
-        const name = `field_${fieldRecord.type}_${fieldName.toLowerCase().replace(/\s+/g, '_')}_${i + 1}`;
+        const name = `field_${fieldRecord.type}_${fieldName
+          .toLowerCase()
+          .replace(/\s+/g, "_")}_${i + 1}`;
         const isSelectType = ["radio", "checkbox", "select"].includes(
           fieldRecord.type
         );
@@ -79,7 +81,25 @@ export default class GestionForm {
           name, // Ajouter le nom généré
           requird: false,
           ordre: currentOrder++,
-          options: isSelectType ? ["Option 1", "Option 2", "Option 3"] : [],
+          options: isSelectType
+            ? [
+                {
+                  ordre: 1,
+                  content: "Option 1",
+                  desactivatedAt: false,
+                },
+                {
+                  ordre: 2,
+                  content: "Option 2",
+                  desactivatedAt: false,
+                },
+                {
+                  ordre: 3,
+                  content: "Option 3",
+                  desactivatedAt: false,
+                },
+              ]
+            : [],
           placeholdre: GestionForm.generatePlaceholder(fieldRecord.type, label),
         });
       }

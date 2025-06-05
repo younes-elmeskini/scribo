@@ -12,6 +12,11 @@ router.put("/field/:id", authenticate, FormController.updateFormField);
 router.put("/field/order/:id", authenticate, FormController.updateOrderFormField);
 router.put("/field/type/:id", authenticate, FormController.updateTypeformField);
 
+// New routes for managing options
+router.post("/field/option/:id", authenticate, FormController.addFormFieldOption);
+router.put("/field/option/:id", authenticate, FormController.updateFormFieldOption);
+router.delete("/field/option/:id", authenticate, FormController.deleteFormFieldOption);
+
 export default router;
 
 
