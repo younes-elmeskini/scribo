@@ -5,6 +5,12 @@ import { validationResult } from "../../../utils/validation/validationResult";
 import { z } from "zod";
 
 type updateform = z.infer<typeof FromValidation.updateformSchema>;
+type updateFormField = z.infer<typeof FromValidation.updateFormFieldSchema>;
+type updateOrderFormField = z.infer<
+  typeof FromValidation.updateOrderFormFieldSchema
+>;
+type updateOption = z.infer<typeof FromValidation.updateOptionSchema>;
+type deleteOption = z.infer<typeof FromValidation.deleteOptionSchema>;
 
 interface FormFieldOption {
   ordre: number;
@@ -285,7 +291,7 @@ export default class FormController {
           .json({ message: "Form field not found or access denied" });
         return;
       }
-      const parsedData = FromValidation.updateFormFieldSchema.parse(req.body);
+      const parsedData : updateFormField = FromValidation.updateFormFieldSchema.parse(req.body);
       const result = await prisma.formField.update({
         where: { id: formFieldId },
         data: {
@@ -554,7 +560,7 @@ export default class FormController {
       // Find the highest order
       const maxOrdre = formField.FormFieldOption.length > 0 
         ? Math.max(...formField.FormFieldOption.map(opt => opt.ordre)) 
-        : -1;
+        : 0;
 
       // Add new option
       const newOption = await prisma.formFieldOption.create({
@@ -593,14 +599,14 @@ export default class FormController {
     try {
       const formFieldId = req.params.id;
       const clientId = req.client?.id;
-      const { optionId, newOrdre, content, desactivedAt } = req.body;
+      const updateData: updateOption  = FromValidation.updateOptionSchema.parse(req.body);
       
       if (!clientId) {
         res.status(401).json({ message: "Unauthorized" });
         return;
       }
       
-      if (!formFieldId || !optionId) {
+      if (!formFieldId || !updateData.optionId) {
         res.status(400).json({ message: "Form Field ID and Option ID are required" });
         return;
       }
@@ -639,7 +645,7 @@ export default class FormController {
       
       // Find the option to update
       const option = await prisma.formFieldOption.findUnique({
-        where: { id: optionId }
+        where: { id: updateData.optionId }
       });
       
       if (!option || option.formFieldId !== formFieldId) {
@@ -647,43 +653,42 @@ export default class FormController {
         return;
       }
       
-      // Update the option
-      const updateData: any = {};
-      if (content !== undefined) updateData.content = content;
-      if (desactivedAt !== undefined) updateData.desactivedAt = desactivedAt;
       
       await prisma.$transaction(async (tx) => {
         // Update basic option data
         await tx.formFieldOption.update({
-          where: { id: optionId },
-          data: updateData
+          where: { id: updateData.optionId },
+          data: {
+            ordre: updateData.newOrdre,
+            desactivedAt: updateData.desactivedAt
+          }
         });
         
         // Update order if provided
-        if (newOrdre !== undefined && newOrdre !== option.ordre) {
+        if (updateData.newOrdre !== undefined && updateData.newOrdre  !== option.ordre) {
           // Get all options for reordering
           const allOptions = await tx.formFieldOption.findMany({
             where: { formFieldId },
             orderBy: { ordre: 'asc' }
           });
           
-          if (newOrdre > option.ordre) {
+          if (updateData.newOrdre  > option.ordre) {
             // Moving down: decrement orders for options between old and new position
             await tx.formFieldOption.updateMany({
               where: {
                 formFieldId,
-                ordre: { gt: option.ordre, lte: newOrdre },
-                id: { not: optionId }
+                ordre: { gt: option.ordre, lte: updateData.newOrdre  },
+                id: { not: updateData.optionId }
               },
               data: { ordre: { decrement: 1 } }
             });
-          } else if (newOrdre < option.ordre) {
+          } else if (updateData.newOrdre  < option.ordre) {
             // Moving up: increment orders for options between new and old position
             await tx.formFieldOption.updateMany({
               where: {
                 formFieldId,
-                ordre: { gte: newOrdre, lt: option.ordre },
-                id: { not: optionId }
+                ordre: { gte: updateData.newOrdre , lt: option.ordre },
+                id: { not: updateData.optionId }
               },
               data: { ordre: { increment: 1 } }
             });
@@ -691,8 +696,8 @@ export default class FormController {
           
           // Update the option's order
           await tx.formFieldOption.update({
-            where: { id: optionId },
-            data: { ordre: newOrdre }
+            where: { id: updateData.optionId },
+            data: { ordre: updateData.newOrdre  }
           });
         }
       });

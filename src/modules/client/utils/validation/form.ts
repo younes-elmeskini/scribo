@@ -48,9 +48,9 @@ export default class FormValidation {
     options: z
       .array(
         z.object({
-          ordar: z.number().int(),
+          ordre: z.number().int(),
           content: z.string(),
-          desactivatedAt: z.boolean().optional().default(false),
+          desactivedAt: z.boolean().optional().default(false),
         })
       )
       .optional(),
@@ -58,5 +58,13 @@ export default class FormValidation {
   static updateOrderFormFieldSchema = z.object({
     newordre: z.number().int(),
     oldordre: z.number().int(),
+  });
+  static updateOptionSchema = z.object({
+    optionId: z.string(),
+    newOrdre: z.number().int().optional(),
+    desactivedAt: z.boolean().optional(),
+  });
+  static deleteOptionSchema = z.object({
+    optionId: z.string(),
   });
 }
