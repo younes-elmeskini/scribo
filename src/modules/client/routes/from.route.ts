@@ -5,6 +5,7 @@ import { authenticate } from "../middleware/auth";
 const router = express.Router();
 router.post("/field/duplicate/:id", authenticate, FormController.duplicateFormField);
 router.post("/field/option/:id", authenticate, FormController.addFormFieldOption);
+router.post("/field/:id", authenticate, FormController.addFormField);
 
 router.get("/fields", FormController.getAllfields);
 router.get("/model", FormController.getAllModelForms);

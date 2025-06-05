@@ -67,4 +67,9 @@ export default class FormValidation {
   static deleteOptionSchema = z.object({
     optionId: z.string(),
   });
+  static addFormFieldSchema = z.object({
+    fieldId: z.string({ message: "Field type ID is required" }),
+    name: z.string().optional(),
+    label: z.string().optional(),
+  });
 }

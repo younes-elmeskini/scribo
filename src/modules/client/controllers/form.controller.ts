@@ -1093,4 +1093,169 @@ export default class FormController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
+  static async addFormField(req: Request, res: Response): Promise<void> {
+    try {
+      const formId = req.params.id;
+      const clientId = req.client?.id;
+      
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+      
+      if (!formId) {
+        res.status(400).json({ message: "Form ID is required" });
+        return;
+      }
+      
+      // Validate request body
+      validationResult(FromValidation.addFormFieldSchema, req, res);
+      const { fieldId, name, label } = FromValidation.addFormFieldSchema.parse(req.body);
+      
+      // Check if form exists and user has access
+      const form = await prisma.form.findFirst({
+        where: {
+          id: formId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() },
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(),
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+        include: {
+          FormField: {
+            orderBy: {
+              ordre: 'desc'
+            },
+            take: 1
+          }
+        }
+      });
+      
+      if (!form) {
+        res.status(404).json({ message: "Form not found or access denied" });
+        return;
+      }
+      
+      // Check if field type exists
+      const field = await prisma.fields.findUnique({
+        where: { id: fieldId }
+      });
+      
+      if (!field) {
+        res.status(404).json({ message: "Field type not found" });
+        return;
+      }
+      
+      // Determine the next order value
+      const nextOrdre = form.FormField.length > 0 ? form.FormField[0].ordre + 1 : 1;
+      
+      // Generate default name and label if not provided
+      const fieldName = field.fieldName;
+      const defaultName = `field_${field.type.toLowerCase()}_${nextOrdre}`;
+      const defaultLabel = `${fieldName} ${nextOrdre}`;
+      
+      // Create the new form field
+      const newFormField = await prisma.$transaction(async (tx) => {
+        // Create the form field
+        const createdField = await tx.formField.create({
+          data: {
+            formId,
+            fieldId,
+            name: name || defaultName,
+            label: label || defaultLabel,
+            requird: false,
+            disable: false,
+            style: [],
+            message: "",
+            ordre: nextOrdre,
+            placeholdre: field.type === "text" ? `Enter ${fieldName.toLowerCase()}` : "",
+          }
+        });
+        
+        // If field type supports options, create default options
+        if (["radio", "checkbox", "select"].includes(field.type)) {
+          const defaultOptions = [
+            { ordre: 0, content: "Option 1", desactivedAt: false },
+            { ordre: 1, content: "Option 2", desactivedAt: false },
+            { ordre: 2, content: "Option 3", desactivedAt: false }
+          ];
+          
+          for (const option of defaultOptions) {
+            await tx.formFieldOption.create({
+              data: {
+                formFieldId: createdField.id,
+                ordre: option.ordre,
+                content: option.content,
+                desactivedAt: option.desactivedAt
+              }
+            });
+          }
+        }
+        
+        return createdField;
+      });
+      
+      // Get the created field with all its data
+      const result = await prisma.formField.findUnique({
+        where: { id: newFormField.id },
+        include: {
+          fields: {
+            select: {
+              id: true,
+              fieldName: true,
+              type: true,
+              icon: true
+            }
+          },
+          FormFieldOption: {
+            orderBy: {
+              ordre: 'asc'
+            }
+          }
+        }
+      });
+      
+      // Get all form fields with the updated order
+      const allFields = await prisma.formField.findMany({
+        where: { formId },
+        orderBy: { ordre: 'asc' },
+        include: {
+          fields: {
+            select: {
+              id: true,
+              fieldName: true,
+              type: true,
+              icon: true
+            }
+          },
+          FormFieldOption: {
+            orderBy: {
+              ordre: 'asc'
+            }
+          }
+        }
+      });
+      
+      res.status(201).json({
+        message: "Form field added successfully",
+        data: {
+          newField: result,
+          allFields
+        }
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
 }
