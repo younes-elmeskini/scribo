@@ -147,29 +147,39 @@ model Form {
   FormField      FormField[]
 }
 
+model FormFieldOption {
+  id           String    @id @default(cuid())
+  formFieldId  String
+  formField    FormField @relation(fields: [formFieldId], references: [id], onDelete: Cascade)
+  ordre        Int
+  content      String
+  desactivedAt Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
 model FormField {
-  id          String    @id @default(cuid())
-  formId      String
-  fieldId     String
-  name        String?
-  label       String?
-  requird     Boolean?
-  disable     Boolean   @default(false)
-  style       String[]  @default([])
-  message     String?
-  ordre       Int
-  placeholdre String?
-  min         Int?
-  max         Int?
-  fileType    FileType?
-  instruction String?
-  options     String[]  @default([])
-  form        Form      @relation(fields: [formId], references: [id])
-  fields      Fields    @relation(fields: [fieldId], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  Answer      Answer[]
+  id            String           @id @default(cuid())
+  formId        String
+  form          Form             @relation(fields: [formId], references: [id])
+  fieldId       String
+  fields        Fields           @relation(fields: [fieldId], references: [id])
+  label         String?
+  name          String?
+  requird       Boolean?
+  disable       Boolean          @default(false)
+  style         String[]         @default([])
+  message       String?
+  ordre         Int
+  placeholdre   String?
+  min           Int?
+  max           Int?
+  fileType      FileType?
+  instruction   String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  Answer        Answer[]
+  FormFieldOption FormFieldOption[]
 }
 
 model Soumission {
@@ -289,7 +299,7 @@ model ModelForm {
 model ModelFormField {
   id          String    @id @default(cuid())
   modelFormId String
-    fieldId     String
+  fieldId     String
   name        String?
   label       String?
   requird     Boolean?
@@ -302,7 +312,7 @@ model ModelFormField {
   max         Int?
   fileType    FileType?
   instruction String?
-  options     String[]  @default([])
+  options     Json?     @default("[]")
   modelForm   ModelForm @relation(fields: [modelFormId], references: [id])
   fields      Fields    @relation(fields: [fieldId], references: [id])
   createdAt   DateTime  @default(now())
