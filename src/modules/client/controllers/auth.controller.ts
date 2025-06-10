@@ -67,19 +67,19 @@ export default class AuthController {
         res.status(401).json({ message: "Invalid credentials" });
         return;
       }
-
       const isProduction = process.env.NODE_ENV === "production";
       res.cookie("token", token, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: isProduction ? "none" : "strict",
+        sameSite: isProduction ? "strict" : "lax",
         maxAge: 24 * 60 * 60 * 1000,
-        domain: isProduction ? ".scribo.enopps.com.com" : undefined,
+        domain: isProduction ? ".scribo.enopps.com" : undefined,
         path: "/",
       });
 
       res.status(200).json({
         message: "Login successful",
+        isProduction: isProduction,
       });
     } catch (error) {
       console.error("Login error:", error);
