@@ -697,7 +697,8 @@ export default class FormController {
           where: { id: updateData.optionId },
           data: {
             ordre: updateData.newOrdre,
-            desactivedAt: updateData.desactivedAt
+            desactivedAt: updateData.desactivedAt,
+            default: updateData.default
           }
         });
         
@@ -1296,7 +1297,6 @@ export default class FormController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
-
   static async getFormFieldMessages(req: Request, res: Response): Promise<void> {
     try {
       const formFieldId = req.params.id;
@@ -1362,7 +1362,6 @@ export default class FormController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
-
   static async updateFormFieldMessages(req: Request, res: Response): Promise<void> {
     try {
       const formFieldId = req.params.id;
@@ -1438,10 +1437,6 @@ export default class FormController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
-
-  /**
-   * Met à jour les configurations d'un formulaire
-   */
   static async updateFormConfiguration(req: Request, res: Response): Promise<void> {
     try {
       // Valider les données avec le schéma
@@ -1558,10 +1553,6 @@ export default class FormController {
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
-
-  /**
-   * Récupère la configuration d'un formulaire
-   */
   static async getFormConfiguration(req: Request, res: Response): Promise<void> {
     try {
       const formId = req.params.id;

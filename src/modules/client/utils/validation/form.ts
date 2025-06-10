@@ -67,6 +67,7 @@ export default class FormValidation {
     optionId: z.string(),
     newOrdre: z.number().int().optional(),
     desactivedAt: z.boolean().optional(),
+    default:z.boolean().optional(),
   });
   static deleteOptionSchema = z.object({
     optionId: z.string(),

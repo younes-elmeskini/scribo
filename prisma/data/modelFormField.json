@@ -43,17 +43,20 @@
       {
         "ordre": 1,
         "content": "CP",
-        "desactivatedAt": false
+        "desactivatedAt": false,
+        "default":false
       },
       {
         "ordre": 2,
         "content": "CE",
-        "desactivatedAt": false
+        "desactivatedAt": false,
+        "default":false
       },
       {
         "ordre": 3,
         "content": "C3",
-        "desactivatedAt": false
+        "desactivatedAt": false,
+        "default":false
       }
     ]
   },
@@ -85,17 +88,20 @@
       {
         "ordre": 1,
         "content": "Informatique",
-        "desactivatedAt": false
+        "desactivatedAt": false,
+        "default":false
       },
       {
         "ordre": 2,
         "content": "Médecine",
-        "desactivatedAt": false
+        "desactivatedAt": false,
+        "default":false
       },
       {
         "ordre": 3,
         "content": "Économie",
-        "desactivatedAt": false
+        "desactivatedAt": false,
+        "default":false
       }
     ]
   },
@@ -135,22 +141,26 @@
       {
         "ordre": 1,
         "content": "Bureautique",
-        "desactivatedAt": false
+        "desactivatedAt": false,
+        "default":false
       },
       {
         "ordre": 2,
         "content": "Développement Web",
-        "desactivatedAt": false
+        "desactivatedAt": false,
+        "default":false
       },
       {
         "ordre": 3,
         "content": "Gestion",
-        "desactivatedAt": false
+        "desactivatedAt": false,
+        "default":false
       },
       {
         "ordre": 4,
         "content": "Langues",
-        "desactivatedAt": false
+        "desactivatedAt": false,
+        "default":false
       }
     ]
   },
@@ -198,17 +208,20 @@
       {
         "ordre": 1,
         "content": "Produit A",
-        "desactivatedAt": false
+        "desactivatedAt": false,
+        "default":false
       },
       {
         "ordre": 2,
         "content": "Produit B",
-        "desactivatedAt": false
+        "desactivatedAt": false,
+        "default":false
       },
       {
         "ordre": 3,
         "content": "Produit C",
-        "desactivatedAt": false
+        "desactivatedAt": false,
+        "default":false
       }
     ]
   },
@@ -272,17 +285,20 @@
       {
         "ordre": 1,
         "content": "Design",
-        "desactivatedAt": false
+        "desactivatedAt": false,
+        "default":false
       },
       {
         "ordre": 2,
         "content": "Développement",
-        "desactivatedAt": false
+        "desactivatedAt": false,
+        "default":false
       },
       {
         "ordre": 3,
         "content": "Marketing",
-        "desactivatedAt": false
+        "desactivatedAt": false,
+        "default":false
       }
     ]
   },
@@ -343,7 +359,8 @@
       {
         "ordre": 2,
         "content": "Non",
-        "desactivatedAt": false
+        "desactivatedAt": false,
+        "default":true
       }
     ]
   },
