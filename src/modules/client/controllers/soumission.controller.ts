@@ -224,6 +224,68 @@ export default class SoumissionController {
     }
   }
 
+  static async toggleSoumissionFavorite(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    try {
+      const soumissionId = req.params.id;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      // Vérifier si la soumission existe et si l'utilisateur a accès
+      const soumission = await prisma.soumission.findFirst({
+        where: {
+          id: soumissionId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() }, // Propriétaire
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(), // Membre d'équipe
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      if (!soumission) {
+        res
+          .status(404)
+          .json({ message: "Submission not found or access denied" });
+        return;
+      }
+
+      // Toggle favorite status
+      const updatedSoumission = await prisma.soumission.update({
+        where: { id: soumissionId },
+        data: { favorite: !soumission.favorite },
+      });
+
+      res.status(200).json({
+        message: updatedSoumission.favorite 
+          ? "Submission marked as favorite" 
+          : "Submission removed from favorites",
+        data: {
+          id: updatedSoumission.id,
+          favorite: updatedSoumission.favorite,
+        },
+      });
+    } catch (error) {
+      console.error("Error toggling submission favorite status:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
 //   static async exportSoumissionsToCSV(
 //     req: Request,
 //     res: Response

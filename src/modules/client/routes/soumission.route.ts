@@ -6,5 +6,6 @@ const router = express.Router();
 
 router.get("/compagne/:id", authenticate, SoumissionController.getCompagneSoumissions);
 router.get("/:id", authenticate, SoumissionController.getSoumissionDetails);
+router.put("/:id/favorite", authenticate, SoumissionController.toggleSoumissionFavorite);
 
 export default router;
