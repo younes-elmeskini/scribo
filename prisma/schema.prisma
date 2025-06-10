@@ -195,6 +195,7 @@ model Soumission {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   deletedAt   DateTime?
+  favorite    Boolean       @default(false)
   answer      Answer[]
   Call        Call[]
   Email       Email[]
