@@ -73,7 +73,7 @@ export default class AuthController {
         secure: isProduction,
         sameSite: isProduction ? "strict" : "lax",
         maxAge: 24 * 60 * 60 * 1000,
-        domain: isProduction ? ".scribo.enopps.com" : undefined,
+        domain: isProduction ? ".enopps.com" : undefined,
         path: "/",
       });
 
