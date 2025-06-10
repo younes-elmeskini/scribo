@@ -127,29 +127,29 @@ model Fields {
 }
 
 model Form {
-  id             String      @id @default(cuid())
-  title          String?
-  titleStyle     String?
-  titleTextStyle TextStyle?  @relation("TitleTextStyle", fields: [titleStyle], references: [id])
-  formStyle      String?
-  formTextStyle  TextStyle?  @relation("formTextStyle", fields: [formStyle], references: [id])
-  Description    String?
-  coverColor     String?
-  coverImage     String?
-  mode           Mode        @default(LIGHT)
-  messageSucces  String?
-  compagneId     String
-  compagne       Compagne    @relation(fields: [compagneId], references: [id])
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  deletedAt      DateTime?
-  desactivatedAt DateTime?
-  sendCopyToUser    Boolean       @default(false)
-  uniqueEmailUsage  Boolean       @default(false)
-  uniqueEmailField  String?       // ID du champ email à usage unique
-  isDeactivated     Boolean       @default(false)    // Date de désactivation automatique
-  defaultFieldId    String?       // ID du champ à utiliser comme identifiant par défaut
-  FormField      FormField[]
+  id               String      @id @default(cuid())
+  title            String?
+  titleStyle       String?
+  titleTextStyle   TextStyle?  @relation("TitleTextStyle", fields: [titleStyle], references: [id])
+  formStyle        String?
+  formTextStyle    TextStyle?  @relation("formTextStyle", fields: [formStyle], references: [id])
+  Description      String?
+  coverColor       String?
+  coverImage       String?
+  mode             Mode        @default(LIGHT)
+  messageSucces    String?
+  compagneId       String
+  compagne         Compagne    @relation(fields: [compagneId], references: [id])
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  deletedAt        DateTime?
+  desactivatedAt   DateTime?
+  sendCopyToUser   Boolean     @default(false)
+  uniqueEmailUsage Boolean     @default(false)
+  uniqueEmailField String? // ID du champ email à usage unique
+  isDeactivated    Boolean     @default(false) // Date de désactivation automatique
+  defaultFieldId   String? // ID du champ à utiliser comme identifiant par défaut
+  FormField        FormField[]
 }
 
 model FormFieldOption {
@@ -164,28 +164,29 @@ model FormFieldOption {
 }
 
 model FormField {
-  id            String           @id @default(cuid())
-  formId        String
-  form          Form             @relation(fields: [formId], references: [id])
-  fieldId       String
-  fields        Fields           @relation(fields: [fieldId], references: [id])
-  label         String?
-  name          String?
-  requird       Boolean?
-  disable       Boolean          @default(false)
-  style         String[]         @default([])
-  message       String?
-  ordre         Int
-  placeholdre   String?
-  min           Int?
-  max           Int?
-  fileType      FileType?
-  instruction   String?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  Answer        Answer[]
+  id              String            @id @default(cuid())
+  formId          String
+  form            Form              @relation(fields: [formId], references: [id])
+  fieldId         String
+  fields          Fields            @relation(fields: [fieldId], references: [id])
+  label           String?
+  name            String?
+  requird         Boolean?
+  disable         Boolean           @default(false)
+  style           String[]          @default([])
+  message         String?
+  ordre           Int
+  placeholdre     String?
+  min             Int?
+  max             Int?
+  fileType        FileType?
+  instruction     String?
+  selectId        String[]          @default([])
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  Answer          Answer[]
   FormFieldOption FormFieldOption[]
-  FormFieldMap  FormFieldMap[]
+  FormFieldMap    FormFieldMap[]
 }
 
 model Soumission {
