@@ -1615,6 +1615,7 @@ export default class FormController {
           }
         }
       });
+      const formFields = form?.FormField || [];
 
       if (!form) {
         res.status(404).json({ message: "Form not found or access denied" });
@@ -1642,8 +1643,8 @@ export default class FormController {
           isDeactivated: form.isDeactivated,
           deactivationDate: form.desactivatedAt,
           defaultFieldId: form.defaultFieldId,
-          emailFields: form.FormField, // Champs email disponibles pour l'option d'unicité
-          allFields: allFields // Tous les champs pour l'option de champ par défaut
+          emailFields: formFields, 
+          allFields: allFields 
         }
       });
     } catch (error) {
