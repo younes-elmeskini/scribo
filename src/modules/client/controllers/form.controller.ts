@@ -1520,17 +1520,20 @@ export default class FormController {
       }
 
       const updatedForm = await prisma.form.update({
-
         where: { id: formId },
         data: {
           sendCopyToUser: configData.sendCopyToUser ?? form.sendCopyToUser,
           uniqueEmailUsage: configData.uniqueEmailUsage ?? form.uniqueEmailUsage,
           uniqueEmailField: configData.uniqueEmailUsage ? configData.uniqueEmailField : form.uniqueEmailField,
           isDeactivated: configData.isDeactivated ?? form.isDeactivated,
-          desactivatedAt: configData.desactivatedAt ,
+          desactivatedAt: configData.isDeactivated ? 
+            (configData.desactivatedAt && !isNaN(new Date(configData.desactivatedAt).getTime()) ? 
+              new Date(configData.desactivatedAt) : 
+              new Date()) : 
+            null,
           defaultFieldId: configData.defaultFieldId 
         }
-      })
+      });
 
       if(configData.uniqueEmailUsage){
         const updateUniqueEmailField = await prisma.formField.findFirst({
@@ -1581,7 +1584,6 @@ export default class FormController {
         return;
       }
 
-      // Vérifier si le formulaire existe et si l'utilisateur a accès
       const form = await prisma.form.findFirst({
         where: {
           id: formId,
