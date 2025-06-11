@@ -61,7 +61,6 @@ export default class FormValidation {
   });
   static updateOrderFormFieldSchema = z.object({
     newordre: z.number().int(),
-    oldordre: z.number().int(),
   });
   static updateOptionSchema = z.object({
     optionId: z.string(),
@@ -92,6 +91,6 @@ export default class FormValidation {
       .transform((val) => new Date(val))
       .optional()
       .nullish(),
-    defaultFieldId: z.string().optional().nullable()
+    defaultFieldId: z.string().optional().nullable() //default formfield 
   });
 }
