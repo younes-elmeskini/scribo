@@ -85,8 +85,8 @@ export default class FormValidation {
     isDeactivated: z.boolean().optional(),
        desactivatedAt: z
       .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, {
-        message: "desactivatedAt must be a valid date in YYYY-MM-DD format.",
+      .regex(/^\d{2}\/\d{2}\/\d{4}$/, {
+        message: "desactivatedAt must be a valid date in DD/MM/YYYY format.",
       })
       .transform((val) => new Date(val))
       .optional()
