@@ -72,8 +72,8 @@ model TeamMenber {
   id           String         @id @default(cuid())
   owenrId      String
   membreId     String
-  owner        Client         @relation("OwnerRelation", fields: [owenrId], references: [id])
-  member       Client         @relation("MemberRelation", fields: [membreId], references: [id])
+  owner        Client         @relation("OwnerRelation", fields: [owenrId], references: [id], onDelete: Cascade)
+  member       Client         @relation("MemberRelation", fields: [membreId], references: [id], onDelete: Cascade)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   deletedAt    DateTime?
@@ -86,8 +86,8 @@ model TeamCompagne {
   teamMenbreId String
   compagneId   String
   role         Role
-  teamMember   TeamMenber @relation(fields: [teamMenbreId], references: [id])
-  compagne     Compagne   @relation(fields: [compagneId], references: [id])
+  teamMember   TeamMenber @relation(fields: [teamMenbreId], references: [id], onDelete: Cascade)
+  compagne     Compagne   @relation(fields: [compagneId], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   deletedAt    DateTime?
@@ -100,7 +100,7 @@ model Compagne {
   status       Status         @default(ACTIVE)
   favrite      Boolean        @default(false)
   clientId     String
-  client       Client         @relation(fields: [clientId], references: [id])
+  client       Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   deletedAt    DateTime?
@@ -130,9 +130,9 @@ model Form {
   id               String      @id @default(cuid())
   title            String?
   titleStyle       String?
-  titleTextStyle   TextStyle?  @relation("TitleTextStyle", fields: [titleStyle], references: [id])
+  titleTextStyle   TextStyle?  @relation("TitleTextStyle", fields: [titleStyle], references: [id], onDelete: Cascade)
   formStyle        String?
-  formTextStyle    TextStyle?  @relation("formTextStyle", fields: [formStyle], references: [id])
+  formTextStyle    TextStyle?  @relation("formTextStyle", fields: [formStyle], references: [id], onDelete: Cascade)
   Description      String?
   coverColor       String?
   coverImage       String?
@@ -144,12 +144,13 @@ model Form {
   updatedAt        DateTime    @updatedAt
   deletedAt        DateTime?
   desactivatedAt   DateTime?
-  sendCopyToUser   Boolean     @default(false)
-  uniqueEmailUsage Boolean     @default(false)
-  uniqueEmailField String? // ID du champ email à usage unique
-  isDeactivated    Boolean     @default(false) // Date de désactivation automatique
-  defaultFieldId   String? // ID du champ à utiliser comme identifiant par défaut
-  FormField        FormField[]
+  sendCopyToUser   Boolean?    @default(false)
+  uniqueEmailUsage Boolean?    @default(false)
+  uniqueEmailField String? 
+  formField        FormField?  @relation("UniqueEmailField", fields: [uniqueEmailField], references: [id], onDelete: Cascade)
+  isDeactivated    Boolean?    @default(false)
+  defaultFieldId   String?
+  FormField        FormField[] @relation("FormFields")
 }
 
 model FormFieldOption {
@@ -167,9 +168,9 @@ model FormFieldOption {
 model FormField {
   id              String            @id @default(cuid())
   formId          String
-  form            Form              @relation(fields: [formId], references: [id])
+  form            Form              @relation("FormFields", fields: [formId], references: [id],  onDelete: Cascade)
   fieldId         String
-  fields          Fields            @relation(fields: [fieldId], references: [id])
+  fields          Fields            @relation(fields: [fieldId], references: [id],  onDelete: Cascade)
   label           String?
   name            String?
   requird         Boolean?
@@ -185,15 +186,18 @@ model FormField {
   selectId        String[]          @default([])
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
+  default         Boolean           @default(false)
+  unique          Boolean           @default(false)
   Answer          Answer[]
   FormFieldOption FormFieldOption[]
   FormFieldMap    FormFieldMap[]
+  UniqueEmailForms Form[]          @relation("UniqueEmailField")
 }
 
 model Soumission {
   id          String        @id @default(cuid())
   compagneId  String
-  compagne    Compagne      @relation(fields: [compagneId], references: [id])
+  compagne    Compagne      @relation(fields: [compagneId], references: [id] , onDelete: Cascade)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   deletedAt   DateTime?
@@ -210,9 +214,9 @@ model Answer {
   id           String     @id @default(cuid())
   valeu        String
   formFieldId  String
-  formField    FormField  @relation(fields: [formFieldId], references: [id])
+  formField    FormField  @relation(fields: [formFieldId], references: [id],  onDelete: Cascade)
   soumissionId String
-  soumission   Soumission @relation(fields: [soumissionId], references: [id])
+  soumission   Soumission @relation(fields: [soumissionId], references: [id],  onDelete: Cascade)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   deletedAt    DateTime?
@@ -222,11 +226,11 @@ model Call {
   id           String     @id @default(cuid())
   call         String
   compagneId   String
-  compagne     Compagne   @relation(fields: [compagneId], references: [id])
+  compagne     Compagne   @relation(fields: [compagneId], references: [id],  onDelete: Cascade)
   clientId     String
-  client       Client     @relation(fields: [clientId], references: [id])
+  client       Client     @relation(fields: [clientId], references: [id],  onDelete: Cascade)
   soumissionId String
-  soumission   Soumission @relation(fields: [soumissionId], references: [id])
+  soumission   Soumission @relation(fields: [soumissionId], references: [id],  onDelete: Cascade)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   deletedAt    DateTime?
@@ -236,11 +240,11 @@ model Email {
   id           String     @id @default(cuid())
   email        String
   compagneId   String
-  compagne     Compagne   @relation(fields: [compagneId], references: [id])
+  compagne     Compagne   @relation(fields: [compagneId], references: [id], onDelete: Cascade)
   clientId     String
-  client       Client     @relation(fields: [clientId], references: [id])
+  client       Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
   soumissionId String
-  soumission   Soumission @relation(fields: [soumissionId], references: [id])
+  soumission   Soumission @relation(fields: [soumissionId], references: [id],  onDelete: Cascade)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   deletedAt    DateTime?
@@ -250,11 +254,11 @@ model Notes {
   id           String     @id @default(cuid())
   notes        String
   compagneId   String
-  compagne     Compagne   @relation(fields: [compagneId], references: [id])
+  compagne     Compagne   @relation(fields: [compagneId], references: [id],  onDelete: Cascade)
   clientId     String
-  client       Client     @relation(fields: [clientId], references: [id])
+  client       Client     @relation(fields: [clientId], references: [id],  onDelete: Cascade)
   soumissionId String
-  soumission   Soumission @relation(fields: [soumissionId], references: [id])
+  soumission   Soumission @relation(fields: [soumissionId], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   deletedAt    DateTime?
@@ -264,11 +268,11 @@ model Task {
   id           String     @id @default(cuid())
   task         String
   compagneId   String
-  compagne     Compagne   @relation(fields: [compagneId], references: [id])
+  compagne     Compagne   @relation(fields: [compagneId], references: [id], onDelete: Cascade)
   clientId     String
-  client       Client     @relation(fields: [clientId], references: [id])
+  client       Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
   soumissionId String
-  soumission   Soumission @relation(fields: [soumissionId], references: [id])
+  soumission   Soumission @relation(fields: [soumissionId], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   deletedAt    DateTime?
@@ -278,11 +282,11 @@ model Appointment {
   id           String     @id @default(cuid())
   date         DateTime
   compagneId   String
-  compagne     Compagne   @relation(fields: [compagneId], references: [id])
+  compagne     Compagne   @relation(fields: [compagneId], references: [id], onDelete: Cascade)
   clientId     String
-  client       Client     @relation(fields: [clientId], references: [id])
+  client       Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
   soumissionId String
-  soumission   Soumission @relation(fields: [soumissionId], references: [id])
+  soumission   Soumission @relation(fields: [soumissionId], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   deletedAt    DateTime?
@@ -297,7 +301,7 @@ model ModelForm {
   mode           Mode             @default(LIGHT)
   messageSucces  String?
   categotyId     String
-  categoty       Categoty         @relation(fields: [categotyId], references: [id])
+  categoty       Categoty         @relation(fields: [categotyId], references: [id], onDelete: Cascade)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   deletedAt      DateTime?
@@ -322,8 +326,8 @@ model ModelFormField {
   fileType    FileType?
   instruction String?
   options     Json?     @default("[]")
-  modelForm   ModelForm @relation(fields: [modelFormId], references: [id])
-  fields      Fields    @relation(fields: [fieldId], references: [id])
+  modelForm   ModelForm @relation(fields: [modelFormId], references: [id], onDelete: Cascade)
+  fields      Fields    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
