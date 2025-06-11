@@ -1439,11 +1439,7 @@ export default class FormController {
   }
   static async updateFormConfiguration(req: Request, res: Response): Promise<void> {
     try {
-      // Valider les données avec le schéma
-      if (!validationResult(FormValidation.formConfigurationSchema, req, res)) {
-        return;
-      }
-      
+      validationResult(FormValidation.formConfigurationSchema, req, res)
       const formId = req.params.id;
       const clientId = req.client?.id;
 
@@ -1523,19 +1519,41 @@ export default class FormController {
         }
       }
 
-      // Mettre à jour la configuration du formulaire
       const updatedForm = await prisma.form.update({
+
         where: { id: formId },
         data: {
           sendCopyToUser: configData.sendCopyToUser ?? form.sendCopyToUser,
           uniqueEmailUsage: configData.uniqueEmailUsage ?? form.uniqueEmailUsage,
-          uniqueEmailField: configData.uniqueEmailUsage ? configData.uniqueEmailField : null,
+          uniqueEmailField: configData.uniqueEmailUsage ? configData.uniqueEmailField : form.uniqueEmailField,
           isDeactivated: configData.isDeactivated ?? form.isDeactivated,
-          desactivatedAt: configData.desactivatedAt || null,
-          defaultFieldId: configData.defaultFieldId || null
+          desactivatedAt: configData.desactivatedAt ,
+          defaultFieldId: configData.defaultFieldId 
         }
-      });
+      })
 
+      if(configData.uniqueEmailUsage){
+        const updateUniqueEmailField = await prisma.formField.findFirst({
+          where: { id: configData.uniqueEmailField ?? "" },
+        })
+        if(updateUniqueEmailField){
+          await prisma.formField.update({
+            where: { id: updateUniqueEmailField.id },
+            data: { unique: true }
+          })
+        }
+      }
+      if(configData.defaultFieldId){
+        const updateDefaultField = await prisma.formField.findFirst({
+          where: { id: configData.defaultFieldId ?? "" },
+        })
+        if(updateDefaultField){
+          await prisma.formField.update({
+            where: { id: updateDefaultField.id },
+            data: { default: true }
+          })
+        }
+      }
       res.status(200).json({
         message: "Configuration du formulaire mise à jour avec succès",
         data: {
