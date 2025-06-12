@@ -1506,4 +1506,142 @@ export default class FormController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
+  static async getValidationForm(req: Request, res: Response): Promise<void> {
+    try {
+      const formId = req.params.id;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      // Check if form exists and user has access
+      const form = await prisma.form.findFirst({
+        where: {
+          id: formId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() },
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(),
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      if (!form) {
+        res.status(404).json({ message: "Form not found or access denied" });
+        return;
+      }
+
+      // Get validation messages
+      const validations = await prisma.validationForm.findMany({
+        where: { formId, deletedAt: null },
+        select:{
+          id:true,
+          validationName:true,
+          validationValeu:true
+        }
+      });
+
+      res.status(200).json({
+        data: validations
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
+  static async updateValidationValues(req: Request, res: Response): Promise<void> {
+    try {
+      const formId = req.params.id;
+      const clientId = req.client?.id;
+      const validations = req.body.validations;
+      
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+      
+      if (!validations || !Array.isArray(validations) || validations.length === 0) {
+        res.status(400).json({ message: "At least one validation update is required" });
+        return;
+      }
+      
+      // Check if form exists and user has access
+      const form = await prisma.form.findFirst({
+        where: {
+          id: formId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() },
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(),
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+      
+      if (!form) {
+        res.status(404).json({ message: "Form not found or access denied" });
+        return;
+      }
+      
+      // Get all validation IDs to update
+      const validationIds = validations.map(v => v.id);
+      
+      // Check if all validations exist and belong to this form
+      const existingValidations = await prisma.validationForm.findMany({
+        where: { 
+          id: { in: validationIds },
+          formId,
+          deletedAt: null
+        }
+      });
+      
+      if (existingValidations.length !== validationIds.length) {
+        res.status(404).json({ message: "One or more validation messages not found" });
+        return;
+      }
+      
+      // Update all validations in a transaction
+      await prisma.$transaction(async (tx) => {
+        for (const validation of validations) {
+          await tx.validationForm.update({
+            where: { id: validation.id },
+            data: { validationValeu: validation.validationValeu }
+          });
+        }
+      });
+      
+      // Get updated validations
+      const updatedValidations = await prisma.validationForm.findMany({
+        where: { formId, deletedAt: null },
+      });
+      
+      res.status(200).json({
+        message: "Validation messages updated successfully",
+        data: updatedValidations
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
 }

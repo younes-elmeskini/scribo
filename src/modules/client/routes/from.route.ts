@@ -10,20 +10,25 @@ router.post("/field/:id", authenticate, FormController.addFormField);
 router.get("/fields", FormController.getAllfields);
 router.get("/model", FormController.getAllModelForms);
 router.get("/:id", authenticate, FormController.getformByCompagneId);
+router.get("/configuration/:id", authenticate, FormController.getFormConfiguration);
+router.get("/validation/:id", authenticate, FormController.getValidationForm);
 
 
 router.put("/:id", authenticate, FormController.updateForm);
 router.put("/field/:id", authenticate, FormController.updateFormField);
 router.put("/field/order/:id", authenticate, FormController.updateOrderFormField);
 router.put("/field/type/:id", authenticate, FormController.updateTypeformField);
+router.put("/field/option/:id", authenticate, FormController.updateFormFieldOption);
+router.put("/configuration/:id", authenticate, FormController.updateFormConfiguration);
+router.put("/validations/:id", authenticate, FormController.updateValidationValues);
 
 
 router.delete("/field/option/:id", authenticate, FormController.deleteFormFieldOption);
 router.delete("/field/:id", authenticate, FormController.deleteFormField);
 
 // Routes pour la configuration du formulaire
-router.get("/configuration/:id", authenticate, FormController.getFormConfiguration);
-router.put("/configuration/:id", authenticate, FormController.updateFormConfiguration);
+
+// Routes for form validation messages
 
 export default router;
 
