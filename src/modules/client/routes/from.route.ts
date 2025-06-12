@@ -1,11 +1,14 @@
 import express from "express";
 import FormController from "../controllers/form.controller";
 import { authenticate } from "../middleware/auth";
+import upload from "../middleware/upload";
 
 const router = express.Router();
 router.post("/field/duplicate/:id", authenticate, FormController.duplicateFormField);
 router.post("/field/option/:id", authenticate, FormController.addFormFieldOption);
 router.post("/field/:id", authenticate, FormController.addFormField);
+router.post("/:id/cover-image", upload.single("coverImage"), FormController.uploadCoverImage);
+
 
 router.get("/fields", FormController.getAllfields);
 router.get("/model", FormController.getAllModelForms);
@@ -27,9 +30,6 @@ router.put("/validations/:id", authenticate, FormController.updateValidationValu
 router.delete("/field/option/:id", authenticate, FormController.deleteFormFieldOption);
 router.delete("/field/:id", authenticate, FormController.deleteFormField);
 
-// Routes pour la configuration du formulaire
-
-// Routes for form validation messages
 
 export default router;
 

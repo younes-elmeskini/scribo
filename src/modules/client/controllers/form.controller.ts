@@ -3,7 +3,7 @@ import prisma from "../../../utils/client";
 import FormValidation from "../utils/validation/form";
 import { validationResult } from "../../../utils/validation/validationResult";
 import { z } from "zod";
-import GestionForm from "../utils/gestionfrom";
+import path from "path";
 
 type updateform = z.infer<typeof FormValidation.updateformSchema>;
 type updateFormField = z.infer<typeof FormValidation.updateFormFieldSchema>;
@@ -1666,6 +1666,32 @@ export default class FormController {
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
+  static async uploadCoverImage(req: Request, res: Response): Promise<void> {
+    try {
+      const formId = req.params.id;
+      if (!req.file) {
+        res.status(400).json({ message: "Aucun fichier envoyé" });
+        return;
+      }
+
+      // Chemin relatif à stocker en BDD
+      const coverImagePath = path.join("cover", req.file.filename);
+
+      const updatedForm = await prisma.form.update({
+        where: { id: formId },
+        data: { coverImage: coverImagePath }
+      });
+
+      res.status(200).json({
+        message: "Image de couverture uploadée avec succès",
+        data: updatedForm
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
 }
