@@ -1526,11 +1526,7 @@ export default class FormController {
           uniqueEmailUsage: configData.uniqueEmailUsage ?? form.uniqueEmailUsage,
           uniqueEmailField: configData.uniqueEmailUsage ? configData.uniqueEmailField : form.uniqueEmailField,
           isDeactivated: configData.isDeactivated ?? form.isDeactivated,
-          desactivatedAt: configData.isDeactivated ? 
-            (configData.desactivatedAt && !isNaN(new Date(configData.desactivatedAt).getTime()) ? 
-              new Date(configData.desactivatedAt) : 
-              new Date()) : 
-            null,
+          desactivatedAt: configData.isDeactivated ? configData.desactivatedAt : form.desactivatedAt,
           defaultFieldId: configData.defaultFieldId 
         }
       });

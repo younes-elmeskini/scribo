@@ -27,7 +27,7 @@ export default class FormValidation {
     lat: z.number().min(-90).max(90).optional(),
     lng: z.number().min(-180).max(180).optional(),
     zoom: z.number().int().min(1).max(20).optional(),
-    height: z.number().int().min(100).max(1000).optional()
+    height: z.number().int().min(100).max(1000).optional(),
   });
 
   // Mettez à jour le schéma updateFormFieldSchema pour inclure mapConfig
@@ -46,7 +46,7 @@ export default class FormValidation {
     selectId: z.array(z.string()).optional(),
     message: z.string().optional(),
     placeholdre: z.string().optional(),
-    mapConfig: FormValidation.mapConfigSchema.optional()
+    mapConfig: FormValidation.mapConfigSchema.optional(),
   });
   static optionsSchema = z.object({
     options: z
@@ -66,7 +66,7 @@ export default class FormValidation {
     optionId: z.string(),
     newOrdre: z.number().int().optional(),
     desactivedAt: z.boolean().optional(),
-    default:z.boolean().optional(),
+    default: z.boolean().optional(),
   });
   static deleteOptionSchema = z.object({
     optionId: z.string(),
@@ -83,14 +83,14 @@ export default class FormValidation {
     uniqueEmailUsage: z.boolean().optional(),
     uniqueEmailField: z.string().optional().nullable(),
     isDeactivated: z.boolean().optional(),
-       desactivatedAt: z
+    desactivatedAt: z
       .string()
-      .regex(/^\d{2}\/\d{2}\/\d{4}$/, {
-        message: "desactivatedAt must be a valid date in DD/MM/YYYY format.",
+      .regex(/^\d{4}\-\d{2}\-\d{2}$/, {
+        message: "desactivatedAt must be a valid date in DD-MM-YYYY format.",
       })
       .transform((val) => new Date(val))
       .optional()
       .nullish(),
-    defaultFieldId: z.string().optional().nullable() //default formfield 
+    defaultFieldId: z.string().optional().nullable(), //default formfield
   });
 }
