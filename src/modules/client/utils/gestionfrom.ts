@@ -101,7 +101,6 @@ export default class GestionForm {
               ]
             : [],
           placeholdre: GestionForm.generatePlaceholder(fieldRecord.type, label),
-          message: GestionForm.generateDefaultErrorMessage(fieldRecord.type, fieldRecord.fieldName, false)
         });
       }
     }
@@ -115,52 +114,94 @@ export default class GestionForm {
    * @param isRequired Indique si le champ est obligatoire
    * @returns Message d'erreur approprié
    */
-  static generateDefaultErrorMessage(fieldType: string, fieldName: string, isRequired: boolean): string {
-    // Message pour champ obligatoire
-    if (isRequired) {
-      return `Le champ ${fieldName.toLowerCase()} est obligatoire`;
-    }
-    
-    // Messages spécifiques par type de champ
-    switch (fieldType) {
-      case "text":
-        return `Veuillez entrer un texte valide`;
-      case "textarea":
-        return `Veuillez entrer une description valide`;
-      case "email":
-        return `Veuillez entrer une adresse email valide`;
-      case "tel":
-        return `Veuillez entrer un numéro de téléphone valide`;
-      case "number":
-        return `Veuillez entrer un nombre valide`;
-      case "date":
-        return `Veuillez entrer une date valide`;
-      case "time":
-        return `Veuillez entrer une heure valide`;
-      case "datetime":
-        return `Veuillez entrer une date et heure valides`;
-      case "file":
-        return `Veuillez sélectionner un fichier valide`;
-      case "image":
-        return `Veuillez sélectionner une image valide`;
-      case "url":
-        return `Veuillez entrer une URL valide`;
-      case "radio":
-        return `Veuillez sélectionner une option`;
-      case "checkbox":
-        return `Veuillez cocher au moins une option`;
-      case "select":
-        return `Veuillez sélectionner une option dans la liste`;
-      case "map":
-        return `Veuillez sélectionner un emplacement sur la carte`;
-      case "range":
-        return `Veuillez sélectionner une valeur dans la plage`;
-      case "color":
-        return `Veuillez sélectionner une couleur`;
-      case "boolean":
-        return `Veuillez indiquer votre choix`;
-      default:
-        return `Veuillez remplir ce champ correctement`;
-    }
+
+  /**
+   * Génère les messages de validation par défaut pour un formulaire
+   * @param formId ID du formulaire
+   * @returns Tableau d'objets contenant les messages de validation par défaut
+   */
+  static generateDefaultValidationMessages(formId: string): Array<{ formId: string, validationName: string, validationValeu: string }> {
+    return [
+      {
+        formId,
+        validationName: "required",
+        validationValeu: "Ce champ est obligatoire",
+      },
+      {
+        formId,
+        validationName: "email",
+        validationValeu: "Veuillez entrer une adresse email valide",
+      },
+      {
+        formId,
+        validationName: "minLength",
+        validationValeu: "Ce champ doit contenir au moins {min} caractères",
+      },
+      {
+        formId,
+        validationName: "maxLength",
+        validationValeu: "Ce champ ne peut pas dépasser {max} caractères",
+      },
+      {
+        formId,
+        validationName: "pattern",
+        validationValeu: "Format invalide",
+      },
+      {
+        formId,
+        validationName: "fileType",
+        validationValeu: "Type de fichier non supporté. Types acceptés: {types}",
+      },
+      {
+        formId,
+        validationName: "fileSize",
+        validationValeu: "La taille du fichier ne doit pas dépasser {size}MB",
+      },
+      {
+        formId,
+        validationName: "minValue",
+        validationValeu: "La valeur doit être supérieure ou égale à {min}",
+      },
+      {
+        formId,
+        validationName: "maxValue",
+        validationValeu: "La valeur doit être inférieure ou égale à {max}",
+      },
+      {
+        formId,
+        validationName: "success",
+        validationValeu: "Formulaire soumis avec succès",
+      },
+      {
+        formId,
+        validationName: "error401",
+        validationValeu: "Vous n'êtes pas autorisé à soumettre ce formulaire",
+      },
+      {
+        formId,
+        validationName: "emailError",
+        validationValeu: "Une erreur s'est produite lors de l'envoi de l'email",
+      },
+      {
+        formId,
+        validationName: "minCharError",
+        validationValeu: "Nombre minimum de caractères non atteint",
+      },
+      {
+        formId,
+        validationName: "maxCharError",
+        validationValeu: "Nombre maximum de caractères dépassé",
+      },
+      {
+        formId,
+        validationName: "fileTypeError",
+        validationValeu: "Type de fichier non autorisé",
+      },
+      {
+        formId,
+        validationName: "uniqueEmail",
+        validationValeu: "Cette adresse email est déjà utilisée",
+      },
+    ];
   }
 }

@@ -7,6 +7,7 @@ import { Role } from "@prisma/client";
 import multer from "multer";
 import GestionForm from "../utils/gestionfrom";
 
+
 type createCompagne = z.infer<typeof CompagneValidation.createCompagneSchema>;
 
 // Configuration Multer pour l'upload de fichiers Excel
@@ -438,6 +439,9 @@ export default class CompagneController {
         form.id
       );
 
+      // Generate default validation messages
+      const defaultValidations = GestionForm.generateDefaultValidationMessages(form.id);
+
       // Replace the createMany call with a transaction that handles options separately
       await prisma.$transaction(async (tx) => {
         // First create the form fields without options
@@ -465,9 +469,22 @@ export default class CompagneController {
             }
           }
         }
+
+        // Create default validation messages
+        for (const validation of defaultValidations) {
+          await tx.validationForm.create({
+            data: validation
+          });
+        }
       });
 
-      res.status(201).json({ message: "Compagne created successfully" });
+      res.status(201).json({
+        message: "Compagne created successfully",
+        data: {
+          compagneId: compagne.id,
+          formId: form.id
+        }
+      });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Internal Server Error" });
@@ -553,6 +570,9 @@ export default class CompagneController {
             newForm.id
           );
 
+          // Generate default validation messages
+          const defaultValidations = GestionForm.generateDefaultValidationMessages(newForm.id);
+
           // Créer tous les champs de formulaire
           if (fieldsData.length > 0) {
             // Process each field individually to handle options
@@ -580,6 +600,13 @@ export default class CompagneController {
                 }
               }
             }
+          }
+
+          // Create default validation messages
+          for (const validation of defaultValidations) {
+            await tx.validationForm.create({
+              data: validation
+            });
           }
 
           return {
@@ -667,7 +694,6 @@ export default class CompagneController {
             coverColor: modelForm.coverColor,
             coverImage: modelForm.coverImage,
             mode: modelForm.mode,
-            messageSucces: modelForm.messageSucces,
           },
         });
 
@@ -680,7 +706,6 @@ export default class CompagneController {
           requird: modelField.requird,
           disable: modelField.disable,
           style: modelField.style,
-          message: modelField.message,
           ordre: modelField.ordre,
           placeholdre: modelField.placeholdre,
           options: modelField.options,
@@ -689,6 +714,9 @@ export default class CompagneController {
           fileType: modelField.fileType,
           instruction: modelField.instruction,
         }));
+
+        // Generate default validation messages
+        const defaultValidations = GestionForm.generateDefaultValidationMessages(newForm.id);
 
         // Process each field individually to handle options
         for (const fieldData of formFieldsData) {
@@ -714,6 +742,13 @@ export default class CompagneController {
               });
             }
           }
+        }
+
+        // Create default validation messages
+        for (const validation of defaultValidations) {
+          await tx.validationForm.create({
+            data: validation
+          });
         }
 
         return {
