@@ -44,7 +44,6 @@ export default class FormValidation {
     disable: z.boolean().optional(),
     style: z.array(z.string()).optional(),
     selectId: z.array(z.string()).optional(),
-    message: z.string().optional(),
     placeholdre: z.string().optional(),
     mapConfig: FormValidation.mapConfigSchema.optional(),
   });

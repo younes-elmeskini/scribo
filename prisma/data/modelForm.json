@@ -6,7 +6,6 @@
     "coverColor": "#FFEB3B",
     "coverImage":"education_primire.png",
     "mode": "LIGHT",
-    "messageSucces": "Inscription réussie",
     "categotyId": "catg_edu"
   },
   {
@@ -16,7 +15,6 @@
     "coverColor": "#2196F3",
     "coverImage": "education_university.png",
     "mode": "LIGHT",
-    "messageSucces": "Formulaire soumis avec succès",
     "categotyId": "catg_edu"
   },
   {
@@ -26,7 +24,6 @@
     "coverColor": "#4CAF50",
     "coverImage": "education_formation.png",
     "mode": "LIGHT",
-    "messageSucces": "Demande enregistrée",
     "categotyId": "catg_edu"
   },
   {
@@ -36,7 +33,6 @@
     "coverColor": "#E91E63",
     "coverImage": "commande_produit.png",
     "mode": "LIGHT",
-    "messageSucces": "Commande validée",
     "categotyId": "catg_commerce"
   },
   {
@@ -46,7 +42,6 @@
     "coverColor": "#9C27B0",
     "coverImage": "demande_devis.png",
     "mode": "LIGHT",
-    "messageSucces": "Demande envoyée",
     "categotyId": "catg_commerce"
   },
   {
@@ -56,7 +51,6 @@
     "coverColor": "#607D8B",
     "coverImage": "satisfaction_client.png",
     "mode": "LIGHT",
-    "messageSucces": "Merci pour votre retour",
     "categotyId": "catg_commerce"
   },
   {
@@ -66,7 +60,6 @@
     "coverColor": "#FF9800",
     "coverImage": "contact_form.png",
     "mode": "LIGHT",
-    "messageSucces": "Message envoyé avec succès",
     "categotyId": "catg_commerce"
   },
   {
@@ -76,7 +69,6 @@
     "coverColor": "#03A9F4",
     "coverImage": "newsletter.png",
     "mode": "LIGHT",
-    "messageSucces": "Inscription confirmée",
     "categotyId": "catg_edu"
   },
   {
@@ -86,7 +78,6 @@
     "coverColor": "#673AB7",
     "coverImage": "event_registration.png",
     "mode": "LIGHT",
-    "messageSucces": "Inscription confirmée",
     "categotyId": "catg_commerce"
   },
   {
@@ -96,7 +87,6 @@
     "coverColor": "#795548",
     "coverImage": "feedback.png",
     "mode": "LIGHT",
-    "messageSucces": "Merci pour votre retour",
     "categotyId": "catg_commerce"
   },
   {
@@ -106,7 +96,6 @@
     "coverColor": "#009688",
     "coverImage": "job_application.png",
     "mode": "LIGHT",
-    "messageSucces": "Candidature reçue",
     "categotyId": "catg_edu"
   },
   {
@@ -116,7 +105,6 @@
     "coverColor": "#8BC34A",
     "coverImage": "internship.png",
     "mode": "LIGHT",
-    "messageSucces": "Demande reçue",
     "categotyId": "catg_edu"
   }
 ]
