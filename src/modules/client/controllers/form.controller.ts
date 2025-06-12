@@ -4,6 +4,7 @@ import FormValidation from "../utils/validation/form";
 import { validationResult } from "../../../utils/validation/validationResult";
 import { z } from "zod";
 import path from "path";
+import fs from "fs";
 
 type updateform = z.infer<typeof FormValidation.updateformSchema>;
 type updateFormField = z.infer<typeof FormValidation.updateFormFieldSchema>;
@@ -1689,6 +1690,43 @@ export default class FormController {
         message: "Image de couverture uploadée avec succès",
         data: updatedForm
       });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
+
+  static async deleteCoverImage(req: Request, res: Response): Promise<void> {
+    try {
+      const formId = req.params.id;
+
+      // Récupérer le chemin de l'image actuelle
+      const form = await prisma.form.findUnique({
+        where: { id: formId },
+        select: { coverImage: true }
+      });
+
+      if (!form || !form.coverImage) {
+        res.status(404).json({ message: "Aucune image de couverture à supprimer" });
+        return;
+      }
+
+      // Supprimer physiquement le fichier
+      const filePath = path.join(process.cwd(), "src", "uploads", form.coverImage);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      } else {
+        res.status(404).json({ message: "image cover not found in uploads" });
+        return;
+      }
+
+      // Mettre à jour la BDD
+      await prisma.form.update({
+        where: { id: formId },
+        data: { coverImage: null }
+      });
+
+      res.status(200).json({ message: "Image de couverture supprimée avec succès" });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Erreur interne du serveur" });

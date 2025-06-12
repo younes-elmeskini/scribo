@@ -29,6 +29,7 @@ router.put("/validations/:id", authenticate, FormController.updateValidationValu
 
 router.delete("/field/option/:id", authenticate, FormController.deleteFormFieldOption);
 router.delete("/field/:id", authenticate, FormController.deleteFormField);
+router.delete("/:id/cover-image", FormController.deleteCoverImage);
 
 
 export default router;
