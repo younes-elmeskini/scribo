@@ -8,12 +8,10 @@ export default class FormValidation {
     Description: z.string({ message: "Description is required." }).optional(),
     titleStyle: z
       .string({ message: "title Style is required." })
-      .nullish()
-      .transform((val) => val ?? "cmbf8tgxo0003jjzgt49nod8u"),
+      .optional(),
     formStyle: z
       .string({ message: "form Style is required." })
-      .optional()
-      .default("cmbf8tgxo0003jjzgt49nod8u"),
+      .optional(),
     coverColor: z.string({ message: "cover Color is required." }).optional(),
     coverImage: z.string({ message: "cover Image is required." }).optional(),
     mode: z.nativeEnum(Mode, { message: "mode is required." }).optional(),
