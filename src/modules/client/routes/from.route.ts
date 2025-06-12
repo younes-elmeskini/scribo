@@ -9,6 +9,7 @@ router.post("/field/:id", authenticate, FormController.addFormField);
 
 router.get("/fields", FormController.getAllfields);
 router.get("/model", FormController.getAllModelForms);
+router.get("/fonts",FormController.getTextStyle)
 router.get("/:id", authenticate, FormController.getformByCompagneId);
 router.get("/configuration/:id", authenticate, FormController.getFormConfiguration);
 router.get("/validation/:id", authenticate, FormController.getValidationForm);

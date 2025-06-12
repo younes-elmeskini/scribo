@@ -1644,4 +1644,28 @@ export default class FormController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
+
+  static async getTextStyle(req: Request, res: Response): Promise<void> {
+    try {
+      const textStyle = await prisma.textStyle.findMany({
+        where:{
+          deletedAt:null
+        },
+        select:{
+          id:true,
+          styleName:true
+        }
+      })
+      if(textStyle.length == 0){
+        res.status(404).json({message:"Text Style not found"})
+        return
+      }
+      res.status(200).json({
+        data:textStyle
+      })
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
 }
