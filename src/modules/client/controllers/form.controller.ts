@@ -125,6 +125,7 @@ export default class FormController {
                   ordre: true,
                   content: true,
                   desactivedAt: true,
+                  default: true,
                 },
                 orderBy: {
                   ordre: "asc",
