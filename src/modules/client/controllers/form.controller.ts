@@ -116,6 +116,7 @@ export default class FormController {
               disable: true,
               style: true,
               ordre: true,
+              selectId:true,
               placeholdre: true,
               FormFieldOption: {
                 select: {
