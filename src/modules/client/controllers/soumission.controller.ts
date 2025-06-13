@@ -1,5 +1,10 @@
 import { Request, Response } from "express";
 import prisma from "../../../utils/client";
+import SoumissionValidation from "../utils/validation/soumission";
+import { validationResult } from "../../../utils/validation/validationResult";
+import { z } from "zod";
+
+type createNote = z.infer<typeof SoumissionValidation.createNotesSchema>;
 export default class SoumissionController {
   static async getCompagneSoumissions(
     req: Request,
@@ -224,6 +229,132 @@ export default class SoumissionController {
     }
   }
 
+  static async updateSoumissionAnswers(req: Request, res: Response): Promise<void> {
+    try {
+      const soumissionId = req.params.id;
+      const clientId = req.client?.id;
+      const answers = req.body.answers;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+      
+      const soumission = await prisma.soumission.findFirst({
+        where: {
+          id: soumissionId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() },
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(),
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+      if (!soumission) {
+        res.status(404).json({ message: "Soumission non trouvée ou accès refusé" });
+        return;
+      }
+
+      if (!Array.isArray(answers) || answers.length === 0) {
+        res.status(400).json({ message: "Aucune réponse à mettre à jour" });
+        return;
+      }
+      
+      // Vérifier que toutes les réponses appartiennent à cette soumission
+      const answerIds = answers.map(a => a.id);
+      const existingAnswers = await prisma.answer.findMany({
+        where: {
+          id: { in: answerIds },
+          soumissionId
+        }
+      });
+      if (existingAnswers.length !== answers.length) {
+        res.status(400).json({ message: "Une ou plusieurs réponses sont invalides" });
+        return;
+      }
+
+      // Mettre à jour toutes les réponses dans une transaction
+      await prisma.$transaction(
+        answers.map(a =>
+          prisma.answer.update({
+            where: { id: a.id },
+            data: { valeu: a.value }
+          })
+        )
+      );
+
+      // Retourner les réponses mises à jour
+      const updatedAnswers = await prisma.answer.findMany({
+        where: { soumissionId }
+      });
+
+      res.status(200).json({
+        message: "Réponses mises à jour avec succès",
+        data: updatedAnswers
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
+  
+  static async deleteSoumission(req: Request, res: Response): Promise<void> {
+    try {
+      const soumissionId = req.params.id;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+      
+      const soumission = await prisma.soumission.findFirst({
+        where: {
+          id: soumissionId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() },
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(),
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+      if (!soumission) {
+        res.status(404).json({ message: "Soumission non trouvée ou accès refusé" });
+        return;
+      }
+      
+      await prisma.soumission.update({
+        where: { id: soumissionId },
+        data:{
+          deletedAt: new Date()
+        }
+      });
+
+      res.status(200).json({ message: "Soumission supprimée avec succès" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
+
   static async toggleSoumissionFavorite(
     req: Request,
     res: Response
@@ -285,6 +416,216 @@ export default class SoumissionController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
+
+  static async createNote(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    try {
+      const soumissionId = req.params.id;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      const soumission = await prisma.soumission.findFirst({
+        where: {
+          id: soumissionId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() }, // Propriétaire
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(), // Membre d'équipe
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      if (!soumission) {
+        res.status(404).json({ message: "Submission not found or access denied" });
+        return;
+      }
+      const parsedData:createNote =  SoumissionValidation.createNotesSchema.parse(req.body);
+
+      if (!parsedData) {
+        res.status(400).json({ message: "Notes content is required" });
+        return;
+      }
+
+      // Créer la note
+      const newNote = await prisma.notes.create({
+        data: {
+          notes :parsedData.toString(),
+          compagneId: soumission.compagneId,
+          clientId: clientId.toString(),
+          soumissionId,
+        },
+      });
+
+      res.status(201).json({
+        message: "Note created successfully",
+        data: newNote,
+      });
+    } catch (error) {
+      console.error("Error creating note:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
+  static async getNotes(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    try {
+      const soumissionId = req.params.id;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      // Vérifier si la soumission existe et si l'utilisateur a accès
+      const soumission = await prisma.soumission.findFirst({
+        where: {
+          id: soumissionId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() }, // Propriétaire
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(), // Membre d'équipe
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      if (!soumission) {
+        res.status(404).json({ message: "Submission not found or access denied" });
+        return;
+      }
+
+      // Récupérer les notes pour cette soumission
+      const notes = await prisma.notes.findMany({
+        where: {
+          soumissionId,
+          deletedAt: null,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      res.status(200).json({
+        data: notes,
+      });
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
+  static async updateNote(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    try {
+      const noteId = req.params.noteId;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      // Vérifier si la note existe et si l'utilisateur a accès
+      const note = await prisma.notes.findFirst({
+        where: {
+          id: noteId,
+          clientId: clientId.toString(),
+        },
+      });
+
+      if (!note) {
+        res.status(404).json({ message: "Note not found or access denied" });
+        return;
+      }
+      const parsedData:createNote =  SoumissionValidation.createNotesSchema.parse(req.body);
+      if (!parsedData) {
+        res.status(400).json({ message: "Notes content is required" });
+        return;
+      }
+      const updatedNote = await prisma.notes.update({
+        where: { id: noteId },
+        data: {
+          notes:parsedData.toString(),
+        }
+      });
+
+      res.status(200).json({
+        message: "Note updated successfully",
+        data: updatedNote,
+      });
+    } catch (error) {
+      console.error("Error updating note:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
+  static async deleteNote(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    try {
+      const noteId = req.params.noteId;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      const note = await prisma.notes.findFirst({
+        where: {
+          id: noteId,
+          clientId: clientId.toString(),
+        },
+      });
+
+      if (!note) {
+        res.status(404).json({ message: "Note not found or access denied" });
+        return;
+      }
+
+      await prisma.notes.update({
+        where: { id: noteId },
+        data: { deletedAt: new Date() },
+      });
+
+      res.status(200).json({
+        message: "Note deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
+
 
 //   static async exportSoumissionsToCSV(
 //     req: Request,
