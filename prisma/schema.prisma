@@ -281,6 +281,8 @@ model Task {
 model Appointment {
   id           String     @id @default(cuid())
   date         DateTime
+  adress       String
+  commentaire  String
   compagneId   String
   compagne     Compagne   @relation(fields: [compagneId], references: [id], onDelete: Cascade)
   clientId     String
