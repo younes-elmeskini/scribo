@@ -141,6 +141,15 @@ export default class FormController {
                   type: true,
                 },
               },
+              FormFieldMap:{
+                select:{
+                  id:true,
+                  lat:true,    
+                  lng:true,       
+                  zoom:true,  
+                  height:true,
+                }
+              }
             },
             orderBy: {
               ordre: "asc",
@@ -1278,7 +1287,7 @@ export default class FormController {
             orderBy: {
               ordre: 'asc'
             }
-          }
+          },
         }
       });
       
