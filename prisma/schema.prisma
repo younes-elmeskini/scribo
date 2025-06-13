@@ -238,6 +238,7 @@ model Call {
 model Email {
   id           String     @id @default(cuid())
   email        String
+  message      String
   compagneId   String
   compagne     Compagne   @relation(fields: [compagneId], references: [id], onDelete: Cascade)
   clientId     String
