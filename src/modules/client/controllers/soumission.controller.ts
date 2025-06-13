@@ -3,8 +3,10 @@ import prisma from "../../../utils/client";
 import SoumissionValidation from "../utils/validation/soumission";
 import { validationResult } from "../../../utils/validation/validationResult";
 import { z } from "zod";
+import nodemailer from 'nodemailer';
 
 type createNote = z.infer<typeof SoumissionValidation.createNotesSchema>;
+type sendEmail = z.infer<typeof SoumissionValidation.sendEmailSchema>;
 export default class SoumissionController {
   static async getCompagneSoumissions(
     req: Request,
@@ -625,7 +627,161 @@ export default class SoumissionController {
     }
   }
 
+  static async sendEmail(req: Request, res: Response): Promise<void> {
+    try {
+      const soumissionId = req.params.id;
+      const clientId = req.client?.id;
 
+      // Validation Zod
+      validationResult(SoumissionValidation.sendEmailSchema, req, res);
+      const parsedData:sendEmail =  SoumissionValidation.sendEmailSchema.parse(req.body);
+
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      // Vérifier que la soumission existe et que le client a accès
+      const soumission = await prisma.soumission.findFirst({
+        where: {
+          id: soumissionId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() },
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(),
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+      if (!soumission) {
+        res.status(404).json({ message: "Soumission non trouvée ou accès refusé" });
+        return;
+      }
+
+      // Stocker l'email
+      const newEmail = await prisma.email.create({
+        data: {
+          email: parsedData.email,
+          message:parsedData.message,
+          compagneId: soumission.compagneId,
+          clientId: clientId.toString(),
+          soumissionId,
+        },
+      });
+
+      const transporter = nodemailer.createTransport({
+        service: 'gmail', 
+        auth: {
+          user: process.env.EMAIL_USER, 
+          pass: process.env.EMAIL_PASSWORD  
+        }
+      });
+
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: parsedData.email,
+        subject: "Message concernant votre soumission",
+        text: parsedData.message,
+      });
+
+      res.status(201).json({
+        message: "Email envoyé et enregistré avec succès",
+        data: newEmail,
+      });
+    } catch (error) {
+      console.error("Error sending email:", error);
+      res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
+
+  static async getEmails(req: Request, res: Response): Promise<void> {
+    try {
+      const soumissionId = req.params.id;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      // Vérifier l'accès à la soumission
+      const soumission = await prisma.soumission.findFirst({
+        where: {
+          id: soumissionId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() },
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(),
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+      if (!soumission) {
+        res.status(404).json({ message: "Soumission non trouvée ou accès refusé" });
+        return;
+      }
+
+      const emails = await prisma.email.findMany({
+        where: { soumissionId, deletedAt: null },
+        orderBy: { createdAt: "desc" },
+      });
+
+      res.status(200).json({ data: emails });
+    } catch (error) {
+      console.error("Error fetching emails:", error);
+      res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
+
+  static async deleteEmail(req: Request, res: Response): Promise<void> {
+    try {
+      const emailId = req.params.emailId;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      const email = await prisma.email.findFirst({
+        where: {
+          id: emailId,
+          clientId: clientId.toString(),
+          deletedAt: null,
+        },
+      });
+      if (!email) {
+        res.status(404).json({ message: "Email non trouvé ou accès refusé" });
+        return;
+      }
+
+      await prisma.email.update({
+        where: { id: emailId },
+        data: { deletedAt: new Date() },
+      });
+
+      res.status(200).json({ message: "Email supprimé avec succès" });
+    } catch (error) {
+      console.error("Error deleting email:", error);
+      res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
 
 //   static async exportSoumissionsToCSV(
 //     req: Request,
