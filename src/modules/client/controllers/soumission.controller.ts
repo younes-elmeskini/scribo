@@ -3,7 +3,7 @@ import prisma from "../../../utils/client";
 import SoumissionValidation from "../utils/validation/soumission";
 import { validationResult } from "../../../utils/validation/validationResult";
 import { z } from "zod";
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 type createNote = z.infer<typeof SoumissionValidation.createNotesSchema>;
 type sendEmail = z.infer<typeof SoumissionValidation.sendEmailSchema>;
@@ -15,23 +15,23 @@ export default class SoumissionController {
     try {
       const compagneId = req.params.id;
       const clientId = req.client?.id;
-      
+
       if (!clientId) {
         res.status(401).json({ message: "Unauthorized" });
         return;
       }
-      
+
       // Vérifier si la campagne existe et si l'utilisateur a accès
       const compagne = await prisma.compagne.findFirst({
         where: {
           id: compagneId,
           OR: [
-            { clientId: clientId.toString() }, 
+            { clientId: clientId.toString() },
             {
               TeamCompagne: {
                 some: {
                   teamMember: {
-                    membreId: clientId.toString(), 
+                    membreId: clientId.toString(),
                   },
                 },
               },
@@ -39,22 +39,24 @@ export default class SoumissionController {
           ],
         },
       });
-      
+
       if (!compagne) {
-        res.status(404).json({ message: "Campagne not found or access denied" });
+        res
+          .status(404)
+          .json({ message: "Campagne not found or access denied" });
         return;
       }
-      
+
       // Parse pagination parameters
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
       const skip = (page - 1) * limit;
-      
+
       // Get total count for pagination metadata
       const totalCount = await prisma.soumission.count({
         where: { compagneId },
       });
-      
+
       // Get submissions with answers
       const soumissions = await prisma.soumission.findMany({
         where: { compagneId },
@@ -79,32 +81,32 @@ export default class SoumissionController {
         skip,
         take: limit,
       });
-      
+
       // Format the submissions for better readability
-      const formattedSoumissions = soumissions.map(soumission => {
+      const formattedSoumissions = soumissions.map((soumission) => {
         // Create an object with field labels as keys and answers as values
         const formattedAnswers: Record<string, any> = {};
-        
-        soumission.answer.forEach(answer => {
+
+        soumission.answer.forEach((answer) => {
           const fieldLabel = answer.formField.label;
           const fieldType = answer.formField.fields.type;
-          
+
           // Format the answer value based on field type
           let formattedValue: any = answer.valeu;
-          
+
           if (fieldType === "date") {
-            formattedValue = new Date(answer.valeu).toISOString().split('T')[0];
+            formattedValue = new Date(answer.valeu).toISOString().split("T")[0];
           } else if (fieldType === "checkbox") {
             formattedValue = answer.valeu === "true";
           } else if (fieldType === "number") {
             formattedValue = parseFloat(answer.valeu);
           }
-          
+
           if (fieldLabel !== null && fieldLabel !== undefined) {
             formattedAnswers[fieldLabel] = formattedValue;
           }
         });
-        
+
         return {
           id: soumission.id,
           createdAt: soumission.createdAt,
@@ -112,10 +114,10 @@ export default class SoumissionController {
           answers: formattedAnswers,
         };
       });
-      
+
       // Calculate pagination metadata
       const totalPages = Math.ceil(totalCount / limit);
-      
+
       res.status(200).json({
         data: formattedSoumissions,
         pagination: {
@@ -206,7 +208,6 @@ export default class SoumissionController {
         appointments: soumission.appointment.length,
       };
 
-
       res.status(200).json({
         data: {
           id: soumission.id,
@@ -231,7 +232,10 @@ export default class SoumissionController {
     }
   }
 
-  static async updateSoumissionAnswers(req: Request, res: Response): Promise<void> {
+  static async updateSoumissionAnswers(
+    req: Request,
+    res: Response
+  ): Promise<void> {
     try {
       const soumissionId = req.params.id;
       const clientId = req.client?.id;
@@ -241,7 +245,7 @@ export default class SoumissionController {
         res.status(401).json({ message: "Unauthorized" });
         return;
       }
-      
+
       const soumission = await prisma.soumission.findFirst({
         where: {
           id: soumissionId,
@@ -262,7 +266,9 @@ export default class SoumissionController {
         },
       });
       if (!soumission) {
-        res.status(404).json({ message: "Soumission non trouvée ou accès refusé" });
+        res
+          .status(404)
+          .json({ message: "Soumission non trouvée ou accès refusé" });
         return;
       }
 
@@ -270,45 +276,47 @@ export default class SoumissionController {
         res.status(400).json({ message: "Aucune réponse à mettre à jour" });
         return;
       }
-      
+
       // Vérifier que toutes les réponses appartiennent à cette soumission
-      const answerIds = answers.map(a => a.id);
+      const answerIds = answers.map((a) => a.id);
       const existingAnswers = await prisma.answer.findMany({
         where: {
           id: { in: answerIds },
-          soumissionId
-        }
+          soumissionId,
+        },
       });
       if (existingAnswers.length !== answers.length) {
-        res.status(400).json({ message: "Une ou plusieurs réponses sont invalides" });
+        res
+          .status(400)
+          .json({ message: "Une ou plusieurs réponses sont invalides" });
         return;
       }
 
       // Mettre à jour toutes les réponses dans une transaction
       await prisma.$transaction(
-        answers.map(a =>
+        answers.map((a) =>
           prisma.answer.update({
             where: { id: a.id },
-            data: { valeu: a.value }
+            data: { valeu: a.value },
           })
         )
       );
 
       // Retourner les réponses mises à jour
       const updatedAnswers = await prisma.answer.findMany({
-        where: { soumissionId }
+        where: { soumissionId },
       });
 
       res.status(200).json({
         message: "Réponses mises à jour avec succès",
-        data: updatedAnswers
+        data: updatedAnswers,
       });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
-  
+
   static async deleteSoumission(req: Request, res: Response): Promise<void> {
     try {
       const soumissionId = req.params.id;
@@ -318,7 +326,7 @@ export default class SoumissionController {
         res.status(401).json({ message: "Unauthorized" });
         return;
       }
-      
+
       const soumission = await prisma.soumission.findFirst({
         where: {
           id: soumissionId,
@@ -339,15 +347,17 @@ export default class SoumissionController {
         },
       });
       if (!soumission) {
-        res.status(404).json({ message: "Soumission non trouvée ou accès refusé" });
+        res
+          .status(404)
+          .json({ message: "Soumission non trouvée ou accès refusé" });
         return;
       }
-      
+
       await prisma.soumission.update({
         where: { id: soumissionId },
-        data:{
-          deletedAt: new Date()
-        }
+        data: {
+          deletedAt: new Date(),
+        },
       });
 
       res.status(200).json({ message: "Soumission supprimée avec succès" });
@@ -405,8 +415,8 @@ export default class SoumissionController {
       });
 
       res.status(200).json({
-        message: updatedSoumission.favorite 
-          ? "Submission marked as favorite" 
+        message: updatedSoumission.favorite
+          ? "Submission marked as favorite"
           : "Submission removed from favorites",
         data: {
           id: updatedSoumission.id,
@@ -419,10 +429,7 @@ export default class SoumissionController {
     }
   }
 
-  static async createNote(
-    req: Request,
-    res: Response
-  ): Promise<void> {
+  static async createNote(req: Request, res: Response): Promise<void> {
     try {
       const soumissionId = req.params.id;
       const clientId = req.client?.id;
@@ -453,10 +460,13 @@ export default class SoumissionController {
       });
 
       if (!soumission) {
-        res.status(404).json({ message: "Submission not found or access denied" });
+        res
+          .status(404)
+          .json({ message: "Submission not found or access denied" });
         return;
       }
-      const parsedData:createNote =  SoumissionValidation.createNotesSchema.parse(req.body);
+      const parsedData: createNote =
+        SoumissionValidation.createNotesSchema.parse(req.body);
 
       if (!parsedData) {
         res.status(400).json({ message: "Notes content is required" });
@@ -466,7 +476,7 @@ export default class SoumissionController {
       // Créer la note
       const newNote = await prisma.notes.create({
         data: {
-          notes :parsedData.toString(),
+          notes: parsedData.toString(),
           compagneId: soumission.compagneId,
           clientId: clientId.toString(),
           soumissionId,
@@ -483,10 +493,7 @@ export default class SoumissionController {
     }
   }
 
-  static async getNotes(
-    req: Request,
-    res: Response
-  ): Promise<void> {
+  static async getNotes(req: Request, res: Response): Promise<void> {
     try {
       const soumissionId = req.params.id;
       const clientId = req.client?.id;
@@ -518,7 +525,9 @@ export default class SoumissionController {
       });
 
       if (!soumission) {
-        res.status(404).json({ message: "Submission not found or access denied" });
+        res
+          .status(404)
+          .json({ message: "Submission not found or access denied" });
         return;
       }
 
@@ -541,10 +550,7 @@ export default class SoumissionController {
     }
   }
 
-  static async updateNote(
-    req: Request,
-    res: Response
-  ): Promise<void> {
+  static async updateNote(req: Request, res: Response): Promise<void> {
     try {
       const noteId = req.params.noteId;
       const clientId = req.client?.id;
@@ -566,7 +572,8 @@ export default class SoumissionController {
         res.status(404).json({ message: "Note not found or access denied" });
         return;
       }
-      const parsedData:createNote =  SoumissionValidation.createNotesSchema.parse(req.body);
+      const parsedData: createNote =
+        SoumissionValidation.createNotesSchema.parse(req.body);
       if (!parsedData) {
         res.status(400).json({ message: "Notes content is required" });
         return;
@@ -574,8 +581,8 @@ export default class SoumissionController {
       const updatedNote = await prisma.notes.update({
         where: { id: noteId },
         data: {
-          notes:parsedData.toString(),
-        }
+          notes: parsedData.toString(),
+        },
       });
 
       res.status(200).json({
@@ -588,10 +595,7 @@ export default class SoumissionController {
     }
   }
 
-  static async deleteNote(
-    req: Request,
-    res: Response
-  ): Promise<void> {
+  static async deleteNote(req: Request, res: Response): Promise<void> {
     try {
       const noteId = req.params.noteId;
       const clientId = req.client?.id;
@@ -634,7 +638,9 @@ export default class SoumissionController {
 
       // Validation Zod
       validationResult(SoumissionValidation.sendEmailSchema, req, res);
-      const parsedData:sendEmail =  SoumissionValidation.sendEmailSchema.parse(req.body);
+      const parsedData: sendEmail = SoumissionValidation.sendEmailSchema.parse(
+        req.body
+      );
 
       if (!clientId) {
         res.status(401).json({ message: "Unauthorized" });
@@ -662,7 +668,9 @@ export default class SoumissionController {
         },
       });
       if (!soumission) {
-        res.status(404).json({ message: "Soumission non trouvée ou accès refusé" });
+        res
+          .status(404)
+          .json({ message: "Soumission non trouvée ou accès refusé" });
         return;
       }
 
@@ -670,7 +678,7 @@ export default class SoumissionController {
       const newEmail = await prisma.email.create({
         data: {
           email: parsedData.email,
-          message:parsedData.message,
+          message: parsedData.message,
           compagneId: soumission.compagneId,
           clientId: clientId.toString(),
           soumissionId,
@@ -678,11 +686,11 @@ export default class SoumissionController {
       });
 
       const transporter = nodemailer.createTransport({
-        service: 'gmail', 
+        service: "gmail",
         auth: {
-          user: process.env.EMAIL_USER, 
-          pass: process.env.EMAIL_PASSWORD  
-        }
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD,
+        },
       });
 
       await transporter.sendMail({
@@ -733,7 +741,9 @@ export default class SoumissionController {
         },
       });
       if (!soumission) {
-        res.status(404).json({ message: "Soumission non trouvée ou accès refusé" });
+        res
+          .status(404)
+          .json({ message: "Soumission non trouvée ou accès refusé" });
         return;
       }
 
@@ -783,139 +793,376 @@ export default class SoumissionController {
     }
   }
 
-//   static async exportSoumissionsToCSV(
-//     req: Request,
-//     res: Response
-//   ): Promise<void> {
-//     try {
-//       const compagneId = req.params.id;
-//       const clientId = req.client?.id;
+  // Ajouter un rendez-vous
+  static async createAppointment(req: Request, res: Response): Promise<void> {
+    try {
+      const { date, adress, representantId, commentaire } = req.body;
+      const soumissionId = req.params.id;
+      const clientId = req.client?.id;
 
-//       if (!clientId) {
-//         res.status(401).json({ message: "Unauthorized" });
-//         return;
-//       }
+      if (!clientId) {
+        res.status(401).json({ message: "Non autorisé" });
+        return;
+      }
 
-//       // Vérifier si la campagne existe et si l'utilisateur a accès
-//       const compagne = await prisma.compagne.findFirst({
-//         where: {
-//           id: compagneId,
-//           OR: [
-//             { clientId: clientId.toString() }, // Propriétaire
-//             {
-//               TeamCompagne: {
-//                 some: {
-//                   teamMember: {
-//                     membreId: clientId.toString(), // Membre d'équipe
-//                   },
-//                 },
-//               },
-//             },
-//           ],
-//         },
-//       });
+      // Vérifier l'accès à la soumission
+      const soumission = await prisma.soumission.findFirst({
+        where: {
+          id: soumissionId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() },
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(),
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+      if (!soumission) {
+        res
+          .status(404)
+          .json({ message: "Soumission non trouvée ou accès refusé" });
+        return;
+      }
 
-//       if (!compagne) {
-//         res
-//           .status(404)
-//           .json({ message: "Campagne not found or access denied" });
-//         return;
-//       }
+      const existingAppointment = await prisma.appointment.findFirst({
+        where: {
+          compagneId: soumission.compagneId,
+          date: new Date(date),
+          deletedAt: null,
+        },
+      });
 
-//       // Get form structure to know all possible fields
-//       const form = await prisma.form.findFirst({
-//         where: { compagneId },
-//         include: {
-//           FormField: {
-//             orderBy: { ordre: "asc" },
-//             select: {
-//               id: true,
-//               label: true,
-//               fields: {
-//                 select: {
-//                   type: true,
-//                 },
-//               },
-//             },
-//           },
-//         },
-//       });
+      if (existingAppointment) {
+        res.status(400).json({
+          message: "Cette date est déjà réservée pour cette campagne.",
+        });
+        return;
+      }
 
-//       if (!form) {
-//         res.status(404).json({ message: "Form not found" });
-//         return;
-//       }
+      const appointment = await prisma.appointment.create({
+        data: {
+          date: new Date(date),
+          compagneId: soumission.compagneId,
+          adress: adress,
+          commentaire,
+          soumissionId,
+          clientId: representantId.toString(),
+        },
+      });
 
-//       // Get all submissions with answers
-//       const soumissions = await prisma.soumission.findMany({
-//         where: { compagneId },
-//         include: {
-//           answer: {
-//             include: {
-//               formField: true,
-//             },
-//           },
-//         },
-//         orderBy: { createdAt: "desc" },
-//       });
+      res
+        .status(201)
+        .json({ message: "Rendez-vous ajouté", data: appointment });
+    } catch (error) {
+      res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
 
-//       // Prepare CSV header (all form fields + submission date)
-//       const headers = [
-//         "Submission ID",
-//         "Submission Date",
-//         ...form.FormField.map((field) => field.label),
-//       ];
+  // Modifier un rendez-vous
+  static async updateAppointment(req: Request, res: Response): Promise<void> {
+    try {
+      const appointmentId = req.params.appointmentId;
+      const { date, adress, representantId, commentaire } = req.body;
+      const clientId = req.client?.id;
 
-//       // Prepare CSV rows
-//       const rows = soumissions.map((soumission) => {
-//         const row: Record<string, string> = {
-//           "Submission ID": soumission.id,
-//           "Submission Date": soumission.createdAt.toISOString(),
-//         };
+      if (!clientId) {
+        res.status(401).json({ message: "Non autorisé" });
+        return;
+      }
 
-//         // Initialize all fields with empty values
-//         form.FormField.forEach((field) => {
-//           row[field.label] = "";
-//         });
+      const appointment = await prisma.appointment.findFirst({
+        where: {
+          id: appointmentId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() },
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(),
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+      if (!appointment) {
+        res
+          .status(404)
+          .json({ message: "appointment non trouvée ou accès refusé" });
+        return;
+      }
 
-//         // Fill in the answers
-//         soumission.answer.forEach((answer) => {
-//           const fieldLabel = answer.formField.label;
-//           row[fieldLabel] = answer.valeu;
-//         });
+      const existingAppointment = await prisma.appointment.findFirst({
+        where: {
+          compagneId: appointment.compagneId,
+          date: new Date(date),
+          deletedAt: null,
+        },
+      });
 
-//         return Object.values(row);
-//       });
+      if (existingAppointment) {
+        res.status(400).json({
+          message: "Cette date est déjà réservée pour cette campagne.",
+        });
+        return;
+      }
 
-//       // Generate CSV content
-//       let csvContent = headers.join(",") + "\n";
-//       rows.forEach((row) => {
-//         // Properly escape and quote CSV values
-//         const escapedRow = row.map((value) => {
-//           // If value contains commas, quotes, or newlines, wrap in quotes and escape any quotes
-//           if (
-//             value &&
-//             (value.includes(",") || value.includes('"') || value.includes("\n"))
-//           ) {
-//             return `"${value.replace(/"/g, '""')}"`;
-//           }
-//           return value;
-//         });
-//         csvContent += escapedRow.join(",") + "\n";
-//       });
+      const updateappointment = await prisma.appointment.update({
+        where: { id: appointmentId, clientId: clientId.toString() },
+        data: {
+          date: new Date(date),
+          adress: adress,
+          clientId: representantId,
+          commentaire,
+        },
+      });
 
-//       // Set response headers for CSV download
-//       res.setHeader("Content-Type", "text/csv");
-//       res.setHeader(
-//         "Content-Disposition",
-//         `attachment; filename=campagne_${compagneId}_submissions.csv`
-//       );
+      res
+        .status(200)
+        .json({ message: "Rendez-vous modifié", data: updateappointment });
+    } catch (error) {
+      res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
 
-//       // Send CSV content
-//       res.status(200).send(csvContent);
-//     } catch (error) {
-//       console.error("Error exporting submissions to CSV:", error);
-//       res.status(500).json({ message: "Internal Server Error" });
-//     }
-//   }
+  static async getAppointments(req: Request, res: Response): Promise<void> {
+    try {
+      const soumissionId = req.params.id;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Non autorisé" });
+        return;
+      }
+      const soumission = await prisma.soumission.findFirst({
+        where: {
+          id: soumissionId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() },
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(),
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+      if (!soumission) {
+        res
+          .status(404)
+          .json({ message: "Soumission non trouvée ou accès refusé" });
+        return;
+      }
+      
+      const appointments = await prisma.appointment.findMany({
+        where: { soumissionId, clientId: clientId.toString(), deletedAt: null },
+        orderBy: { date: "desc" },
+      });
+
+      res.status(200).json({ data: appointments });
+    } catch (error) {
+      res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
+
+  // Supprimer un rendez-vous (soft delete)
+  static async deleteAppointment(req: Request, res: Response): Promise<void> {
+    try {
+      const appointmentId = req.params.appointmentId;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Non autorisé" });
+        return;
+      }
+      const appointment = await prisma.appointment.findFirst({
+        where: {
+          id: appointmentId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() },
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(),
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+      if (!appointment) {
+        res
+          .status(404)
+          .json({ message: "Soumission non trouvée ou accès refusé" });
+        return;
+      }
+      
+
+      await prisma.appointment.update({
+        where: { id: appointmentId, clientId: clientId.toString() },
+        data: { deletedAt: new Date() },
+      });
+
+      res.status(200).json({ message: "Rendez-vous supprimé" });
+    } catch (error) {
+      res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
+  //   static async exportSoumissionsToCSV(
+  //     req: Request,
+  //     res: Response
+  //   ): Promise<void> {
+  //     try {
+  //       const compagneId = req.params.id;
+  //       const clientId = req.client?.id;
+
+  //       if (!clientId) {
+  //         res.status(401).json({ message: "Unauthorized" });
+  //         return;
+  //       }
+
+  //       // Vérifier si la campagne existe et si l'utilisateur a accès
+  //       const compagne = await prisma.compagne.findFirst({
+  //         where: {
+  //           id: compagneId,
+  //           OR: [
+  //             { clientId: clientId.toString() }, // Propriétaire
+  //             {
+  //               TeamCompagne: {
+  //                 some: {
+  //                   teamMember: {
+  //                     membreId: clientId.toString(), // Membre d'équipe
+  //                   },
+  //                 },
+  //               },
+  //             },
+  //           ],
+  //         },
+  //       });
+
+  //       if (!compagne) {
+  //         res
+  //           .status(404)
+  //           .json({ message: "Campagne not found or access denied" });
+  //         return;
+  //       }
+
+  //       // Get form structure to know all possible fields
+  //       const form = await prisma.form.findFirst({
+  //         where: { compagneId },
+  //         include: {
+  //           FormField: {
+  //             orderBy: { ordre: "asc" },
+  //             select: {
+  //               id: true,
+  //               label: true,
+  //               fields: {
+  //                 select: {
+  //                   type: true,
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         },
+  //       });
+
+  //       if (!form) {
+  //         res.status(404).json({ message: "Form not found" });
+  //         return;
+  //       }
+
+  //       // Get all submissions with answers
+  //       const soumissions = await prisma.soumission.findMany({
+  //         where: { compagneId },
+  //         include: {
+  //           answer: {
+  //             include: {
+  //               formField: true,
+  //             },
+  //           },
+  //         },
+  //         orderBy: { createdAt: "desc" },
+  //       });
+
+  //       // Prepare CSV header (all form fields + submission date)
+  //       const headers = [
+  //         "Submission ID",
+  //         "Submission Date",
+  //         ...form.FormField.map((field) => field.label),
+  //       ];
+
+  //       // Prepare CSV rows
+  //       const rows = soumissions.map((soumission) => {
+  //         const row: Record<string, string> = {
+  //           "Submission ID": soumission.id,
+  //           "Submission Date": soumission.createdAt.toISOString(),
+  //         };
+
+  //         // Initialize all fields with empty values
+  //         form.FormField.forEach((field) => {
+  //           row[field.label] = "";
+  //         });
+
+  //         // Fill in the answers
+  //         soumission.answer.forEach((answer) => {
+  //           const fieldLabel = answer.formField.label;
+  //           row[fieldLabel] = answer.valeu;
+  //         });
+
+  //         return Object.values(row);
+  //       });
+
+  //       // Generate CSV content
+  //       let csvContent = headers.join(",") + "\n";
+  //       rows.forEach((row) => {
+  //         // Properly escape and quote CSV values
+  //         const escapedRow = row.map((value) => {
+  //           // If value contains commas, quotes, or newlines, wrap in quotes and escape any quotes
+  //           if (
+  //             value &&
+  //             (value.includes(",") || value.includes('"') || value.includes("\n"))
+  //           ) {
+  //             return `"${value.replace(/"/g, '""')}"`;
+  //           }
+  //           return value;
+  //         });
+  //         csvContent += escapedRow.join(",") + "\n";
+  //       });
+
+  //       // Set response headers for CSV download
+  //       res.setHeader("Content-Type", "text/csv");
+  //       res.setHeader(
+  //         "Content-Disposition",
+  //         `attachment; filename=campagne_${compagneId}_submissions.csv`
+  //       );
+
+  //       // Send CSV content
+  //       res.status(200).send(csvContent);
+  //     } catch (error) {
+  //       console.error("Error exporting submissions to CSV:", error);
+  //       res.status(500).json({ message: "Internal Server Error" });
+  //     }
+  //   }
 }
