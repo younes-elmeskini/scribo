@@ -1689,7 +1689,7 @@ export default class FormController {
       }
 
       // Chemin relatif à stocker en BDD
-      const coverImagePath = path.join("cover/", req.file.filename);
+      const coverImagePath = `cover/${req.file.filename}`;
 
       const updatedForm = await prisma.form.update({
         where: { id: formId },

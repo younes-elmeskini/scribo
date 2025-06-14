@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs";
 
 // Création auto du dossier uploads si besoin
-const uploadDir = path.join(__dirname, "../../../uploads/cover");
+const uploadDir = path.join(__dirname, "../../../uploads/cover/");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
