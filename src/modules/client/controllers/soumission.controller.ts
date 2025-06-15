@@ -1030,6 +1030,112 @@ export default class SoumissionController {
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
+
+  static async createTask(req: Request, res: Response): Promise<void> {
+    try {
+      const { titleTask, description, representantId} = req.body;
+      const soumissionId = req.params.id;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Non autorisé" });
+        return;
+      }
+
+      // Vérifier l'accès à la soumission
+      const soumission = await prisma.soumission.findFirst({
+        where: {
+          id: soumissionId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() },
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(),
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+      if (!soumission) {
+        res
+          .status(404)
+          .json({ message: "Soumission non trouvée ou accès refusé" });
+        return;
+      }
+
+      const task = await prisma.task.create({
+        data: {
+          compagneId: soumission.compagneId,
+          titleTask,
+          description,
+          soumissionId,
+          clientId: representantId.toString(),
+        },
+      });
+
+      if(!task){
+        res.status(404).json({
+          message:"task not created"
+        })
+      }
+      res
+        .status(201)
+        .json({ message: "Rendez-vous ajouté", data: task });
+    } catch (error) {
+      res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
+
+  static async getTask(req: Request, res: Response): Promise<void> {
+    try {
+      const soumissionId = req.params.id;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Non autorisé" });
+        return;
+      }
+      const soumission = await prisma.soumission.findFirst({
+        where: {
+          id: soumissionId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() },
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(),
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+      if (!soumission) {
+        res
+          .status(404)
+          .json({ message: "Soumission non trouvée ou accès refusé" });
+        return;
+      }
+      
+      const tasks = await prisma.task.findMany({
+        where: { soumissionId, clientId: clientId.toString(), deletedAt: null },
+      });
+      
+      res.status(200).json({ data: tasks });
+    } catch (error) {
+      res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
   //   static async exportSoumissionsToCSV(
   //     req: Request,
   //     res: Response
