@@ -266,7 +266,9 @@ model Notes {
 
 model Task {
   id           String     @id @default(cuid())
-  task         String
+  titleTask    String
+  description  String
+  status       Boolean    @default(false)
   compagneId   String
   compagne     Compagne   @relation(fields: [compagneId], references: [id], onDelete: Cascade)
   clientId     String
