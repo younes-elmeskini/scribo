@@ -22,5 +22,6 @@ router.get("/sidebar", authenticate, CompagneController.getsideBarData);
 router.get("/:id", authenticate, CompagneController.getCompagneById);
 
 router.put("/:id/favorite", authenticate, CompagneController.favoriteCompagne);
+router.put("/:id", authenticate, CompagneController.updateCompagne)
 
 export default router;

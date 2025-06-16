@@ -7,8 +7,8 @@ import { Role } from "@prisma/client";
 import multer from "multer";
 import GestionForm from "../utils/gestionfrom";
 
-
 type createCompagne = z.infer<typeof CompagneValidation.createCompagneSchema>;
+type updateCompagne = z.infer<typeof CompagneValidation.updatecompagne>;
 
 // Configuration Multer pour l'upload de fichiers Excel
 const storage = multer.memoryStorage();
@@ -191,8 +191,23 @@ export default class CompagneController {
   static async getCompagneById(req: Request, res: Response): Promise<void> {
     try {
       const compagneId = req.params.id;
+      const clientId = req.client?.id;
+      if (!clientId) {
+        res.status(400).json({ message: "Unauthorized" });
+        return;
+      }
       const compagne = await prisma.compagne.findUnique({
-        where: { id: compagneId },
+        where: {
+          id: compagneId,
+          OR: [
+            {
+              clientId: clientId.toString(), // Owner
+            },
+            {
+              clientId: clientId.toString(), // Member
+            },
+          ],
+        },
         select: {
           description: true,
         },
@@ -224,12 +239,12 @@ export default class CompagneController {
             compagneId,
           },
           FormFieldOption: {
-            some: {} // This replaces the options.isEmpty check
+            some: {}, // This replaces the options.isEmpty check
           },
         },
         include: {
           Answer: true,
-          FormFieldOption: true
+          FormFieldOption: true,
         },
       });
 
@@ -292,16 +307,16 @@ export default class CompagneController {
       });
       res.status(200).json({
         data: {
-          totalsoumissions:soumissions.length,
+          totalsoumissions: soumissions.length,
           description: compagne.description,
           soumissionsByDay,
           answersStats,
-          action:{
+          action: {
             calls,
             notes,
             emails,
             tasks,
-            appointment
+            appointment,
           },
         },
       });
@@ -426,10 +441,10 @@ export default class CompagneController {
       }
 
       // Préparer les données pour GestionForm.generateFormFieldsData
-      const fieldCountsData = parsedData.fields.map(field => ({
-        fieldName: fields.find(f => f.id === field.id)?.fieldName || "",
+      const fieldCountsData = parsedData.fields.map((field) => ({
+        fieldName: fields.find((f) => f.id === field.id)?.fieldName || "",
         id: field.id,
-        count: field.quantity || 1
+        count: field.quantity || 1,
       }));
 
       // Utiliser GestionForm pour générer les champs de formulaire
@@ -440,7 +455,9 @@ export default class CompagneController {
       );
 
       // Generate default validation messages
-      const defaultValidations = GestionForm.generateDefaultValidationMessages(form.id);
+      const defaultValidations = GestionForm.generateDefaultValidationMessages(
+        form.id
+      );
 
       // Replace the createMany call with a transaction that handles options separately
       await prisma.$transaction(async (tx) => {
@@ -448,12 +465,12 @@ export default class CompagneController {
         for (const fieldData of formFieldsData) {
           // Extract options to handle separately
           const { options, ...fieldWithoutOptions } = fieldData;
-          
+
           // Create the form field
           const createdField = await tx.formField.create({
-            data: fieldWithoutOptions
+            data: fieldWithoutOptions,
           });
-          
+
           // If this field has options and is of a type that supports options
           if (options && options.length > 0) {
             // Create options for this field
@@ -463,8 +480,8 @@ export default class CompagneController {
                   formFieldId: createdField.id,
                   ordre: option.ordre,
                   content: option.content,
-                  desactivedAt: option.desactivatedAt || false
-                }
+                  desactivedAt: option.desactivatedAt || false,
+                },
               });
             }
           }
@@ -473,7 +490,7 @@ export default class CompagneController {
         // Create default validation messages
         for (const validation of defaultValidations) {
           await tx.validationForm.create({
-            data: validation
+            data: validation,
           });
         }
       });
@@ -482,8 +499,8 @@ export default class CompagneController {
         message: "Compagne created successfully",
         data: {
           compagneId: compagne.id,
-          formId: form.id
-        }
+          formId: form.id,
+        },
       });
     } catch (error) {
       console.error(error);
@@ -571,7 +588,8 @@ export default class CompagneController {
           );
 
           // Generate default validation messages
-          const defaultValidations = GestionForm.generateDefaultValidationMessages(newForm.id);
+          const defaultValidations =
+            GestionForm.generateDefaultValidationMessages(newForm.id);
 
           // Créer tous les champs de formulaire
           if (fieldsData.length > 0) {
@@ -579,12 +597,12 @@ export default class CompagneController {
             for (const fieldData of fieldsData) {
               // Extract options to handle separately
               const { options, ...fieldWithoutOptions } = fieldData as any;
-              
+
               // Create the form field
               const createdField = await tx.formField.create({
-                data: fieldWithoutOptions
+                data: fieldWithoutOptions,
               });
-              
+
               // If this field has options and is of a type that supports options
               if (options && Array.isArray(options) && options.length > 0) {
                 // Create options for this field
@@ -594,8 +612,8 @@ export default class CompagneController {
                       formFieldId: createdField.id,
                       ordre: option.ordre,
                       content: option.content,
-                      desactivedAt: option.desactivatedAt || false
-                    }
+                      desactivedAt: option.desactivatedAt || false,
+                    },
                   });
                 }
               }
@@ -605,7 +623,7 @@ export default class CompagneController {
           // Create default validation messages
           for (const validation of defaultValidations) {
             await tx.validationForm.create({
-              data: validation
+              data: validation,
             });
           }
 
@@ -702,7 +720,9 @@ export default class CompagneController {
           formId: newForm.id,
           fieldId: modelField.fieldId,
           label: modelField.label,
-          name: `field_${modelField.fields.type.toLowerCase()}_${modelField.ordre}`,
+          name: `field_${modelField.fields.type.toLowerCase()}_${
+            modelField.ordre
+          }`,
           requird: modelField.requird,
           disable: modelField.disable,
           style: modelField.style,
@@ -716,18 +736,19 @@ export default class CompagneController {
         }));
 
         // Generate default validation messages
-        const defaultValidations = GestionForm.generateDefaultValidationMessages(newForm.id);
+        const defaultValidations =
+          GestionForm.generateDefaultValidationMessages(newForm.id);
 
         // Process each field individually to handle options
         for (const fieldData of formFieldsData) {
           // Extract options to handle separately
           const { options, ...fieldWithoutOptions } = fieldData as any;
-          
+
           // Create the form field
           const createdField = await tx.formField.create({
-            data: fieldWithoutOptions
+            data: fieldWithoutOptions,
           });
-          
+
           // If this field has options and is of a type that supports options
           if (options && Array.isArray(options) && options.length > 0) {
             // Create options for this field
@@ -737,8 +758,8 @@ export default class CompagneController {
                   formFieldId: createdField.id,
                   ordre: option.ordre,
                   content: option.content,
-                  desactivedAt: option.desactivatedAt || false
-                }
+                  desactivedAt: option.desactivatedAt || false,
+                },
               });
             }
           }
@@ -747,7 +768,7 @@ export default class CompagneController {
         // Create default validation messages
         for (const validation of defaultValidations) {
           await tx.validationForm.create({
-            data: validation
+            data: validation,
           });
         }
 
@@ -772,6 +793,52 @@ export default class CompagneController {
         message: "Erreur lors de la création de la campagne",
         error: error instanceof Error ? error.message : "Erreur inconnue",
       });
+    }
+  }
+
+  static async updateCompagne(req: Request, res: Response): Promise<void> {
+    try {
+      validationResult(CompagneValidation.updatecompagne, req, res);
+      const parsedData: updateCompagne =
+        CompagneValidation.updatecompagne.parse(req.body);
+      const compagneId = req.params;
+      const clientId = req.client?.id;
+      if (!clientId) {
+        res.status(400).json({ message: "Unauthorized" });
+        return;
+      }
+      const compagne = await prisma.compagne.findUnique({
+        where: {
+          id: compagneId.toString(),
+          OR: [
+            {
+              clientId: clientId.toString(), // Owner
+            },
+            {
+              clientId: clientId.toString(), // Member
+            },
+          ],
+        },
+      });
+
+      if (!compagne) {
+        res.status(404).json({ message: "Compagne not found" });
+        return;
+      }
+      const updateComapgne = await prisma.compagne.update({
+        where: {
+          id: compagneId.toString(),
+        },
+        data: {
+          ...parsedData,
+        },
+      });
+      res.status(201).json({
+        message: "Compagne updated successfully",
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
     }
   }
 }

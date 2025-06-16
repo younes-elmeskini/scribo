@@ -27,4 +27,15 @@ export default class CompagneValidation {
       message: "fields must be an array of strings.",
     }),
   });
+
+  static updatecompagne = z.object({
+    compagneName: z
+    .string()
+    .min(3, { message: "Compagne name must be at least 3 characters long." })
+    .optional(),
+    description: z
+    .string()
+    .min(3, { message: "Compagne description must be at least 3 characters long." })
+    .optional(),
+  })
 }
