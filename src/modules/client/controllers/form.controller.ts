@@ -1563,8 +1563,13 @@ export default class FormController {
         }
       });
 
+      const grouped: Record<string, {id: string, validationValeu: string}> = {};
+      validations.forEach(v => {
+        grouped[v.validationName] = { id: v.id, validationValeu: v.validationValeu };
+      });
+
       res.status(200).json({
-        data: validations
+        data: grouped
       });
     } catch (error) {
       console.error(error);
@@ -1588,7 +1593,6 @@ export default class FormController {
         return;
       }
       
-      // Check if form exists and user has access
       const form = await prisma.form.findFirst({
         where: {
           id: formId,
@@ -1614,10 +1618,8 @@ export default class FormController {
         return;
       }
       
-      // Get all validation IDs to update
       const validationIds = validations.map(v => v.id);
       
-      // Check if all validations exist and belong to this form
       const existingValidations = await prisma.validationForm.findMany({
         where: { 
           id: { in: validationIds },
@@ -1631,7 +1633,6 @@ export default class FormController {
         return;
       }
       
-      // Update all validations in a transaction
       await prisma.$transaction(async (tx) => {
         for (const validation of validations) {
           await tx.validationForm.update({
@@ -1641,7 +1642,6 @@ export default class FormController {
         }
       });
       
-      // Get updated validations
       const updatedValidations = await prisma.validationForm.findMany({
         where: { formId, deletedAt: null },
       });
