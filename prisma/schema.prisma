@@ -207,6 +207,7 @@ model Soumission {
   Notes       Notes[]
   Task        Task[]
   appointment Appointment[]
+  History     History[]
 }
 
 model Answer {
@@ -375,4 +376,12 @@ model ValidationForm {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
+}
+
+model History {
+  id           String     @id @default(cuid())
+  soumissionId String
+  soumission   Soumission @relation(fields: [soumissionId], references: [id], onDelete: Cascade)
+  description  String?
+  createdAt    DateTime   @default(now())
 }
