@@ -302,14 +302,22 @@ export default class SoumissionController {
         )
       );
 
-      // Retourner les réponses mises à jour
-      const updatedAnswers = await prisma.answer.findMany({
-        where: { soumissionId },
+      const client = await prisma.client.findFirst({
+        where: {
+          id: clientId.toString(),
+        },
       });
+
+      await prisma.history.create({
+        data: {
+          soumissionId,
+          description: `${client?.firstName} a modifié les données de la soumission. #${soumission.id}`,
+        },
+      });
+
 
       res.status(200).json({
         message: "Réponses mises à jour avec succès",
-        data: updatedAnswers,
       });
     } catch (error) {
       console.error(error);
@@ -482,7 +490,22 @@ export default class SoumissionController {
           soumissionId,
         },
       });
+      if (!newNote) {
+        res.status(400).json({ message: "Note not created" });
+        return;
+      }
 
+      const client = await prisma.client.findFirst({
+        where: {
+          id: clientId.toString(),
+        },
+      });
+      await prisma.history.create({
+        data: {
+          soumissionId,
+          description: `${client?.firstName}  a ajouté la note ${soumission.id}`,
+        },
+      });
       res.status(201).json({
         message: "Note created successfully",
         data: newNote,
@@ -584,7 +607,6 @@ export default class SoumissionController {
           notes: parsedData.toString(),
         },
       });
-
       res.status(200).json({
         message: "Note updated successfully",
         data: updatedNote,
@@ -692,12 +714,29 @@ export default class SoumissionController {
           pass: process.env.EMAIL_PASSWORD,
         },
       });
-
-      await transporter.sendMail({
+      const emailSend = await transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: parsedData.email,
         subject: "Message concernant votre soumission",
         text: parsedData.message,
+      });
+
+      if (!emailSend) {
+        res.status(400).json({ message: "Note not created" });
+        return;
+      }
+
+      const client = await prisma.client.findFirst({
+        where: {
+          id: clientId.toString(),
+        },
+      });
+
+      await prisma.history.create({
+        data: {
+          soumissionId,
+          description: `${client?.firstName} a envoyé un email à ${parsedData.email}`,
+        },
       });
 
       res.status(201).json({
@@ -855,6 +894,23 @@ export default class SoumissionController {
           commentaire,
           soumissionId,
           clientId: representantId.toString(),
+        },
+      });
+      if (!appointment) {
+        res.status(400).json({ message: "appointment not created" });
+        return;
+      }
+
+      const client = await prisma.client.findFirst({
+        where: {
+          id: clientId.toString(),
+        },
+      });
+
+      await prisma.history.create({
+        data: {
+          soumissionId,
+          description: `${client?.firstName} a ajouté le rendez-vous #${soumission.id}`,
         },
       });
 
@@ -1079,10 +1135,22 @@ export default class SoumissionController {
       });
 
       if (!task) {
-        res.status(404).json({
-          message: "task not created",
-        });
+        res.status(400).json({ message: "task not created" });
+        return;
       }
+
+      const client = await prisma.client.findFirst({
+        where: {
+          id: clientId.toString(),
+        },
+      });
+
+      await prisma.history.create({
+        data: {
+          soumissionId,
+          description: `${client?.firstName} a réalisé la tâche #${soumission.id}`,
+        },
+      });
       res.status(201).json({ message: "Rendez-vous ajouté", data: task });
     } catch (error) {
       res.status(500).json({ message: "Erreur interne du serveur" });
@@ -1225,9 +1293,7 @@ export default class SoumissionController {
         },
       });
       if (!task) {
-        res
-          .status(404)
-          .json({ message: "Task non trouvée ou accès refusé" });
+        res.status(404).json({ message: "Task non trouvée ou accès refusé" });
         return;
       }
 
@@ -1240,7 +1306,6 @@ export default class SoumissionController {
     } catch (error) {
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
-  
   }
   //   static async exportSoumissionsToCSV(
   //     req: Request,
