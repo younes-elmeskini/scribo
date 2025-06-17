@@ -124,83 +124,98 @@ export default class GestionForm {
     return [
       {
         formId,
-        validationName: "required",
-        validationValeu: "Ce champ est obligatoire",
-      },
-      {
-        formId,
-        validationName: "email",
-        validationValeu: "Veuillez entrer une adresse email valide",
-      },
-      {
-        formId,
-        validationName: "minLength",
-        validationValeu: "Ce champ doit contenir au moins {min} caractères",
-      },
-      {
-        formId,
-        validationName: "maxLength",
-        validationValeu: "Ce champ ne peut pas dépasser {max} caractères",
-      },
-      {
-        formId,
-        validationName: "pattern",
-        validationValeu: "Format invalide",
-      },
-      {
-        formId,
-        validationName: "fileType",
-        validationValeu: "Type de fichier non supporté. Types acceptés: {types}",
-      },
-      {
-        formId,
-        validationName: "fileSize",
-        validationValeu: "La taille du fichier ne doit pas dépasser {size}MB",
-      },
-      {
-        formId,
-        validationName: "minValue",
-        validationValeu: "La valeur doit être supérieure ou égale à {min}",
-      },
-      {
-        formId,
-        validationName: "maxValue",
-        validationValeu: "La valeur doit être inférieure ou égale à {max}",
-      },
-      {
-        formId,
         validationName: "success",
-        validationValeu: "Formulaire soumis avec succès",
+        validationValeu: "Merci pour votre message. Il a été envoyé.",
       },
       {
         formId,
-        validationName: "error401",
-        validationValeu: "Vous n'êtes pas autorisé à soumettre ce formulaire",
+        validationName: "echec",
+        validationValeu: "Une erreur s'est produite lors de la tentative d'envoi de votre message. Veuillez réessayer plus tard.",
       },
       {
         formId,
-        validationName: "emailError",
-        validationValeu: "Une erreur s'est produite lors de l'envoi de l'email",
+        validationName: "validationError",
+        validationValeu: "Un ou plusieurs champs contiennent une erreur. S'il vous plaît, vérifiez et essayez à nouveau.",
       },
       {
         formId,
-        validationName: "minCharError",
-        validationValeu: "Nombre minimum de caractères non atteint",
+        validationName: "accept",
+        validationValeu: "Vous devez accepter les termes et conditions avant d'envoyer votre message.",
       },
       {
         formId,
-        validationName: "maxCharError",
-        validationValeu: "Nombre maximum de caractères dépassé",
+        validationName: "fill",
+        validationValeu: "Veuillez remplir ce champ.",
       },
       {
         formId,
-        validationName: "fileTypeError",
-        validationValeu: "Type de fichier non autorisé",
+        validationName: "max",
+        validationValeu: "Ce champ a une entrée trop longue.",
       },
       {
         formId,
-        validationName: "uniqueEmail",
-        validationValeu: "Cette adresse email est déjà utilisée",
+        validationName: "min",
+        validationValeu: "Ce champ a une entrée trop courte.",
+      },
+      {
+        formId,
+        validationName: "uploadFail",
+        validationValeu: "Une erreur inconnue s'est produite lors du téléchargement du fichier.",
+      },
+      {
+        formId,
+        validationName: "unautorisedFile",
+        validationValeu: "Vous n'êtes pas autorisé à télécharger des fichiers de ce type.",
+      },
+      {
+        formId,
+        validationName: "uploadMax",
+        validationValeu: "Le fichier téléchargé est trop volumineux.",
+      },
+      {
+        formId,
+        validationName: "unvalidDate",
+        validationValeu: "Veuillez saisir une date au format AAAA-MM-JJ.",
+      },
+      {
+        formId,
+        validationName: "dateMax",
+        validationValeu: "Ce champ a une date trop précoce.",
+      },
+      {
+        formId,
+        validationName: "dateMin",
+        validationValeu: "Ce champ a une date trop tardive.",
+      },
+      {
+        formId,
+        validationName: "unvalidNum",
+        validationValeu: "Veuillez entrer un numéro.",
+      },
+      {
+        formId,
+        validationName: "maxNum",
+        validationValeu: "Ce champ contient un nombre trop petit.",
+      },
+      {
+        formId,
+        validationName: "minNum",
+        validationValeu: "Ce champ contient un nombre trop grand.",
+      },
+      {
+        formId,
+        validationName: "unvalidEmail",
+        validationValeu: "Entrez une adresse email valide.",
+      },
+      {
+        formId,
+        validationName: "unvalidUrl",
+        validationValeu: "Veuillez saisir une URL valide.",
+      },
+      {
+        formId,
+        validationName: "unvalidPhone",
+        validationValeu: "Veuillez saisir un numéro de téléphone valide.",
       },
     ];
   }
