@@ -28,5 +28,6 @@ router.put("/:id/favorite", authenticate, CompagneController.favoriteCompagne);
 router.put("/:id", authenticate, CompagneController.updateCompagne)
 
 router.delete('/teamcompagne/:id', authenticate, CompagneController.deleteTeamCompagne);
+router.delete('/:id', authenticate, CompagneController.deleteCompagne);
 
 export default router;

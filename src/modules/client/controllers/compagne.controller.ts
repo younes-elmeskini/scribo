@@ -1042,4 +1042,35 @@ export default class CompagneController {
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
+
+  static async deleteCompagne(req: Request, res: Response): Promise<void> {
+    try {
+      const compagneId = req.params.id;
+      const clientId = req.client?.id;
+      if (!clientId) {
+        res.status(401).json({ message: "Non autorisé" });
+        return;
+      }
+      // Vérifier que la campagne existe et que l'utilisateur est propriétaire
+      const compagne = await prisma.compagne.findFirst({
+        where: {
+          id: compagneId,
+          clientId: clientId.toString(),
+          deletedAt: null
+        },
+      });
+      if (!compagne) {
+        res.status(404).json({ message: "Campagne non trouvée ou accès refusé" });
+        return;
+      }
+      await prisma.compagne.update({
+        where: { id: compagneId },
+        data: { deletedAt: new Date() },
+      });
+      res.status(200).json({ message: "Campagne supprimée avec succès" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
 }
