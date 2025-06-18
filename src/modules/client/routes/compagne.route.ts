@@ -21,9 +21,8 @@ router.post("/teamcompagne", authenticate, CompagneController.addToTeamCompagne)
 
 router.get("/", authenticate, CompagneController.getAllCompagne);
 router.get("/sidebar", authenticate, CompagneController.getsideBarData);
-router.get("/team-member",  authenticate, CompagneController.getTeamMembre)
 router.get("/:id", authenticate, CompagneController.getCompagneById);
-router.get('/teamcompagne/:id', authenticate, CompagneController.getTeamCompagne);
+router.get('/team/:id', authenticate, CompagneController.getTeam);
 
 router.put("/:id/favorite", authenticate, CompagneController.favoriteCompagne);
 router.put("/:id", authenticate, CompagneController.updateCompagne)

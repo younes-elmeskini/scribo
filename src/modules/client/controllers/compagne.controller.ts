@@ -842,41 +842,6 @@ export default class CompagneController {
     }
   }
 
-  static async getTeamMembre(req: Request, res: Response): Promise<void> {
-    try {
-      const clientId = req.client?.id;
-      if (!clientId) {
-        res.status(400).json({ message: "Unauthorized" });
-        return;
-      }
-      const teamMember = await prisma.teamMenber.findMany({
-        where: {
-          owenrId: clientId.toString(),
-        },
-        include: {
-          member: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              profilImage: true,
-            },
-          },
-        },
-      });
-      if (teamMember.length === 0) {
-        res.status(404).json({ message: "teamMember not found" });
-        return;
-      }
-      res.status(200).json({
-        data: teamMember,
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
-    }
-  }
-
   static async addToTeamCompagne(req: Request, res: Response): Promise<void> {
     try {
       const membreId = req.body;
@@ -978,15 +943,18 @@ export default class CompagneController {
     }
   }
 
-  static async getTeamCompagne(req: Request, res: Response): Promise<void> {
+  static async getTeam(req: Request, res: Response): Promise<void> {
     try {
       const compagneId = req.params.id;
       const clientId = req.client?.id;
+      const { search } = req.query;
+
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
-      // Check if the client is owner or member of the campaign
+
+      // Vérifier si le client a accès à la campagne
       const compagne = await prisma.compagne.findFirst({
         where: {
           id: compagneId,
@@ -1005,10 +973,11 @@ export default class CompagneController {
         },
       });
       if (!compagne) {
-        res.status(404).json({ message: "Campaign not found or access denied" });
+        res.status(404).json({ message: "Campagne non trouvée ou accès refusé" });
         return;
       }
-      // Get all teamCompagne members for this campaign
+
+      // 1. Récupérer les membres assignés à la campagne
       const teamCompagne = await prisma.teamCompagne.findMany({
         where: { compagneId },
         include: {
@@ -1019,6 +988,7 @@ export default class CompagneController {
                   id: true,
                   firstName: true,
                   lastName: true,
+                  email: true,
                   profilImage: true,
                 },
               },
@@ -1026,10 +996,50 @@ export default class CompagneController {
           },
         },
       });
-      res.status(200).json({ data: teamCompagne });
+      let membresAssignes = teamCompagne.map(tc => tc.teamMember.member);
+
+      // 2. Récupérer tous les membres de l'équipe (teamMembre)
+      const allTeamMembers = await prisma.teamMenber.findMany({
+        where: {
+          owenrId: clientId.toString(),
+        },
+        include: {
+          member: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              profilImage: true,
+            },
+          },
+        },
+      });
+      // Exclure ceux déjà assignés à la campagne
+      const membresAssignesIds = new Set(membresAssignes.map(m => m.id));
+      let autresMembres = allTeamMembers
+        .map(tm => tm.member)
+        .filter(m => !membresAssignesIds.has(m.id));
+
+      // 3. Filtrage si search
+      if (search) {
+        const searchTerm = (search as string).toLowerCase();
+        const filterFn = (m: any) =>
+          m.firstName.toLowerCase().includes(searchTerm) ||
+          m.lastName.toLowerCase().includes(searchTerm) ||
+          m.email.toLowerCase().includes(searchTerm);
+        // Filtrer les deux listes
+        membresAssignes = membresAssignes.filter(filterFn);
+        autresMembres = autresMembres.filter(filterFn);
+      }
+
+      res.status(200).json({
+        membresAssignes,
+        autresMembres
+      });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
 }
