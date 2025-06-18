@@ -841,4 +841,195 @@ export default class CompagneController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
+
+  static async getTeamMembre(req: Request, res: Response): Promise<void> {
+    try {
+      const clientId = req.client?.id;
+      if (!clientId) {
+        res.status(400).json({ message: "Unauthorized" });
+        return;
+      }
+      const teamMember = await prisma.teamMenber.findMany({
+        where: {
+          owenrId: clientId.toString(),
+        },
+        include: {
+          member: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              profilImage: true,
+            },
+          },
+        },
+      });
+      if (teamMember.length === 0) {
+        res.status(404).json({ message: "teamMember not found" });
+        return;
+      }
+      res.status(200).json({
+        data: teamMember,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
+  static async addToTeamCompagne(req: Request, res: Response): Promise<void> {
+    try {
+      const membreId = req.body;
+      const compagneId = req.params;
+      const clientId = req.client?.id;
+      if (!clientId) {
+        res.status(400).json({ message: "Unauthorized" });
+        return;
+      }
+      const compagne = await prisma.compagne.findUnique({
+        where: {
+          id: compagneId.toString(),
+          OR: [
+            {
+              clientId: clientId.toString(), // Owner
+            },
+            {
+              clientId: clientId.toString(), // Member
+            },
+          ],
+        },
+      });
+      if (!compagne) {
+        res.status(404).json({ message: "Compagne not found" });
+        return;
+      }
+      const membre = await prisma.teamMenber.findFirst({
+        where: {
+          owenrId:clientId.toString(),
+          membreId:membreId,
+        },
+      });
+      if(!membre){
+        res.status(404).json({ message: "teamMember not found" });
+        return;
+      }
+      const compagneMember = await prisma.teamCompagne.findFirst({
+        where:{
+          id:membre.id
+        }
+      })
+      if(compagneMember){
+        res.status(404).json({ message: "teamCompagne ready existed" });
+        return;
+      }
+      const teamCompagne = await prisma.teamCompagne.create({
+        data: {
+          teamMenbreId: membre.id,
+          compagneId: compagneId.toString(),
+          role: 'MEMBER'
+        }
+      })
+      if(!teamCompagne){
+        res.status(404).json({ message: "teamCompagne not created" });
+        return;
+      }
+      res.status(201).json({
+        message:"teamCompagne create succes"
+      })
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
+  static async deleteTeamCompagne(req: Request, res: Response): Promise<void> {
+    try {
+      const teamCompagneId = req.params.id;
+      const clientId = req.client?.id;
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+      const teamCompagne = await prisma.teamCompagne.findUnique({
+        where: { id: teamCompagneId },
+        include: {
+          compagne: true
+        }
+      });
+
+      if (!teamCompagne) {
+        res.status(404).json({ message: "teamCompagne not found" });
+        return;
+      }
+
+      // Check if the authenticated client is the owner of the campaign
+      if (teamCompagne.compagne.clientId !== clientId.toString()) {
+        res.status(403).json({ message: "Access denied: you are not the owner of the campaign." });
+        return;
+      }
+
+      await prisma.teamCompagne.delete({
+        where: { id: teamCompagneId },
+      });
+      res.status(200).json({ message: "teamCompagne successfully deleted" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
+  static async getTeamCompagne(req: Request, res: Response): Promise<void> {
+    try {
+      const compagneId = req.params.id;
+      const clientId = req.client?.id;
+      if (!clientId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+      // Check if the client is owner or member of the campaign
+      const compagne = await prisma.compagne.findFirst({
+        where: {
+          id: compagneId,
+          OR: [
+            { clientId: clientId.toString() },
+            {
+              TeamCompagne: {
+                some: {
+                  teamMember: {
+                    membreId: clientId.toString(),
+                  },
+                },
+              },
+            },
+          ],
+        },
+      });
+      if (!compagne) {
+        res.status(404).json({ message: "Campaign not found or access denied" });
+        return;
+      }
+      // Get all teamCompagne members for this campaign
+      const teamCompagne = await prisma.teamCompagne.findMany({
+        where: { compagneId },
+        include: {
+          teamMember: {
+            include: {
+              member: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  profilImage: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      res.status(200).json({ data: teamCompagne });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
 }
