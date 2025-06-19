@@ -1363,4 +1363,65 @@ export default class SoumissionController {
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
+  static async getExportSoummision(req: Request, res: Response): Promise<void> {
+    try {
+      const compagneId = req.params.id;
+      const clientId = req.client?.id;
+      if (!clientId) {
+        res.status(401).json({ message: "Non autorisé" });
+        return;
+      }
+
+      // Construction dynamique des filtres
+      const where: any = { compagneId };
+
+      // Exemple de gestion de filtres (à adapter selon tes besoins)
+      if (req.query.status) {
+        where.status = req.query.status;
+      }
+      if (req.query.startDate && req.query.endDate) {
+        where.createdAt = {
+          gte: new Date(req.query.startDate as string),
+          lte: new Date(req.query.endDate as string),
+        };
+      }
+      if (req.query.favorite) {
+        where.favorite = req.query.favorite === "true";
+      }
+      // Ajoute ici d'autres filtres selon ton interface
+
+      // Recherche texte sur un champ précis (exemple)
+      if (req.query.search && req.query.field) {
+        where.answer = {
+          some: {
+            formField: { name: req.query.field },
+            valeu: { contains: req.query.search, mode: "insensitive" },
+          },
+        };
+      }
+
+      const soumissions = await prisma.soumission.findMany({
+        where,
+        include: {
+          answer: {
+            include: {
+              formField: {
+                select: {
+                  label: true,
+                  name: true,
+                  fields: { select: { type: true } },
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      res.status(200).json(soumissions);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
 }
