@@ -16,12 +16,13 @@ router.get("/:id/email", authenticate, SoumissionController.getEmails);
 router.get("/:id/appointment", authenticate, SoumissionController.getAppointments)
 router.get("/:id/task", authenticate, SoumissionController.getTask)
 router.get("/compagne/:id/history", authenticate, SoumissionController.getCompagneHistory);
+router.get("/compagne/:id/export", authenticate, SoumissionController.getExportSoummision);
 
 router.put("/:id/favorite", authenticate, SoumissionController.toggleSoumissionFavorite);
 router.put("/soumission/:id/answers", authenticate, SoumissionController.updateSoumissionAnswers);
 router.put("/note/:noteId", authenticate, SoumissionController.updateNote);
 router.put("/appointment/:appointmentId", authenticate, SoumissionController.updateAppointment);
-router.put("/task/:taskId", authenticate, SoumissionController.updateTask);
+router.put("/task/:taskId", authenticate, SoumissionController.updateTask); 
 
 router.delete("/note/:noteId", authenticate, SoumissionController.deleteNote);
 router.delete("/email/:emailId", authenticate, SoumissionController.deleteEmail);
