@@ -52,22 +52,18 @@ export default class FormController {
       for (const answer of answers) {
         let valueToSave: any = answer.value;
         const formField = Array.isArray(form.formField)
-          ? form.formField.find((ff) => ff.id === answer.fieldId)
-          : form.formField && form.formField.id === answer.fieldId
+          ? form.formField.find((ff) => ff.id === answer.formFieldId)
+          : form.formField && form.formField.id === answer.formFieldId
             ? form.formField
             : undefined;
 
         // Handle file upload
         if (formField?.fields.type === "file" && answer.file) {
-          // Create upload directory for this soumission if it doesn't exist
           const uploadDir = path.join(__dirname, "../../../../uploads", soumission.id);
           await fs.mkdir(uploadDir, { recursive: true });
-
-          // Decode base64 or handle file buffer (assuming answer.file is base64 string)
           const fileBuffer = Buffer.from(answer.file, "base64");
           const fileName = `${Date.now()}_${answer.fileName || "upload"}`;
           const filePath = path.join(uploadDir, fileName);
-
           await fs.writeFile(filePath, fileBuffer);
           valueToSave = `/uploads/${soumission.id}/${fileName}`;
         }
@@ -85,12 +81,12 @@ export default class FormController {
         await prisma.answer.create({
           data: {
             valeu: valueToSave,
-            formFieldId: answer.fieldId,
+            formFieldId: answer.formFieldId, // <-- use the correct property
             soumissionId: soumission.id,
           },
         });
 
-        results.push({ formFieldId: answer.fieldId, value: valueToSave });
+        results.push({ formFieldId: answer.formFieldId, value: valueToSave });
       }
 
       res.status(200).json({ form, answers: results });

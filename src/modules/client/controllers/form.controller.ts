@@ -1576,7 +1576,6 @@ export default class FormController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
-
   static async updateValidationValues(req: Request, res: Response): Promise<void> {
     try {
       const formId = req.params.id;
@@ -1655,7 +1654,6 @@ export default class FormController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
-
   static async getTextStyle(req: Request, res: Response): Promise<void> {
     try {
       const textStyle = await prisma.textStyle.findMany({
@@ -1679,7 +1677,6 @@ export default class FormController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
-
   static async uploadCoverImage(req: Request, res: Response): Promise<void> {
     try {
       const formId = req.params.id;
@@ -1705,7 +1702,6 @@ export default class FormController {
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
-
   static async deleteCoverImage(req: Request, res: Response): Promise<void> {
     try {
       const formId = req.params.id;
