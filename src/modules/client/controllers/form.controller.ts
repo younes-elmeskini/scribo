@@ -1684,15 +1684,21 @@ export default class FormController {
         res.status(400).json({ message: "Aucun fichier envoyé" });
         return;
       }
-
       // Chemin relatif à stocker en BDD
       const coverImagePath = `cover/${req.file.filename}`;
+      if (!coverImagePath) {
+        res.status(400).json({ message: "Le chemin de l'image de couverture est requis" });
+        return;
+      }
 
       const updatedForm = await prisma.form.update({
         where: { id: formId },
         data: { coverImage: coverImagePath }
       });
-
+      if (!updatedForm) {
+        res.status(404).json({ message: "Formulaire non trouvé" });
+        return;
+      }
       res.status(200).json({
         message: "Image de couverture uploadée avec succès",
         data: updatedForm
