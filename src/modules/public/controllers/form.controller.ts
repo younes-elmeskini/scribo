@@ -9,6 +9,14 @@ export default class FormController {
       const formId = req.params.id;
       const form = await prisma.form.findUnique({
         where: { id: formId },
+        include: {
+          formField: {
+            where: { disable: false },
+            include: {
+              fields: true,
+            },
+          },
+        },
       });
       if (!form) {
         res.status(404).json({ message: "Form not found" });
@@ -29,6 +37,7 @@ export default class FormController {
           formField: {
             include: {
               fields: true,
+              UniqueEmailForms: true,
             },
           },
         },
@@ -37,6 +46,37 @@ export default class FormController {
         res.status(404).json({ message: "Form not found" });
         return;
       }
+
+      // Check for UniqueEmailForms if email field exists
+      const formFields = Array.isArray(form.formField) ? form.formField : [form.formField].filter(Boolean);
+
+      const emailField = formFields.find(
+        (ff) =>
+          ff.fields.type === "email" &&
+          ff.UniqueEmailForms &&
+          ff.UniqueEmailForms.length > 0
+      );
+
+      if (emailField) {
+        const answers = req.body.answers || [];
+        const emailAnswer = answers.find((a: any) => a.formFieldId === emailField.id);
+        if (emailAnswer && emailAnswer.value) {
+          const existing = await prisma.answer.findFirst({
+            where: {
+              formFieldId: emailField.id,
+              valeu: emailAnswer.value,
+              soumission: {
+                compagneId: form.compagneId,
+              },
+            },
+          });
+          if (existing) {
+            res.status(400).json({ message: "Email already used for this form" });
+            return;
+          }
+        }
+      }
+
       const soumission = await prisma.soumission.create({
         data: {
           compagneId: form.compagneId,
@@ -81,7 +121,7 @@ export default class FormController {
         await prisma.answer.create({
           data: {
             valeu: valueToSave,
-            formFieldId: answer.formFieldId, // <-- use the correct property
+            formFieldId: answer.formFieldId,
             soumissionId: soumission.id,
           },
         });
