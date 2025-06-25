@@ -212,6 +212,7 @@ export default class CompagneController {
         select: {
           description: true,
           compagneName:true,
+          favrite:true,
           createdAt:true,
           updatedAt: true
         },
@@ -321,6 +322,7 @@ export default class CompagneController {
           description: compagne.description,
           createdAt:compagne.createdAt,
           updatedAt:compagne.updatedAt,
+          favorite:compagne.favrite,
           soumissionsByDay: soumissionsByDayArr,
           answersStats,
           action: {
