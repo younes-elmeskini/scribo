@@ -66,6 +66,35 @@ export default class FormController {
       console.log("Received body:", req.body);
       console.log("Received files:", req.files);
 
+      const { answers } = req.body;
+
+      // Check for unique email if required
+      if (form.uniqueEmailUsage && form.uniqueEmailField) {
+        if (answers && Array.isArray(answers)) {
+          const emailAnswer = answers.find(
+            (ans: any) => ans.formFieldId === form.uniqueEmailField
+          );
+
+          if (emailAnswer && emailAnswer.value) {
+            const emailValue = emailAnswer.value;
+
+            const existingAnswer = await prisma.answer.findFirst({
+              where: {
+                formFieldId: form.uniqueEmailField,
+                valeu: emailValue,
+              },
+            });
+
+            if (existingAnswer) {
+              res
+                .status(409)
+                .json({ message: "This email has already been used for a submission." });
+              return;
+            }
+          }
+        }
+      }
+
       const soumission = await prisma.soumission.create({
         data: {
           compagneId: form.compagneId,
@@ -76,7 +105,6 @@ export default class FormController {
       await fs.mkdir(submissionUploadDir, { recursive: true });
 
       const answerPromises: any[] = [];
-      const { answers } = req.body;
       const files = req.files as Express.Multer.File[];
 
       if (answers && Array.isArray(answers)) {
