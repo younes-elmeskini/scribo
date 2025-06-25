@@ -127,6 +127,8 @@ export default class FormController {
               await fs.rename(file.path, newPath);
               finalValue = path.relative(path.join(process.cwd(), 'src'), newPath);
             }
+          } else if (fieldInfo?.type === "checkbox" && Array.isArray(textValue)) {
+            finalValue = textValue.join(", ");
           } else {
             finalValue = textValue;
           }
