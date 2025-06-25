@@ -97,7 +97,7 @@ export default class SoumissionController {
           if (fieldType === "date") {
             formattedValue = new Date(answer.valeu).toISOString().split("T")[0];
           } else if (fieldType === "checkbox") {
-            formattedValue = answer.valeu === "true";
+            formattedValue = JSON.parse(answer.valeu);
           } else if (fieldType === "number") {
             formattedValue = parseFloat(answer.valeu);
           }

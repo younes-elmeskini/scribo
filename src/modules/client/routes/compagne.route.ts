@@ -17,7 +17,7 @@ router.post(
   authenticate,
   CompagneController.createCompagneFromModel
 );
-router.post("/teamcompagne", authenticate, CompagneController.addToTeamCompagne)
+router.post("/:compagneId/teamcompagne", authenticate, CompagneController.addToTeamCompagne)
 
 router.get("/", authenticate, CompagneController.getAllCompagne);
 router.get("/sidebar", authenticate, CompagneController.getsideBarData);

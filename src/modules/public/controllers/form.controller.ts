@@ -149,9 +149,26 @@ export default class FormController {
 
       const createdAnswers = await Promise.all(answerPromises);
 
+      // Nettoyage des valeurs pour la réponse :
+      const cleanedAnswers = createdAnswers.map((answer) => {
+        let cleanedValue = answer.valeu;
+        // Si la valeur ressemble à un tableau JSON, on la parse et on la retransforme en string simple
+        if (typeof cleanedValue === 'string' && cleanedValue.startsWith('["') && cleanedValue.endsWith('"]')) {
+          try {
+            const parsed = JSON.parse(cleanedValue);
+            if (Array.isArray(parsed)) {
+              cleanedValue = parsed.join(', ');
+            }
+          } catch (e) {
+            console.warn('Erreur lors du parsing JSON de la valeur du champ:', cleanedValue, e);
+          }
+        }
+        return { ...answer, valeu: cleanedValue };
+      });
+
       res
         .status(201)
-        .json({ message: "Form submitted successfully", data: createdAnswers });
+        .json({ message: "Form submitted successfully", data: cleanedAnswers });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Internal Server Error" });

@@ -191,7 +191,7 @@ export default class CompagneController {
   }
   static async getCompagneById(req: Request, res: Response): Promise<void> {
     try {
-      const compagneId = req.params.id;
+      const compagneId = req.params.id as string;
       const clientId = req.client?.id;
       if (!clientId) {
         res.status(400).json({ message: "Unauthorized" });
@@ -340,7 +340,7 @@ export default class CompagneController {
 
   static async favoriteCompagne(req: Request, res: Response): Promise<void> {
     try {
-      const compagneId = req.params.id;
+      const compagneId = req.params.id as string;
       const clientId = req.client?.id;
 
       if (!clientId) {
@@ -813,7 +813,7 @@ export default class CompagneController {
       validationResult(CompagneValidation.updatecompagne, req, res);
       const parsedData: updateCompagne =
         CompagneValidation.updatecompagne.parse(req.body);
-      const compagneId = req.params;
+      const compagneId = req.params.id as string;
       const clientId = req.client?.id;
       if (!clientId) {
         res.status(400).json({ message: "Unauthorized" });
@@ -821,7 +821,7 @@ export default class CompagneController {
       }
       const compagne = await prisma.compagne.findUnique({
         where: {
-          id: compagneId.toString(),
+          id: compagneId,
           OR: [
             {
               clientId: clientId.toString(), // Owner
@@ -839,7 +839,7 @@ export default class CompagneController {
       }
       const updateComapgne = await prisma.compagne.update({
         where: {
-          id: compagneId.toString(),
+          id: compagneId,
         },
         data: {
           ...parsedData,
@@ -857,7 +857,7 @@ export default class CompagneController {
   static async addToTeamCompagne(req: Request, res: Response): Promise<void> {
     try {
       const membreId = req.body;
-      const compagneId = req.params;
+      const compagneId = req.params.compagneId;
       const clientId = req.client?.id;
       if (!clientId) {
         res.status(400).json({ message: "Unauthorized" });
@@ -902,7 +902,7 @@ export default class CompagneController {
       const teamCompagne = await prisma.teamCompagne.create({
         data: {
           teamMenbreId: membre.id,
-          compagneId: compagneId.toString(),
+          compagneId: compagneId,
           role: 'MEMBER'
         }
       })
