@@ -71,18 +71,21 @@ export default class FormController {
           compagneId: form.compagneId,
         },
       });
+      
+      const submissionUploadDir = path.join(process.cwd(), 'src/uploads/soumissions', soumission.id);
+      await fs.mkdir(submissionUploadDir, { recursive: true });
 
       const answerPromises: any[] = [];
       const { answers } = req.body;
       const files = req.files as Express.Multer.File[];
 
       if (answers && Array.isArray(answers)) {
-        answers.forEach((answer: any, index: number) => {
+        for (const [index, answer] of answers.entries()) {
           const { formFieldId, value: textValue } = answer;
 
           if (!formFieldMap.has(formFieldId)) {
             console.warn(`Received answer for an unknown formFieldId: ${formFieldId}. Skipping.`);
-            return;
+            continue;
           }
 
           const fieldInfo = formFieldMap.get(formFieldId);
@@ -92,7 +95,9 @@ export default class FormController {
             const expectedFieldname = `answers[${index}][value]`;
             const file = files.find((f) => f.fieldname === expectedFieldname);
             if (file) {
-              finalValue = path.relative(path.join(process.cwd(), 'src'), file.path);
+              const newPath = path.join(submissionUploadDir, file.filename);
+              await fs.rename(file.path, newPath);
+              finalValue = path.relative(path.join(process.cwd(), 'src'), newPath);
             }
           } else {
             finalValue = textValue;
@@ -109,7 +114,7 @@ export default class FormController {
               })
             );
           }
-        });
+        }
       }
 
       const createdAnswers = await Promise.all(answerPromises);
