@@ -272,9 +272,25 @@ export default class CompagneController {
 
         // Compter les réponses
         field.Answer.forEach((answer) => {
-          if (optionCount[answer.valeu] !== undefined) {
-            optionCount[answer.valeu]++;
+          let values: string[] = [];
+          if (
+            typeof answer.valeu === 'string' &&
+            answer.valeu.startsWith('["') &&
+            answer.valeu.endsWith('"]')
+          ) {
+            try {
+              values = JSON.parse(answer.valeu);
+            } catch {
+              values = [answer.valeu];
+            }
+          } else {
+            values = [answer.valeu];
           }
+          values.forEach((val) => {
+            if (optionCount[val] !== undefined) {
+              optionCount[val]++;
+            }
+          });
         });
 
         // Transformer en tableau d'objets { name, valeu }
