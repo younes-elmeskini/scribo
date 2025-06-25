@@ -7,6 +7,7 @@ import { Role } from "@prisma/client";
 import multer from "multer";
 import GestionForm from "../utils/gestionfrom";
 import { Parser as Json2csvParser } from "json2csv"; 
+import { title } from "process";
 
 type createCompagne = z.infer<typeof CompagneValidation.createCompagneSchema>;
 type updateCompagne = z.infer<typeof CompagneValidation.updatecompagne>;
@@ -211,6 +212,9 @@ export default class CompagneController {
         },
         select: {
           description: true,
+          compagneName:true,
+          createdAt:true,
+          updatedAt: true
         },
       });
       if (!compagne) {
@@ -260,33 +264,29 @@ export default class CompagneController {
 
       const answersStats = formFields.map((field) => {
         const optionCount: Record<string, number> = {};
-        const optionPorcentage: Record<string, number> = {};
 
-        // Initialize counts for all options
+        // Initialiser les compteurs pour chaque option
         field.FormFieldOption.forEach((option) => {
           optionCount[option.content] = 0;
         });
 
-        // Count answers
+        // Compter les réponses
         field.Answer.forEach((answer) => {
           if (optionCount[answer.valeu] !== undefined) {
             optionCount[answer.valeu]++;
           }
         });
 
-        // Calculate percentages
-        if (field.Answer.length > 0) {
-          Object.keys(optionCount).forEach((option) => {
-            optionPorcentage[option] =
-              (optionCount[option] / field.Answer.length) * 100;
-          });
-        }
+        // Transformer en tableau d'objets { name, valeu }
+        const answers = Object.entries(optionCount).map(([name, valeu]) => ({
+          name,
+          valeu,
+        }));
 
         return {
           fieldId: field.id,
-          label: field.label,
-          stats: optionCount,
-          porcentage: optionPorcentage,
+          namefield: field.label,
+          answers,
         };
       });
 
@@ -318,7 +318,10 @@ export default class CompagneController {
       res.status(200).json({
         data: {
           totalsoumissions: soumissions.length,
+          title:compagne.compagneName,
           description: compagne.description,
+          createdAt:compagne.createdAt,
+          updatedAt:compagne.updatedAt,
           soumissionsByDay: soumissionsByDayArr,
           answersStats,
           action: {
