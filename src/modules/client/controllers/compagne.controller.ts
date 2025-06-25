@@ -259,6 +259,7 @@ export default class CompagneController {
         include: {
           Answer: true,
           FormFieldOption: true,
+          fields: true,
         },
       });
 
@@ -273,16 +274,8 @@ export default class CompagneController {
         // Compter les réponses
         field.Answer.forEach((answer) => {
           let values: string[] = [];
-          if (
-            typeof answer.valeu === 'string' &&
-            answer.valeu.startsWith('["') &&
-            answer.valeu.endsWith('"]')
-          ) {
-            try {
-              values = JSON.parse(answer.valeu);
-            } catch {
-              values = [answer.valeu];
-            }
+          if (field.fields?.type === 'checkbox' && typeof answer.valeu === 'string') {
+            values = answer.valeu.split(',').map(v => v.trim()).filter(v => v);
           } else {
             values = [answer.valeu];
           }

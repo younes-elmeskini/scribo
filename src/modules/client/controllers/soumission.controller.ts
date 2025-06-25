@@ -82,44 +82,43 @@ export default class SoumissionController {
         take: limit,
       });
 
-      // Format the submissions for better readability
-      const formattedSoumissions = soumissions.map((soumission) => {
-        // Create an object with field labels as keys and answers as values
-        const formattedAnswers: Record<string, any> = {};
+      // 1. Récupérer les champs du formulaire (headers)
+      const form = await prisma.form.findFirst({
+        where: { compagneId },
+        include: {
+          FormField: {
+            select: { id: true, label: true },
+          },
+        },
+      });
+      
+      if (!form || !form.FormField || form.FormField.length === 0) {
+        res.status(404).json({ message: "Aucun champ trouvé pour cette campagne" });
+        return;
+      }
+      const headers = form.FormField.map((f: any) => ({ id: f.id, label: f.label }));
 
+      // 2. Construire les rows
+      const rows = soumissions.map((soumission) => {
+        // Associer chaque réponse à l'id du champ
+        const answersByFieldId: Record<string, any> = {};
         soumission.answer.forEach((answer) => {
-          const fieldLabel = answer.formField.label;
-          const fieldType = answer.formField.fields.type;
-
-          // Format the answer value based on field type
-          let formattedValue: any = answer.valeu;
-
-          if (fieldType === "date") {
-            formattedValue = new Date(answer.valeu).toISOString().split("T")[0];
-          } else if (fieldType === "checkbox") {
-            formattedValue = JSON.parse(answer.valeu);
-          } else if (fieldType === "number") {
-            formattedValue = parseFloat(answer.valeu);
-          }
-
-          if (fieldLabel !== null && fieldLabel !== undefined) {
-            formattedAnswers[fieldLabel] = formattedValue;
-          }
+          answersByFieldId[answer.formFieldId] = answer.valeu;
         });
-
+        // Générer le tableau de réponses dans l'ordre des headers
+        const answers = headers.map(h => answersByFieldId[h.id] || "");
         return {
           id: soumission.id,
-          createdAt: soumission.createdAt,
-          updatedAt: soumission.updatedAt,
-          answers: formattedAnswers,
+          answers,
         };
       });
 
-      // Calculate pagination metadata
+      // 3. Pagination
       const totalPages = Math.ceil(totalCount / limit);
 
       res.status(200).json({
-        data: formattedSoumissions,
+        headers,
+        rows,
         pagination: {
           currentPage: page,
           totalPages,

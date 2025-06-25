@@ -127,8 +127,20 @@ export default class FormController {
               await fs.rename(file.path, newPath);
               finalValue = path.relative(path.join(process.cwd(), 'src'), newPath);
             }
-          } else if (fieldInfo?.type === "checkbox" && Array.isArray(textValue)) {
-            finalValue = textValue.join(", ");
+          } else if (fieldInfo?.type === "checkbox") {
+            let arr: string[] = [];
+            if (Array.isArray(textValue)) {
+              arr = textValue;
+            } else if (typeof textValue === "string" && textValue.startsWith("[") && textValue.endsWith("]")) {
+              try {
+                arr = JSON.parse(textValue);
+              } catch {
+                arr = [textValue];
+              }
+            } else if (typeof textValue === "string") {
+              arr = [textValue];
+            }
+            finalValue = arr.join(", ");
           } else {
             finalValue = textValue;
           }
@@ -149,26 +161,9 @@ export default class FormController {
 
       const createdAnswers = await Promise.all(answerPromises);
 
-      // Nettoyage des valeurs pour la réponse :
-      const cleanedAnswers = createdAnswers.map((answer) => {
-        let cleanedValue = answer.valeu;
-        // Si la valeur ressemble à un tableau JSON, on la parse et on la retransforme en string simple
-        if (typeof cleanedValue === 'string' && cleanedValue.startsWith('["') && cleanedValue.endsWith('"]')) {
-          try {
-            const parsed = JSON.parse(cleanedValue);
-            if (Array.isArray(parsed)) {
-              cleanedValue = parsed.join(', ');
-            }
-          } catch (e) {
-            console.warn('Erreur lors du parsing JSON de la valeur du champ:', cleanedValue, e);
-          }
-        }
-        return { ...answer, valeu: cleanedValue };
-      });
-
       res
         .status(201)
-        .json({ message: "Form submitted successfully", data: cleanedAnswers });
+        .json({ message: "Form submitted successfully", data: createdAnswers });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Internal Server Error" });
