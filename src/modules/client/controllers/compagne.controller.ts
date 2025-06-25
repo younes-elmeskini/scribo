@@ -224,14 +224,23 @@ export default class CompagneController {
         select: { createdAt: true },
       });
 
-      const soumissionsByDay = soumissions.reduce(
-        (acc: Record<string, number>, submission) => {
-          const date = submission.createdAt.toISOString().split("T")[0];
-          acc[date] = (acc[date] || 0) + 1;
-          return acc;
-        },
-        {}
-      );
+      // Nouveau : soumissions par jour au format { date: 'DD/MM', value: count }
+      const counts: Record<string, number> = {};
+      soumissions.forEach((s) => {
+        const d = new Date(s.createdAt);
+        const day = d.getDate().toString().padStart(2, '0');
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        const key = `${day}/${month}`;
+        counts[key] = (counts[key] || 0) + 1;
+      });
+      const soumissionsByDayArr = Object.entries(counts)
+        .map(([date, value]) => ({ date, value }))
+        .sort((a, b) => {
+          const [ad, am] = a.date.split('/').map(Number);
+          const [bd, bm] = b.date.split('/').map(Number);
+          if (am !== bm) return am - bm;
+          return ad - bd;
+        });
 
       // Get all FormFields with options
       const formFields = await prisma.formField.findMany({
@@ -310,7 +319,7 @@ export default class CompagneController {
         data: {
           totalsoumissions: soumissions.length,
           description: compagne.description,
-          soumissionsByDay,
+          soumissionsByDay: soumissionsByDayArr,
           answersStats,
           action: {
             calls,
