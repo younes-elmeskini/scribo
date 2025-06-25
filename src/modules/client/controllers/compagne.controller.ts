@@ -119,7 +119,6 @@ export default class CompagneController {
         favrite: campagne.favrite,
         soumission: campagne.soumission.length,
         actions:
-          campagne.soumission.length +
           campagne.Call.length +
           campagne.Email.length +
           campagne.Notes.length +
