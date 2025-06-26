@@ -1741,4 +1741,91 @@ export default class FormController {
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
+  static async getFormFieldsWithOptions(req: Request, res: Response): Promise<void> {
+    try {
+      const formId = req.params.id;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Non autorisé" });
+        return;
+      }
+
+      if (!formId) {
+        res.status(400).json({ message: "L'ID du formulaire est requis" });
+        return;
+      }
+
+      // Check if form exists and user has access
+      const form = await prisma.form.findFirst({
+        where: {
+          id: formId,
+          compagne: {
+            OR: [
+              { clientId: clientId.toString() },
+              {
+                TeamCompagne: {
+                  some: {
+                    teamMember: {
+                      membreId: clientId.toString(),
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      if (!form) {
+        res.status(404).json({ message: "Formulaire non trouvé ou accès refusé" });
+        return;
+      }
+
+      const formFieldsWithOptions = await prisma.formField.findMany({
+        where: {
+          formId: formId,
+          fields: {
+            type: {
+              in: ['select', 'radio', 'checkbox']
+            }
+          }
+        },
+        select: {
+          id: true,
+          label: true,
+          fields: {
+            select: {
+              type: true
+            }
+          },
+          FormFieldOption: {
+            select: {
+              id: true,
+              content: true,
+            },
+            orderBy: {
+              ordre: 'asc'
+            }
+          }
+        },
+        orderBy: {
+          ordre: 'asc'
+        }
+      });
+
+      const formattedData = formFieldsWithOptions.map(field => ({
+        id:field.id,
+        name: field.label,
+        type: field.fields.type,
+        valeux: field.FormFieldOption.map(option => ({ id: option.id, content: option.content }))
+      }));
+
+      res.status(200).json({ data: formattedData });
+
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
 }
