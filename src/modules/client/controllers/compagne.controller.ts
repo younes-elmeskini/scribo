@@ -869,7 +869,7 @@ export default class CompagneController {
 
   static async addToTeamCompagne(req: Request, res: Response): Promise<void> {
     try {
-      const membreId = req.body;
+      const { membreId } = req.body;
       const compagneId = req.params.compagneId;
       const clientId = req.client?.id;
       if (!clientId) {
@@ -895,20 +895,20 @@ export default class CompagneController {
       }
       const membre = await prisma.teamMenber.findFirst({
         where: {
-          owenrId:clientId.toString(),
-          membreId:membreId,
+          owenrId: clientId.toString(),
+          membreId: membreId,
         },
       });
-      if(!membre){
+      if (!membre) {
         res.status(404).json({ message: "teamMember not found" });
         return;
       }
       const compagneMember = await prisma.teamCompagne.findFirst({
-        where:{
-          id:membre.id
+        where: {
+          id: membre.id
         }
       })
-      if(compagneMember){
+      if (compagneMember) {
         res.status(404).json({ message: "teamCompagne ready existed" });
         return;
       }
@@ -919,12 +919,12 @@ export default class CompagneController {
           role: 'MEMBER'
         }
       })
-      if(!teamCompagne){
+      if (!teamCompagne) {
         res.status(404).json({ message: "teamCompagne not created" });
         return;
       }
       res.status(201).json({
-        message:"teamCompagne create succes"
+        message: "teamCompagne create succes"
       })
     } catch (error) {
       console.error(error);

@@ -1344,6 +1344,18 @@ export default class SoumissionController {
 
       const tasks = await prisma.task.findMany({
         where: { soumissionId, deletedAt: null },
+        select:{
+          titleTask:true,
+          description:true,
+          status:true,
+          client:{
+            select:{
+              firstName:true,
+              lastName:true,
+              profilImage:true
+            }
+          }
+        }
       });
 
       res.status(200).json({ data: tasks });
