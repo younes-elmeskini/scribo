@@ -821,6 +821,149 @@ export default class CompagneController {
     }
   }
 
+  static async duplicateCompagne(req: Request, res: Response): Promise<void> {
+    try {
+      const compagneId = req.params.id;
+      const clientId = req.client?.id;
+      if (!clientId) {
+        res.status(401).json({ message: "Non autorisé" });
+        return;
+      }
+      // Récupérer la compagne d'origine
+      const originalCompagne = await prisma.compagne.findFirst({
+        where: {
+          id: compagneId,
+          OR: [
+            { clientId: clientId.toString() },
+            {
+              TeamCompagne: {
+                some: {
+                  teamMember: {
+                    membreId: clientId.toString(),
+                  },
+                },
+              },
+            },
+          ],
+        },
+        include: {
+          Form: {
+            include: {
+              FormField: {
+                include: {
+                  FormFieldOption: true,
+                  FormFieldMap: true,
+                  fields: true,
+                },
+                orderBy: { ordre: "asc" },
+              },
+              ValidationForm: true,
+            },
+          },
+        },
+      });
+      if (!originalCompagne) {
+        res.status(404).json({ message: "Campagne non trouvée ou accès refusé" });
+        return;
+      }
+      const originalForm = originalCompagne.Form[0];
+      if (!originalForm) {
+        res.status(404).json({ message: "Aucun formulaire associé à la campagne" });
+        return;
+      }
+      // Transaction de duplication
+      const result = await prisma.$transaction(async (tx) => {
+        // 1. Créer la nouvelle compagne
+        const newCompagne = await tx.compagne.create({
+          data: {
+            compagneName: originalCompagne.compagneName + " (copie)",
+            clientId: clientId.toString(),
+            description: originalCompagne.description,
+            status: originalCompagne.status,
+            favrite: false,
+          },
+        });
+        // 2. Créer le nouveau form
+        const newForm = await tx.form.create({
+          data: {
+            compagneId: newCompagne.id,
+            title: (originalForm.title || originalCompagne.compagneName) + " (copie)",
+            Description: originalForm.Description,
+            coverColor: originalForm.coverColor,
+            coverImage: originalForm.coverImage,
+            mode: originalForm.mode,
+            titleStyle: originalForm.titleStyle,
+            formStyle: originalForm.formStyle,
+          },
+        });
+        // 3. Dupliquer les validations personnalisées
+        for (const validation of originalForm.ValidationForm) {
+          await tx.validationForm.create({
+            data: {
+              formId: newForm.id,
+              validationName: validation.validationName,
+              validationValeu: validation.validationValeu,
+            },
+          });
+        }
+        // 4. Dupliquer les formFields (et options/maps)
+        for (const field of originalForm.FormField) {
+          const { id: _oldFieldId, FormFieldOption, FormFieldMap, ...fieldData } = field;
+          // Créer le formField
+          const newField = await tx.formField.create({
+            data: {
+              ...fieldData,
+              formId: newForm.id,
+              // On retire les propriétés non valides
+              id: undefined,
+              fields: undefined,
+              FormFieldOption: undefined,
+              FormFieldMap: undefined,
+              createdAt: undefined,
+              updatedAt: undefined,
+            },
+          });
+          // Dupliquer les options
+          if (FormFieldOption && FormFieldOption.length > 0) {
+            for (const option of FormFieldOption) {
+              await tx.formFieldOption.create({
+                data: {
+                  formFieldId: newField.id,
+                  ordre: option.ordre,
+                  content: option.content,
+                  desactivedAt: option.desactivedAt,
+                  default: option.default,
+                },
+              });
+            }
+          }
+          // Dupliquer la map si présente
+          if (FormFieldMap && FormFieldMap.length > 0) {
+            for (const map of FormFieldMap) {
+              await tx.formFieldMap.create({
+                data: {
+                  formFieldId: newField.id,
+                  lat: map.lat,
+                  lng: map.lng,
+                  zoom: map.zoom,
+                  height: map.height,
+                },
+              });
+            }
+          }
+        }
+        return { compagneId: newCompagne.id, formId: newForm.id };
+      });
+      res.status(201).json({
+        message: "Campagne dupliquée avec succès",
+        data: result,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Erreur lors de la duplication de la campagne" });
+    }
+  }
+
   static async updateCompagne(req: Request, res: Response): Promise<void> {
     try {
       validationResult(CompagneValidation.updatecompagne, req, res);

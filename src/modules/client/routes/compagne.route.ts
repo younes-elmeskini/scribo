@@ -18,6 +18,7 @@ router.post(
   CompagneController.createCompagneFromModel
 );
 router.post("/:compagneId/teamcompagne", authenticate, CompagneController.addToTeamCompagne)
+router.post("/:id/duplicate", authenticate, CompagneController.duplicateCompagne);
 
 router.get("/", authenticate, CompagneController.getAllCompagne);
 router.get("/sidebar", authenticate, CompagneController.getsideBarData);
@@ -29,5 +30,6 @@ router.put("/:id", authenticate, CompagneController.updateCompagne)
 
 router.delete('/teamcompagne/:id', authenticate, CompagneController.deleteTeamCompagne);
 router.delete('/:id', authenticate, CompagneController.deleteCompagne);
+
 
 export default router;
