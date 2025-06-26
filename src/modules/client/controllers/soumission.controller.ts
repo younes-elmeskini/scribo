@@ -1301,7 +1301,7 @@ export default class SoumissionController {
           description: `${client?.firstName} a réalisé la tâche #${soumission.id}`,
         },
       });
-      res.status(201).json({ message: "Rendez-vous ajouté", data: task });
+      res.status(201).json({ message: "task ajouté", data: task });
     } catch (error) {
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
@@ -1343,7 +1343,7 @@ export default class SoumissionController {
       }
 
       const tasks = await prisma.task.findMany({
-        where: { soumissionId, clientId: clientId.toString(), deletedAt: null },
+        where: { soumissionId, deletedAt: null },
       });
 
       res.status(200).json({ data: tasks });
@@ -1389,17 +1389,20 @@ export default class SoumissionController {
         return;
       }
 
+      const taskId = req.params.taskId;
+      if (!taskId) {
+         res.status(400).json({ message: "taskId requis" });
+         return
+      }
       const task = await prisma.task.update({
-        where: {
-          id: soumission.id,
-        },
+        where: { id: taskId },
         data: {
           compagneId: soumission.compagneId,
           titleTask,
           description,
           status,
           soumissionId,
-          clientId: representantId.toString(),
+          clientId: representantId,
         },
       });
 
@@ -1408,15 +1411,16 @@ export default class SoumissionController {
           message: "task not created",
         });
       }
-      res.status(201).json({ message: " ajouté", data: task });
+      res.status(201).json({ message: "task ajouté", data: task });
     } catch (error) {
-      res.status(500).json({ message: "Erreur interne du serveur" });
+      console.error(error)
+      res.status(500).json({ message: "Erreur interne du serveur",error });
     }
   }
 
   static async deleteTask(req: Request, res: Response): Promise<void> {
     try {
-      const taskId = req.params;
+      const taskId = req.params.taskId;
       const clientId = req.client?.id;
 
       if (!clientId) {
@@ -1448,12 +1452,13 @@ export default class SoumissionController {
       }
 
       await prisma.task.update({
-        where: { id: taskId.toString(), clientId: clientId.toString() },
+        where: { id: taskId},
         data: { deletedAt: new Date() },
       });
 
       res.status(200).json({ message: "Task supprimé" });
     } catch (error) {
+      console.error(error)
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
