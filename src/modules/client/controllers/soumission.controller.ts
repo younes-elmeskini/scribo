@@ -875,6 +875,19 @@ export default class SoumissionController {
 
       const emails = await prisma.email.findMany({
         where: { soumissionId, deletedAt: null },
+        select:{
+          id:true,
+          email:true,
+          message:true,
+          client:{
+            select: {
+              firstName:true,
+              lastName:true,
+              profilImage:true,
+            }
+          },
+          createdAt:true,
+        },
         orderBy: { createdAt: "desc" },
       });
 
