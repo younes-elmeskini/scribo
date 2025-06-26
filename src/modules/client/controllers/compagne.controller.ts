@@ -940,7 +940,8 @@ export default class CompagneController {
         res.status(401).json({ message: "Unauthorized" });
         return;
       }
-      const teamCompagne = await prisma.teamCompagne.findUnique({
+
+      const teamCompagne = await prisma.teamCompagne.findFirst({
         where: { id: teamCompagneId },
         include: {
           compagne: true
@@ -1005,7 +1006,8 @@ export default class CompagneController {
       // 1. Récupérer les membres assignés à la campagne
       const teamCompagne = await prisma.teamCompagne.findMany({
         where: { compagneId },
-        include: {
+        select: {
+          id:true,
           teamMember: {
             include: {
               member: {
@@ -1021,7 +1023,10 @@ export default class CompagneController {
           },
         },
       });
-      let membresAssignes = teamCompagne.map(tc => tc.teamMember.member);
+      let membresAssignes = teamCompagne.map(tc => ({
+        ...tc.teamMember.member,
+        teamCompagneId: tc.id
+      }));
 
       // 2. Récupérer tous les membres de l'équipe (teamMembre)
       const allTeamMembers = await prisma.teamMenber.findMany({
