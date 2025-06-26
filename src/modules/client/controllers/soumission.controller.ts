@@ -52,7 +52,7 @@ export default class SoumissionController {
       const limit = parseInt(req.query.limit as string) || 10;
       const skip = (page - 1) * limit;
 
-      const { search, field, favorite, optionField, optionValue, startDate, endDate } = req.query;
+      const { search, field, favorite, fieldOption, selectedValue, startDate, endDate } = req.query;
       const where: any = { AND: [{ compagneId }] };
 
       // Filtre favori
@@ -99,8 +99,6 @@ export default class SoumissionController {
           where.AND.push(...globalSearchConditions);
         }
       }
-
-      const { fieldOption, selectedValue } = req.query;
       if (fieldOption && selectedValue) {
         const formField = await prisma.formField.findFirst({
           where: {
@@ -175,7 +173,16 @@ export default class SoumissionController {
         where: { compagneId },
         include: {
           FormField: {
-            select: { id: true, label: true, name: true },
+            select: {
+              id: true,
+              label: true,
+              name: true,
+              fields: {
+                select: {
+                  type: true
+                }
+              }
+            },
           },
         },
       });
@@ -184,7 +191,7 @@ export default class SoumissionController {
         res.status(404).json({ message: "Aucun champ trouvé pour cette campagne" });
         return;
       }
-      const headers = form.FormField.map((f: any) => ({ id: f.id, label: f.label, name: f.name }));
+      const headers = form.FormField.map((f: any) => ({ id: f.id, label: f.label, name: f.name, type : f.fields.type }));
 
       const rows = soumissions.map((soumission) => {
         const answersByFieldId: Record<string, any> = {};
