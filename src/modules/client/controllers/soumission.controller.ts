@@ -578,7 +578,7 @@ export default class SoumissionController {
       // Créer la note
       const newNote = await prisma.notes.create({
         data: {
-          notes: parsedData.toString(),
+          notes: parsedData.note.toString(),
           compagneId: soumission.compagneId,
           clientId: clientId.toString(),
           soumissionId,
@@ -698,7 +698,7 @@ export default class SoumissionController {
       const updatedNote = await prisma.notes.update({
         where: { id: noteId },
         data: {
-          notes: parsedData.toString(),
+          notes: parsedData.note.toString(),
         },
       });
       res.status(200).json({
