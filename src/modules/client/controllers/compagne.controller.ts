@@ -200,6 +200,7 @@ export default class CompagneController {
       const compagne = await prisma.compagne.findUnique({
         where: {
           id: compagneId,
+          deletedAt:null,
           OR: [
             {
               clientId: clientId.toString(), // Owner

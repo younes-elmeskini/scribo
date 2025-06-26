@@ -203,14 +203,16 @@ export default class SoumissionController {
       const totalPages = Math.ceil(totalCount / limit);
 
       res.status(200).json({
-        headers,
-        rows,
-        pagination: {
-          currentPage: page,
-          totalPages,
-          totalItems: totalCount,
-          itemsPerPage: limit,
-        },
+        data:{
+          headers,
+          rows,
+          pagination: {
+            currentPage: page,
+            totalPages,
+            totalItems: totalCount,
+            itemsPerPage: limit,
+          },
+        }
       });
     } catch (error) {
       console.error("Error fetching submissions:", error);
