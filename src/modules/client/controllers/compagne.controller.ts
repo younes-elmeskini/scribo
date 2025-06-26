@@ -79,6 +79,7 @@ export default class CompagneController {
 
       const campagnes = await prisma.compagne.findMany({
         where: {
+          deletedAt:null,
           OR: [
             {
               clientId: clientId.toString(), // Owner

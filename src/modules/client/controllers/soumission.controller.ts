@@ -654,6 +654,18 @@ export default class SoumissionController {
           soumissionId,
           deletedAt: null,
         },
+        select:{
+          id:true,
+          notes:true,
+          createdAt:true,
+          client:{
+            select:{
+              firstName:true,
+              lastName:true,
+              profilImage:true
+            }
+          }
+        },
         orderBy: {
           createdAt: "desc",
         },
