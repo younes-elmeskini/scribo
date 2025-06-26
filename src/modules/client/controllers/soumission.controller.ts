@@ -195,6 +195,7 @@ export default class SoumissionController {
         return {
           id: soumission.id,
           answers,
+          favorite: soumission.favorite,
         };
       });
 
