@@ -52,7 +52,15 @@ export default class SoumissionController {
       const limit = parseInt(req.query.limit as string) || 10;
       const skip = (page - 1) * limit;
 
-      const { search, field, favorite, fieldOption, selectedValue, startDate, endDate } = req.query;
+      const {
+        search,
+        field,
+        favorite,
+        fieldOption,
+        selectedValue,
+        startDate,
+        endDate,
+      } = req.query;
       const where: any = { AND: [{ compagneId }] };
 
       // Filtre favori
@@ -72,7 +80,9 @@ export default class SoumissionController {
 
       // Filtre recherche texte
       if (search) {
-        const searchTerms = Array.isArray(search) ? (search as string[]) : [search as string];
+        const searchTerms = Array.isArray(search)
+          ? (search as string[])
+          : [search as string];
 
         if (field) {
           // Recherche dans un champ spécifique
@@ -179,26 +189,33 @@ export default class SoumissionController {
               name: true,
               fields: {
                 select: {
-                  type: true
-                }
-              }
+                  type: true,
+                },
+              },
             },
           },
         },
       });
-      
+
       if (!form || !form.FormField || form.FormField.length === 0) {
-        res.status(404).json({ message: "Aucun champ trouvé pour cette campagne" });
+        res
+          .status(404)
+          .json({ message: "Aucun champ trouvé pour cette campagne" });
         return;
       }
-      const headers = form.FormField.map((f: any) => ({ id: f.id, label: f.label, name: f.name, type : f.fields.type }));
+      const headers = form.FormField.map((f: any) => ({
+        id: f.id,
+        label: f.label,
+        name: f.name,
+        type: f.fields.type,
+      }));
 
       const rows = soumissions.map((soumission) => {
         const answersByFieldId: Record<string, any> = {};
         soumission.answer.forEach((answer) => {
           answersByFieldId[answer.formFieldId] = answer.valeu;
         });
-        const answers = headers.map(h => answersByFieldId[h.id] || "");
+        const answers = headers.map((h) => answersByFieldId[h.id] || "");
         return {
           id: soumission.id,
           answers,
@@ -210,7 +227,7 @@ export default class SoumissionController {
       const totalPages = Math.ceil(totalCount / limit);
 
       res.status(200).json({
-        data:{
+        data: {
           headers,
           rows,
           pagination: {
@@ -219,7 +236,7 @@ export default class SoumissionController {
             totalItems: totalCount,
             itemsPerPage: limit,
           },
-        }
+        },
       });
     } catch (error) {
       console.error("Error fetching submissions:", error);
@@ -408,7 +425,6 @@ export default class SoumissionController {
           description: `${client?.firstName} a modifié les données de la soumission. #${soumission.id}`,
         },
       });
-
 
       res.status(200).json({
         message: "Réponses mises à jour avec succès",
@@ -654,17 +670,17 @@ export default class SoumissionController {
           soumissionId,
           deletedAt: null,
         },
-        select:{
-          id:true,
-          notes:true,
-          createdAt:true,
-          client:{
-            select:{
-              firstName:true,
-              lastName:true,
-              profilImage:true
-            }
-          }
+        select: {
+          id: true,
+          notes: true,
+          createdAt: true,
+          client: {
+            select: {
+              firstName: true,
+              lastName: true,
+              profilImage: true,
+            },
+          },
         },
         orderBy: {
           createdAt: "desc",
@@ -894,18 +910,18 @@ export default class SoumissionController {
 
       const emails = await prisma.email.findMany({
         where: { soumissionId, deletedAt: null },
-        select:{
-          id:true,
-          email:true,
-          message:true,
-          client:{
+        select: {
+          id: true,
+          email: true,
+          message: true,
+          client: {
             select: {
-              firstName:true,
-              lastName:true,
-              profilImage:true,
-            }
+              firstName: true,
+              lastName: true,
+              profilImage: true,
+            },
           },
-          createdAt:true,
+          createdAt: true,
         },
         orderBy: { createdAt: "desc" },
       });
@@ -1095,7 +1111,7 @@ export default class SoumissionController {
       }
 
       const updateappointment = await prisma.appointment.update({
-        where: { id: appointmentId, clientId: clientId.toString() },
+        where: { id: appointmentId },
         data: {
           date: new Date(date),
           adress: adress,
@@ -1148,7 +1164,21 @@ export default class SoumissionController {
       }
 
       const appointments = await prisma.appointment.findMany({
-        where: { soumissionId, clientId: clientId.toString(), deletedAt: null },
+        where: { soumissionId, deletedAt: null },
+        select:{
+          id:true,
+          date:true,
+          adress:true,
+          commentaire:true,
+          createdAt:true,
+          client:{
+            select:{
+              firstName:true,
+              lastName:true,
+              profilImage:true,
+            }
+          }
+        },
         orderBy: { date: "desc" },
       });
 
@@ -1195,12 +1225,13 @@ export default class SoumissionController {
       }
 
       await prisma.appointment.update({
-        where: { id: appointmentId, clientId: clientId.toString() },
+        where: { id: appointmentId },
         data: { deletedAt: new Date() },
       });
 
       res.status(200).json({ message: "Rendez-vous supprimé" });
     } catch (error) {
+      console.error(error)
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
@@ -1456,25 +1487,27 @@ export default class SoumissionController {
       });
 
       if (!compagne) {
-        res.status(404).json({ message: "Campagne non trouvée ou accès refusé" });
+        res
+          .status(404)
+          .json({ message: "Campagne non trouvée ou accès refusé" });
         return;
       }
 
       // Récupérer toutes les soumissions de la campagne
       const soumissions = await prisma.soumission.findMany({
         where: { compagneId },
-        select: { id: true }
+        select: { id: true },
       });
-      const soumissionIds = soumissions.map(s => s.id);
+      const soumissionIds = soumissions.map((s) => s.id);
 
       // Récupérer l'historique de toutes les soumissions
       const history = await prisma.history.findMany({
         where: { soumissionId: { in: soumissionIds } },
         orderBy: { createdAt: "desc" },
-        select:{
-          id:true,
-          description:true
-        }
+        select: {
+          id: true,
+          description: true,
+        },
       });
 
       res.status(200).json({ data: history });
@@ -1511,7 +1544,9 @@ export default class SoumissionController {
 
       // Recherche texte sur un champ précis (exemple)
       if (req.query.search && req.query.field) {
-        const searchTerms = Array.isArray(req.query.search) ? (req.query.search as string[]) : [req.query.search as string];
+        const searchTerms = Array.isArray(req.query.search)
+          ? (req.query.search as string[])
+          : [req.query.search as string];
         const answerConditions = searchTerms.map((term) => ({
           valeu: { contains: term, mode: "insensitive" },
         }));
