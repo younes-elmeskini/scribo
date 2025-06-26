@@ -52,14 +52,103 @@ export default class SoumissionController {
       const limit = parseInt(req.query.limit as string) || 10;
       const skip = (page - 1) * limit;
 
-      // Get total count for pagination metadata
-      const totalCount = await prisma.soumission.count({
-        where: { compagneId },
-      });
+      const { search, field, favorite, optionField, optionValue, startDate, endDate } = req.query;
+      const where: any = { AND: [{ compagneId }] };
 
-      // Get submissions with answers
+      // Filtre favori
+      if (favorite !== undefined) {
+        where.AND.push({ favorite: favorite === "true" });
+      }
+
+      // Filtre date
+      if (startDate && endDate) {
+        where.AND.push({
+          createdAt: {
+            gte: new Date(startDate as string),
+            lte: new Date(endDate as string),
+          },
+        });
+      }
+
+      // Filtre recherche texte
+      if (search) {
+        const searchTerms = Array.isArray(search) ? (search as string[]) : [search as string];
+
+        if (field) {
+          // Recherche dans un champ spécifique
+          const answerConditions = searchTerms.map((term) => ({
+            valeu: { contains: term, mode: "insensitive" },
+          }));
+
+          where.AND.push({
+            answer: {
+              some: {
+                formField: { name: field as string },
+                AND: answerConditions,
+              },
+            },
+          });
+        } else {
+          const globalSearchConditions = searchTerms.map((term) => ({
+            answer: {
+              some: {
+                valeu: { contains: term, mode: "insensitive" },
+              },
+            },
+          }));
+          where.AND.push(...globalSearchConditions);
+        }
+      }
+
+      const { fieldOption, selectedValue } = req.query;
+      if (fieldOption && selectedValue) {
+        const formField = await prisma.formField.findFirst({
+          where: {
+            name: fieldOption as string,
+            form: {
+              compagneId: compagneId,
+            },
+          },
+          include: {
+            fields: { select: { type: true } },
+          },
+        });
+
+        const isCheckbox = formField?.fields.type === "checkbox";
+        const values = Array.isArray(selectedValue)
+          ? (selectedValue as string[])
+          : [selectedValue as string];
+
+        if (isCheckbox) {
+          const checkboxConditions = values.map((val) => ({
+            valeu: { contains: val, mode: "insensitive" },
+          }));
+
+          where.AND.push({
+            answer: {
+              some: {
+                formField: { name: fieldOption as string },
+                AND: checkboxConditions,
+              },
+            },
+          });
+        } else {
+          where.AND.push({
+            answer: {
+              some: {
+                formField: { name: fieldOption as string },
+                valeu: { in: values },
+              },
+            },
+          });
+        }
+      }
+
+      // Get total count pour la pagination
+      const totalCount = await prisma.soumission.count({ where });
+
       const soumissions = await prisma.soumission.findMany({
-        where: { compagneId },
+        where,
         include: {
           answer: {
             include: {
@@ -82,12 +171,11 @@ export default class SoumissionController {
         take: limit,
       });
 
-      // 1. Récupérer les champs du formulaire (headers)
       const form = await prisma.form.findFirst({
         where: { compagneId },
         include: {
           FormField: {
-            select: { id: true, label: true },
+            select: { id: true, label: true, name: true },
           },
         },
       });
@@ -96,16 +184,13 @@ export default class SoumissionController {
         res.status(404).json({ message: "Aucun champ trouvé pour cette campagne" });
         return;
       }
-      const headers = form.FormField.map((f: any) => ({ id: f.id, label: f.label }));
+      const headers = form.FormField.map((f: any) => ({ id: f.id, label: f.label, name: f.name }));
 
-      // 2. Construire les rows
       const rows = soumissions.map((soumission) => {
-        // Associer chaque réponse à l'id du champ
         const answersByFieldId: Record<string, any> = {};
         soumission.answer.forEach((answer) => {
           answersByFieldId[answer.formFieldId] = answer.valeu;
         });
-        // Générer le tableau de réponses dans l'ordre des headers
         const answers = headers.map(h => answersByFieldId[h.id] || "");
         return {
           id: soumission.id,
@@ -1391,10 +1476,15 @@ export default class SoumissionController {
 
       // Recherche texte sur un champ précis (exemple)
       if (req.query.search && req.query.field) {
+        const searchTerms = Array.isArray(req.query.search) ? (req.query.search as string[]) : [req.query.search as string];
+        const answerConditions = searchTerms.map((term) => ({
+          valeu: { contains: term, mode: "insensitive" },
+        }));
+
         where.answer = {
           some: {
             formField: { name: req.query.field },
-            valeu: { contains: req.query.search, mode: "insensitive" },
+            AND: answerConditions,
           },
         };
       }
