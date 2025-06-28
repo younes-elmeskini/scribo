@@ -4,6 +4,9 @@ import SoumissionValidation from "../utils/validation/soumission";
 import { validationResult } from "../../../utils/validation/validationResult";
 import { z } from "zod";
 import nodemailer from "nodemailer";
+import { Parser as Json2csvParser } from "json2csv";
+import fs from "fs";
+import path from "path";
 
 type createNote = z.infer<typeof SoumissionValidation.createNotesSchema>;
 type sendEmail = z.infer<typeof SoumissionValidation.sendEmailSchema>;
@@ -424,8 +427,8 @@ export default class SoumissionController {
           soumissionId,
           content: "a modifié les données de la soumission",
           from: `${client?.firstName} ${client?.lastName}`,
-          to:soumission.id,
-          type: "UPDATE"
+          to: soumission.id,
+          type: "UPDATE",
         },
       });
 
@@ -618,8 +621,8 @@ export default class SoumissionController {
           soumissionId,
           content: "a ajouté la note ",
           from: `${client?.firstName} ${client?.lastName}`,
-          to:soumission.id,
-          type: "NOTE"
+          to: soumission.id,
+          type: "NOTE",
         },
       });
       res.status(201).json({
@@ -865,11 +868,10 @@ export default class SoumissionController {
           soumissionId,
           content: " a envoyé un email à ",
           from: `${client?.firstName} ${client?.lastName}`,
-          to:parsedData.email,
-          type: "EMAIL"
+          to: parsedData.email,
+          type: "EMAIL",
         },
       });
-      
 
       res.status(201).json({
         message: "Email envoyé et enregistré avec succès",
@@ -1057,8 +1059,8 @@ export default class SoumissionController {
           soumissionId,
           content: "a ajouté le rendez-vous",
           from: `${client?.firstName} ${client?.lastName}`,
-          to:appointment.id,
-          type: "APPOINTMENT"
+          to: appointment.id,
+          type: "APPOINTMENT",
         },
       });
 
@@ -1178,19 +1180,19 @@ export default class SoumissionController {
 
       const appointments = await prisma.appointment.findMany({
         where: { soumissionId, deletedAt: null },
-        select:{
-          id:true,
-          date:true,
-          adress:true,
-          commentaire:true,
-          createdAt:true,
-          client:{
-            select:{
-              firstName:true,
-              lastName:true,
-              profilImage:true,
-            }
-          }
+        select: {
+          id: true,
+          date: true,
+          adress: true,
+          commentaire: true,
+          createdAt: true,
+          client: {
+            select: {
+              firstName: true,
+              lastName: true,
+              profilImage: true,
+            },
+          },
         },
         orderBy: { date: "desc" },
       });
@@ -1244,7 +1246,7 @@ export default class SoumissionController {
 
       res.status(200).json({ message: "Rendez-vous supprimé" });
     } catch (error) {
-      console.error(error)
+      console.error(error);
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
@@ -1313,8 +1315,8 @@ export default class SoumissionController {
           soumissionId,
           content: "a réalisé la tâche ",
           from: `${client?.firstName} ${client?.lastName}`,
-          to:task.id,
-          type: "TASK"
+          to: task.id,
+          type: "TASK",
         },
       });
       res.status(201).json({ message: "task ajouté", data: task });
@@ -1360,18 +1362,18 @@ export default class SoumissionController {
 
       const tasks = await prisma.task.findMany({
         where: { soumissionId, deletedAt: null },
-        select:{
-          titleTask:true,
-          description:true,
-          status:true,
-          client:{
-            select:{
-              firstName:true,
-              lastName:true,
-              profilImage:true
-            }
-          }
-        }
+        select: {
+          titleTask: true,
+          description: true,
+          status: true,
+          client: {
+            select: {
+              firstName: true,
+              lastName: true,
+              profilImage: true,
+            },
+          },
+        },
       });
 
       res.status(200).json({ data: tasks });
@@ -1419,8 +1421,8 @@ export default class SoumissionController {
 
       const taskId = req.params.taskId;
       if (!taskId) {
-         res.status(400).json({ message: "taskId requis" });
-         return
+        res.status(400).json({ message: "taskId requis" });
+        return;
       }
       const task = await prisma.task.update({
         where: { id: taskId },
@@ -1441,8 +1443,8 @@ export default class SoumissionController {
       }
       res.status(201).json({ message: "task ajouté", data: task });
     } catch (error) {
-      console.error(error)
-      res.status(500).json({ message: "Erreur interne du serveur",error });
+      console.error(error);
+      res.status(500).json({ message: "Erreur interne du serveur", error });
     }
   }
 
@@ -1480,13 +1482,13 @@ export default class SoumissionController {
       }
 
       await prisma.task.update({
-        where: { id: taskId},
+        where: { id: taskId },
         data: { deletedAt: new Date() },
       });
 
       res.status(200).json({ message: "Task supprimé" });
     } catch (error) {
-      console.error(error)
+      console.error(error);
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
@@ -1540,9 +1542,9 @@ export default class SoumissionController {
         select: {
           id: true,
           content: true,
-          from:true,
+          from: true,
           to: true,
-          type:true,
+          type: true,
         },
       });
 
@@ -1617,6 +1619,163 @@ export default class SoumissionController {
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
+  static async exportSoumissionsFiltrees(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    try {
+      const compagneId = req.params.id;
+      const clientId = req.client?.id;
+      const { filters, fields, format } = req.body; // Les filtres, champs et format envoyés par le frontend
+
+      if (!clientId) {
+        res.status(401).json({ message: "Non autorisé" });
+        return;
+      }
+
+      // Reprise de la logique de getCompagneSoumissions
+      const where: any = { AND: [{ compagneId }] };
+
+      if (filters?.favorite !== undefined) {
+        where.AND.push({ favorite: filters.favorite === true });
+      }
+      if (filters?.startDate && filters?.endDate) {
+        where.AND.push({
+          createdAt: {
+            gte: new Date(filters.startDate),
+            lte: new Date(filters.endDate),
+          },
+        });
+      }
+      if (filters?.search) {
+        const searchTerms = Array.isArray(filters.search)
+          ? filters.search
+          : [filters.search];
+        if (filters.field) {
+          const answerConditions = searchTerms.map((term: string) => ({
+            valeu: { contains: term, mode: "insensitive" },
+          }));
+          where.AND.push({
+            answer: {
+              some: {
+                formField: { name: filters.field },
+                AND: answerConditions,
+              },
+            },
+          });
+        } else {
+          const globalSearchConditions = searchTerms.map((term: string) => ({
+            answer: {
+              some: {
+                valeu: { contains: term, mode: "insensitive" },
+              },
+            },
+          }));
+          where.AND.push(...globalSearchConditions);
+        }
+      }
+      if (filters?.fieldOption && filters?.selectedValue) {
+        const formField = await prisma.formField.findFirst({
+          where: {
+            name: filters.fieldOption,
+            form: { compagneId },
+          },
+          include: { fields: { select: { type: true } } },
+        });
+        const isCheckbox = formField?.fields.type === "checkbox";
+        const values = Array.isArray(filters.selectedValue)
+          ? filters.selectedValue
+          : [filters.selectedValue];
+        if (isCheckbox) {
+          const checkboxConditions = values.map((val: string) => ({
+            valeu: { contains: val, mode: "insensitive" },
+          }));
+          where.AND.push({
+            answer: {
+              some: {
+                formField: { name: filters.fieldOption },
+                AND: checkboxConditions,
+              },
+            },
+          });
+        } else {
+          where.AND.push({
+            answer: {
+              some: {
+                formField: { name: filters.fieldOption },
+                valeu: { in: values },
+              },
+            },
+          });
+        }
+      }
+
+      // Récupère les soumissions filtrées
+      const soumissions = await prisma.soumission.findMany({
+        where,
+        include: {
+          answer: {
+            include: {
+              formField: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      // Génère les données à exporter
+      const exportData = soumissions.map((soumission) => {
+        const answers = soumission.answer.map((a) => ({
+          formFieldName: a.formField.label || a.formField.name,
+          valeu: a.valeu,
+        }));
+        return {
+          soumissionId: soumission.id,
+          dateSoumission: soumission.createdAt.toISOString(),
+          answers,
+        };
+      });
+
+      // Détermine le nom et le chemin du fichier
+      const fileName = `export_soumissions_${Date.now()}.${
+        format === "csv" ? "csv" : "json"
+      }`;
+      const filePath = path.join(__dirname, "../../../uploads", fileName);
+
+      const uploadsDir = path.join(__dirname, "../../../uploads");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      if (format === "csv") {
+        // Pour le CSV, answers est stringifié
+        const flatExportData = exportData.map((row) => ({
+          ...row,
+          answers: JSON.stringify(row.answers),
+        }));
+        const parser = new Json2csvParser({
+          fields: ["soumissionId", "dateSoumission", "answers"],
+        });
+        const csv = parser.parse(flatExportData);
+        fs.writeFileSync(filePath, csv, "utf8");
+      } else if (format === "json") {
+        fs.writeFileSync(filePath, JSON.stringify(exportData, null, 2), "utf8");
+      } else {
+        res.status(400).json({ message: "Format d'export non supporté" });
+        return;
+      }
+
+      // Retourne le chemin du fichier pour téléchargement
+      res.status(200).json({
+        message: "Export réussi",
+        file: `/uploads/${fileName}`,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Erreur lors de l'export", error });
     }
   }
 }
