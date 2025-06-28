@@ -36,6 +36,15 @@ enum FileType {
   RFT
 }
 
+enum TypeAction {
+  NOTE
+  CALL
+  EMAIL
+  APPOINTMENT
+  TASK
+  UPDATE
+}
+
 model User {
   id          String    @id @default(cuid())
   firstName   String
@@ -382,6 +391,9 @@ model History {
   id           String     @id @default(cuid())
   soumissionId String
   soumission   Soumission @relation(fields: [soumissionId], references: [id], onDelete: Cascade)
-  description  String?
+  content      String?
+  from         String
+  to           String
+  type         TypeAction
   createdAt    DateTime   @default(now())
 }
