@@ -15,7 +15,7 @@ router.get("/:id/notes", authenticate, SoumissionController.getNotes);
 router.get("/:id/email", authenticate, SoumissionController.getEmails);
 router.get("/:id/appointment", authenticate, SoumissionController.getAppointments)
 router.get("/:id/task", authenticate, SoumissionController.getTask)
-router.get("/compagne/:id/history", authenticate, SoumissionController.getCompagneHistory);
+router.get("/:id/history", authenticate, SoumissionController.getCompagneHistory);
 router.get("/compagne/:id/export", authenticate, SoumissionController.getExportSoummision);
 
 router.put("/:id/favorite", authenticate, SoumissionController.toggleSoumissionFavorite);

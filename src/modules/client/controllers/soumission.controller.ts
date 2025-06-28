@@ -422,7 +422,10 @@ export default class SoumissionController {
       await prisma.history.create({
         data: {
           soumissionId,
-          description: `${client?.firstName} a modifié les données de la soumission. #${soumission.id}`,
+          content: "a modifié les données de la soumission",
+          from: `${client?.firstName} ${client?.lastName}`,
+          to:soumission.id,
+          type: "UPDATE"
         },
       });
 
@@ -613,7 +616,10 @@ export default class SoumissionController {
       await prisma.history.create({
         data: {
           soumissionId,
-          description: `${client?.firstName}  a ajouté la note ${soumission.id}`,
+          content: "a ajouté la note ",
+          from: `${client?.firstName} ${client?.lastName}`,
+          to:soumission.id,
+          type: "NOTE"
         },
       });
       res.status(201).json({
@@ -857,9 +863,13 @@ export default class SoumissionController {
       await prisma.history.create({
         data: {
           soumissionId,
-          description: `${client?.firstName} a envoyé un email à ${parsedData.email}`,
+          content: " a envoyé un email à ",
+          from: `${client?.firstName} ${client?.lastName}`,
+          to:parsedData.email,
+          type: "EMAIL"
         },
       });
+      
 
       res.status(201).json({
         message: "Email envoyé et enregistré avec succès",
@@ -1045,7 +1055,10 @@ export default class SoumissionController {
       await prisma.history.create({
         data: {
           soumissionId,
-          description: `${client?.firstName} a ajouté le rendez-vous #${soumission.id}`,
+          content: "a ajouté le rendez-vous",
+          from: `${client?.firstName} ${client?.lastName}`,
+          to:appointment.id,
+          type: "APPOINTMENT"
         },
       });
 
@@ -1298,7 +1311,10 @@ export default class SoumissionController {
       await prisma.history.create({
         data: {
           soumissionId,
-          description: `${client?.firstName} a réalisé la tâche #${soumission.id}`,
+          content: "a réalisé la tâche ",
+          from: `${client?.firstName} ${client?.lastName}`,
+          to:task.id,
+          type: "TASK"
         },
       });
       res.status(201).json({ message: "task ajouté", data: task });
@@ -1523,7 +1539,10 @@ export default class SoumissionController {
         orderBy: { createdAt: "desc" },
         select: {
           id: true,
-          description: true,
+          content: true,
+          from:true,
+          to: true,
+          type:true,
         },
       });
 
