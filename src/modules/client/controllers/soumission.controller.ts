@@ -7,6 +7,7 @@ import nodemailer from "nodemailer";
 import { Parser as Json2csvParser } from "json2csv";
 import fs from "fs";
 import path from "path";
+import * as XLSX from "xlsx";
 
 type createNote = z.infer<typeof SoumissionValidation.createNotesSchema>;
 type sendEmail = z.infer<typeof SoumissionValidation.sendEmailSchema>;
@@ -1741,7 +1742,7 @@ export default class SoumissionController {
 
       // Détermine le nom et le chemin du fichier
       const fileName = `export_soumissions_${Date.now()}.${
-        format === "csv" ? "csv" : "json"
+        format === "xlsx" || format === "excel" ? "xlsx" : format
       }`;
       const filePath = path.join(__dirname, "../../../uploads", fileName);
 
@@ -1763,6 +1764,37 @@ export default class SoumissionController {
         fs.writeFileSync(filePath, csv, "utf8");
       } else if (format === "json") {
         fs.writeFileSync(filePath, JSON.stringify(exportData, null, 2), "utf8");
+      } else if (format === "xlsx" || format === "excel") {
+        // On aplatit les réponses pour chaque soumission (une colonne par champ)
+        const allFieldNames = Array.from(
+          new Set(
+            soumissions.flatMap((s) =>
+              s.answer
+                .map((a) => a.formField.label || a.formField.name)
+                .filter((name) => !!name)
+            )
+          )
+        );
+
+        const excelData = soumissions.map((soumission) => {
+          const row: Record<string, any> = {
+            soumissionId: soumission.id,
+            dateSoumission: soumission.createdAt.toISOString(),
+          };
+          allFieldNames.forEach((fieldName) => {
+            if (!fieldName) return; // Ignore les noms nuls
+            const answer = soumission.answer.find(
+              (a) => (a.formField.label || a.formField.name) === fieldName
+            );
+            row[fieldName] = answer ? answer.valeu : "";
+          });
+          return row;
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Soumissions");
+        XLSX.writeFile(workbook, filePath);
       } else {
         res.status(400).json({ message: "Format d'export non supporté" });
         return;
