@@ -1069,6 +1069,20 @@ export default class SoumissionController {
           soumissionId,
           clientId: representantId.toString(),
         },
+        select: {
+          id: true,
+          date: true,
+          adress: true,
+          commentaire: true,
+          createdAt: true,
+          client: {
+            select: {
+              firstName: true,
+              lastName: true,
+              profilImage: true,
+            },
+          },
+        },
       });
       if (!appointment) {
         res.status(400).json({ message: "appointment not created" });
@@ -1326,6 +1340,19 @@ export default class SoumissionController {
           description,
           soumissionId,
           clientId: representantId.toString(),
+        },
+        select: {
+          id:true,
+          titleTask: true,
+          description: true,
+          status: true,
+          client: {
+            select: {
+              firstName: true,
+              lastName: true,
+              profilImage: true,
+            },
+          },
         },
       });
 

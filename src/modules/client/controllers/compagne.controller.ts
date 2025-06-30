@@ -321,6 +321,7 @@ export default class CompagneController {
           compagneId,
         },
         select: {
+          id:true,
           titleTask: true,
           description: true,
           status: true,
