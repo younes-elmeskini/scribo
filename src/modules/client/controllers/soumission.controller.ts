@@ -1625,113 +1625,88 @@ export default class SoumissionController {
         return;
       }
 
-      // Construction dynamique des filtres
       const where: any = { AND: [{ compagneId }] };
 
-      // Exemple de gestion de filtres (à adapter selon tes besoins)
-      if (req.query.status) {
-        where.status = req.query.status;
-      }
-      if (req.query.startDate && req.query.endDate) {
-        where.createdAt = {
-          gte: new Date(req.query.startDate as string),
-          lte: new Date(req.query.endDate as string),
-        };
-      }
-      if (req.query.favorite) {
-        where.favorite = req.query.favorite === "true";
-      }
-      // Ajoute ici d'autres filtres selon ton interface
-
-      // Recherche texte sur un champ précis (exemple)
-      if (req.query.search && req.query.field) {
-        const searchTerms = Array.isArray(req.query.search)
-          ? (req.query.search as string[])
-          : [req.query.search as string];
-        const answerConditions = searchTerms.map((term) => ({
-          valeu: { contains: term, mode: "insensitive" },
-        }));
-
-        where.answer = {
-          some: {
-            formField: { name: req.query.field },
-            AND: answerConditions,
-          },
-        };
-      }
-
-      // Recherche texte globale (sans champ spécifique) ajout 01
-      if (filters?.favorite !== undefined) {
-        where.AND.push({ favorite: filters.favorite === true });
-      }
-      if (filters?.startDate && filters?.endDate) {
-        where.AND.push({
-          createdAt: {
-            gte: new Date(filters.startDate),
-            lte: new Date(filters.endDate),
-          },
-        });
-      }
-      if (filters?.search) {
-        const searchTerms = Array.isArray(filters.search)
-          ? filters.search
-          : [filters.search];
-        if (filters.field) {
-          const answerConditions = searchTerms.map((term: string) => ({
-            valeu: { contains: term, mode: "insensitive" },
-          }));
+      if (filters) {
+        if (filters.startDate && filters.endDate) {
           where.AND.push({
-            answer: {
-              some: {
-                formField: { name: filters.field },
-                AND: answerConditions,
-              },
+            createdAt: {
+              gte: new Date(filters.startDate),
+              lte: new Date(filters.endDate),
             },
           });
-        } else {
-          const globalSearchConditions = searchTerms.map((term: string) => ({
-            answer: {
-              some: {
-                valeu: { contains: term, mode: "insensitive" },
-              },
-            },
-          }));
-          where.AND.push(...globalSearchConditions);
         }
-      }
-      if (filters?.fieldOption && filters?.selectedValue) {
-        const formField = await prisma.formField.findFirst({
-          where: {
-            name: filters.fieldOption,
-            form: { compagneId },
-          },
-          include: { fields: { select: { type: true } } },
-        });
-        const isCheckbox = formField?.fields.type === "checkbox";
-        const values = Array.isArray(filters.selectedValue)
-          ? filters.selectedValue
-          : [filters.selectedValue];
-        if (isCheckbox) {
-          const checkboxConditions = values.map((val: string) => ({
-            valeu: { contains: val, mode: "insensitive" },
-          }));
-          where.AND.push({
-            answer: {
-              some: {
-                formField: { name: filters.fieldOption },
-                AND: checkboxConditions,
+        if (filters.selectedIds && Array.isArray(filters.selectedIds) && filters.selectedIds.length > 0) {
+          where.AND.push({ id: { in: filters.selectedIds } });
+        }
+        if (filters.favorite !== undefined) {
+          where.AND.push({ favorite: filters.favorite === true });
+        }
+        if (filters.search) {
+          const searchTerms = Array.isArray(filters.search)
+            ? filters.search
+            : [filters.search];
+
+          if (filters.field) {
+            const answerConditions = searchTerms.map((term: string) => ({
+              valeu: { contains: term, mode: "insensitive" },
+            }));
+            where.AND.push({
+              answer: {
+                some: {
+                  formField: { name: filters.field },
+                  AND: answerConditions,
+                },
               },
-            },
-          });
-        } else {
-          where.AND.push({
-            answer: {
-              some: {
-                formField: { name: filters.fieldOption },
-                valeu: { in: values },
+            });
+          } else {
+            const globalSearchConditions = searchTerms.map((term: string) => ({
+              answer: {
+                some: { valeu: { contains: term, mode: "insensitive" } },
               },
-            },
-          });
+            }));
+            where.AND.push(...globalSearchConditions);
+          }
+        }
+        if (filters.fieldOptions && Array.isArray(filters.fieldOptions)) {
+          for (const optionFilter of filters.fieldOptions) {
+            const { field: fieldName, value: selectedValue } = optionFilter;
+
+            if (fieldName && selectedValue) {
+              const formField = await prisma.formField.findFirst({
+                where: { name: fieldName, form: { compagneId } },
+                include: { fields: { select: { type: true } } },
+              });
+
+              const isCheckbox = formField?.fields.type === "checkbox";
+              const values = Array.isArray(selectedValue)
+                ? selectedValue
+                : [selectedValue];
+
+              if (isCheckbox) {
+                const checkboxConditions = values.map((val: string) => ({
+                  valeu: { contains: val, mode: "insensitive" },
+                }));
+                where.AND.push({
+                  answer: {
+                    some: {
+                      formField: { name: fieldName },
+                      AND: checkboxConditions,
+                    },
+                  },
+                });
+              } else {
+                where.AND.push({
+                  answer: {
+                    some: {
+                      formField: { name: fieldName },
+                      valeu: { in: values },
+                    },
+                  },
+                });
+              }
+            }
+          }
         }
       }
 
@@ -1773,23 +1748,90 @@ export default class SoumissionController {
 
       // Reprise de la logique de getCompagneSoumissions
       const where: any = { AND: [{ compagneId }] };
-      if (filters?.startDate && filters?.endDate) {
-        where.AND.push({
-          createdAt: {
-            gte: new Date(filters.startDate),
-            lte: new Date(filters.endDate),
-          },
-        });
+
+      if (filters) {
+        if (filters.startDate && filters.endDate) {
+          where.AND.push({
+            createdAt: {
+              gte: new Date(filters.startDate),
+              lte: new Date(filters.endDate),
+            },
+          });
+        }
+        if (filters.selectedIds && Array.isArray(filters.selectedIds) && filters.selectedIds.length > 0) {
+          where.AND.push({ id: { in: filters.selectedIds } });
+        }
+        if (filters.favorite !== undefined) {
+          where.AND.push({ favorite: filters.favorite === true });
+        }
+        if (filters.search) {
+          const searchTerms = Array.isArray(filters.search)
+            ? filters.search
+            : [filters.search];
+
+          if (filters.field) {
+            const answerConditions = searchTerms.map((term: string) => ({
+              valeu: { contains: term, mode: "insensitive" },
+            }));
+            where.AND.push({
+              answer: {
+                some: {
+                  formField: { name: filters.field },
+                  AND: answerConditions,
+                },
+              },
+            });
+          } else {
+            const globalSearchConditions = searchTerms.map((term: string) => ({
+              answer: {
+                some: { valeu: { contains: term, mode: "insensitive" } },
+              },
+            }));
+            where.AND.push(...globalSearchConditions);
+          }
+        }
+        if (filters.fieldOptions && Array.isArray(filters.fieldOptions)) {
+          for (const optionFilter of filters.fieldOptions) {
+            const { field: fieldName, value: selectedValue } = optionFilter;
+
+            if (fieldName && selectedValue) {
+              const formField = await prisma.formField.findFirst({
+                where: { name: fieldName, form: { compagneId } },
+                include: { fields: { select: { type: true } } },
+              });
+
+              const isCheckbox = formField?.fields.type === "checkbox";
+              const values = Array.isArray(selectedValue)
+                ? selectedValue
+                : [selectedValue];
+
+              if (isCheckbox) {
+                const checkboxConditions = values.map((val: string) => ({
+                  valeu: { contains: val, mode: "insensitive" },
+                }));
+                where.AND.push({
+                  answer: {
+                    some: {
+                      formField: { name: fieldName },
+                      AND: checkboxConditions,
+                    },
+                  },
+                });
+              } else {
+                where.AND.push({
+                  answer: {
+                    some: {
+                      formField: { name: fieldName },
+                      valeu: { in: values },
+                    },
+                  },
+                });
+              }
+            }
+          }
+        }
       }
-      if (
-        filters?.selectedIds &&
-        Array.isArray(filters.selectedIds) &&
-        filters.selectedIds.length > 0
-      ) {
-        where.AND.push({
-          id: { in: filters.selectedIds },
-        });
-      }
+
       // Récupère les soumissions filtrées
       const soumissions = await prisma.soumission.findMany({
         where,
@@ -1802,6 +1844,15 @@ export default class SoumissionController {
         },
         orderBy: { createdAt: "desc" },
       });
+
+      if (soumissions.length === 0) {
+        res.status(200).json({
+          message:
+            "Aucune soumission ne correspond aux filtres sélectionnés. Aucun fichier n'a été généré.",
+          file: null,
+        });
+        return;
+      }
 
       // Génère les données à exporter
       const exportData = soumissions.map((soumission) => {
