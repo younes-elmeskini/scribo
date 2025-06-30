@@ -6,7 +6,7 @@ import { validationResult } from "../../../utils/validation/validationResult";
 import { Role } from "@prisma/client";
 import multer from "multer";
 import GestionForm from "../utils/gestionfrom";
-import { Parser as Json2csvParser } from "json2csv"; 
+import { Parser as Json2csvParser } from "json2csv";
 import { title } from "process";
 
 type createCompagne = z.infer<typeof CompagneValidation.createCompagneSchema>;
@@ -79,7 +79,7 @@ export default class CompagneController {
 
       const campagnes = await prisma.compagne.findMany({
         where: {
-          deletedAt:null,
+          deletedAt: null,
           OR: [
             {
               clientId: clientId.toString(), // Owner
@@ -201,7 +201,7 @@ export default class CompagneController {
       const compagne = await prisma.compagne.findUnique({
         where: {
           id: compagneId,
-          deletedAt:null,
+          deletedAt: null,
           OR: [
             {
               clientId: clientId.toString(), // Owner
@@ -213,10 +213,10 @@ export default class CompagneController {
         },
         select: {
           description: true,
-          compagneName:true,
-          favrite:true,
-          createdAt:true,
-          updatedAt: true
+          compagneName: true,
+          favrite: true,
+          createdAt: true,
+          updatedAt: true,
         },
       });
       if (!compagne) {
@@ -234,16 +234,16 @@ export default class CompagneController {
       const counts: Record<string, number> = {};
       soumissions.forEach((s) => {
         const d = new Date(s.createdAt);
-        const day = d.getDate().toString().padStart(2, '0');
-        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        const day = d.getDate().toString().padStart(2, "0");
+        const month = (d.getMonth() + 1).toString().padStart(2, "0");
         const key = `${day}/${month}`;
         counts[key] = (counts[key] || 0) + 1;
       });
       const soumissionsByDayArr = Object.entries(counts)
         .map(([date, value]) => ({ date, value }))
         .sort((a, b) => {
-          const [ad, am] = a.date.split('/').map(Number);
-          const [bd, bm] = b.date.split('/').map(Number);
+          const [ad, am] = a.date.split("/").map(Number);
+          const [bd, bm] = b.date.split("/").map(Number);
           if (am !== bm) return am - bm;
           return ad - bd;
         });
@@ -276,8 +276,14 @@ export default class CompagneController {
         // Compter les réponses
         field.Answer.forEach((answer) => {
           let values: string[] = [];
-          if (field.fields?.type === 'checkbox' && typeof answer.valeu === 'string') {
-            values = answer.valeu.split(',').map(v => v.trim()).filter(v => v);
+          if (
+            field.fields?.type === "checkbox" &&
+            typeof answer.valeu === "string"
+          ) {
+            values = answer.valeu
+              .split(",")
+              .map((v) => v.trim())
+              .filter((v) => v);
           } else {
             values = [answer.valeu];
           }
@@ -321,11 +327,11 @@ export default class CompagneController {
           compagneId,
         },
         select: {
-          id:true,
+          id: true,
           titleTask: true,
           description: true,
           status: true,
-          createdAt:true,
+          createdAt: true,
           client: {
             select: {
               firstName: true,
@@ -357,11 +363,11 @@ export default class CompagneController {
       res.status(200).json({
         data: {
           totalsoumissions: soumissions.length,
-          title:compagne.compagneName,
+          title: compagne.compagneName,
           description: compagne.description,
-          createdAt:compagne.createdAt,
-          updatedAt:compagne.updatedAt,
-          favorite:compagne.favrite,
+          createdAt: compagne.createdAt,
+          updatedAt: compagne.updatedAt,
+          favorite: compagne.favrite,
           soumissionsByDay: soumissionsByDayArr,
           answersStats,
           action: {
@@ -892,12 +898,16 @@ export default class CompagneController {
         },
       });
       if (!originalCompagne) {
-        res.status(404).json({ message: "Campagne non trouvée ou accès refusé" });
+        res
+          .status(404)
+          .json({ message: "Campagne non trouvée ou accès refusé" });
         return;
       }
       const originalForm = originalCompagne.Form[0];
       if (!originalForm) {
-        res.status(404).json({ message: "Aucun formulaire associé à la campagne" });
+        res
+          .status(404)
+          .json({ message: "Aucun formulaire associé à la campagne" });
         return;
       }
       // Transaction de duplication
@@ -916,7 +926,9 @@ export default class CompagneController {
         const newForm = await tx.form.create({
           data: {
             compagneId: newCompagne.id,
-            title: (originalForm.title || originalCompagne.compagneName) + " (copie)",
+            title:
+              (originalForm.title || originalCompagne.compagneName) +
+              " (copie)",
             Description: originalForm.Description,
             coverColor: originalForm.coverColor,
             coverImage: originalForm.coverImage,
@@ -937,7 +949,12 @@ export default class CompagneController {
         }
         // 4. Dupliquer les formFields (et options/maps)
         for (const field of originalForm.FormField) {
-          const { id: _oldFieldId, FormFieldOption, FormFieldMap, ...fieldData } = field;
+          const {
+            id: _oldFieldId,
+            FormFieldOption,
+            FormFieldMap,
+            ...fieldData
+          } = field;
           // Créer le formField
           const newField = await tx.formField.create({
             data: {
@@ -989,7 +1006,9 @@ export default class CompagneController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Erreur lors de la duplication de la campagne" });
+      res
+        .status(500)
+        .json({ message: "Erreur lors de la duplication de la campagne" });
     }
   }
 
@@ -1077,9 +1096,9 @@ export default class CompagneController {
       }
       const compagneMember = await prisma.teamCompagne.findFirst({
         where: {
-          id: membre.id
-        }
-      })
+          id: membre.id,
+        },
+      });
       if (compagneMember) {
         res.status(404).json({ message: "teamCompagne ready existed" });
         return;
@@ -1088,16 +1107,16 @@ export default class CompagneController {
         data: {
           teamMenbreId: membre.id,
           compagneId: compagneId,
-          role: 'MEMBER'
-        }
-      })
+          role: "MEMBER",
+        },
+      });
       if (!teamCompagne) {
         res.status(404).json({ message: "teamCompagne not created" });
         return;
       }
       res.status(201).json({
-        message: "teamCompagne create succes"
-      })
+        message: "teamCompagne create succes",
+      });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Internal Server Error" });
@@ -1116,8 +1135,8 @@ export default class CompagneController {
       const teamCompagne = await prisma.teamCompagne.findFirst({
         where: { id: teamCompagneId },
         include: {
-          compagne: true
-        }
+          compagne: true,
+        },
       });
 
       if (!teamCompagne) {
@@ -1127,7 +1146,11 @@ export default class CompagneController {
 
       // Check if the authenticated client is the owner of the campaign
       if (teamCompagne.compagne.clientId !== clientId.toString()) {
-        res.status(403).json({ message: "Access denied: you are not the owner of the campaign." });
+        res
+          .status(403)
+          .json({
+            message: "Access denied: you are not the owner of the campaign.",
+          });
         return;
       }
 
@@ -1171,7 +1194,9 @@ export default class CompagneController {
         },
       });
       if (!compagne) {
-        res.status(404).json({ message: "Campagne non trouvée ou accès refusé" });
+        res
+          .status(404)
+          .json({ message: "Campagne non trouvée ou accès refusé" });
         return;
       }
 
@@ -1179,7 +1204,7 @@ export default class CompagneController {
       const teamCompagne = await prisma.teamCompagne.findMany({
         where: { compagneId },
         select: {
-          id:true,
+          id: true,
           teamMember: {
             include: {
               member: {
@@ -1195,9 +1220,9 @@ export default class CompagneController {
           },
         },
       });
-      let membresAssignes = teamCompagne.map(tc => ({
+      let membresAssignes = teamCompagne.map((tc) => ({
         ...tc.teamMember.member,
-        teamCompagneId: tc.id
+        teamCompagneId: tc.id,
       }));
 
       // 2. Récupérer tous les membres de l'équipe (teamMembre)
@@ -1218,10 +1243,10 @@ export default class CompagneController {
         },
       });
       // Exclure ceux déjà assignés à la campagne
-      const membresAssignesIds = new Set(membresAssignes.map(m => m.id));
+      const membresAssignesIds = new Set(membresAssignes.map((m) => m.id));
       let autresMembres = allTeamMembers
-        .map(tm => tm.member)
-        .filter(m => !membresAssignesIds.has(m.id));
+        .map((tm) => tm.member)
+        .filter((m) => !membresAssignesIds.has(m.id));
 
       // 3. Filtrage si search
       if (search) {
@@ -1236,8 +1261,10 @@ export default class CompagneController {
       }
 
       res.status(200).json({
-        membresAssignes,
-        autresMembres
+        data: {
+          membresAssignes,
+          autresMembres,
+        },
       });
     } catch (error) {
       console.error(error);
@@ -1258,11 +1285,13 @@ export default class CompagneController {
         where: {
           id: compagneId,
           clientId: clientId.toString(),
-          deletedAt: null
+          deletedAt: null,
         },
       });
       if (!compagne) {
-        res.status(404).json({ message: "Campagne non trouvée ou accès refusé" });
+        res
+          .status(404)
+          .json({ message: "Campagne non trouvée ou accès refusé" });
         return;
       }
       await prisma.compagne.update({
