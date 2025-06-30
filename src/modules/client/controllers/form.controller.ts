@@ -1759,7 +1759,7 @@ export default class FormController {
       // Check if form exists and user has access
       const form = await prisma.form.findFirst({
         where: {
-          id: compagneId,
+          compagneId: compagneId,
           compagne: {
             OR: [
               { clientId: clientId.toString() },
