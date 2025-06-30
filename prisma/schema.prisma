@@ -103,24 +103,25 @@ model TeamCompagne {
 }
 
 model Compagne {
-  id           String         @id @default(cuid())
-  compagneName String
-  description  String?
-  status       Status         @default(ACTIVE)
-  favrite      Boolean        @default(false)
-  clientId     String
-  client       Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  deletedAt    DateTime?
-  Form         Form[]
-  TeamCompagne TeamCompagne[]
-  soumission   Soumission[]
-  Call         Call[]
-  Email        Email[]
-  Notes        Notes[]
-  Task         Task[]
-  appointment  Appointment[]
+  id            String          @id @default(cuid())
+  compagneName  String
+  description   String?
+  status        Status          @default(ACTIVE)
+  favrite       Boolean         @default(false)
+  clientId      String
+  client        Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  deletedAt     DateTime?
+  Form          Form[]
+  TeamCompagne  TeamCompagne[]
+  soumission    Soumission[]
+  Call          Call[]
+  Email         Email[]
+  Notes         Notes[]
+  Task          Task[]
+  appointment   Appointment[]
+  ExportHistory ExportHistory[]
 }
 
 model Fields {
@@ -396,4 +397,13 @@ model History {
   to           String
   type         TypeAction
   createdAt    DateTime   @default(now())
+}
+
+model ExportHistory {
+  id         String   @id @default(cuid())
+  file       String
+  compagneId String
+  compagne   Compagne @relation(fields: [compagneId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  deletedAt  DateTime?
 }

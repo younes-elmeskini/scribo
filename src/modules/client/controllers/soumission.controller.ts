@@ -1626,7 +1626,7 @@ export default class SoumissionController {
       }
 
       // Construction dynamique des filtres
-      const where: any = { compagneId };
+      const where: any = { AND: [{ compagneId }] };
 
       // Exemple de gestion de filtres (à adapter selon tes besoins)
       if (req.query.status) {
@@ -1779,6 +1779,15 @@ export default class SoumissionController {
             gte: new Date(filters.startDate),
             lte: new Date(filters.endDate),
           },
+        });
+      }
+      if (
+        filters?.selectedIds &&
+        Array.isArray(filters.selectedIds) &&
+        filters.selectedIds.length > 0
+      ) {
+        where.AND.push({
+          id: { in: filters.selectedIds },
         });
       }
       // Récupère les soumissions filtrées
