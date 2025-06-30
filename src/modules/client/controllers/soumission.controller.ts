@@ -1896,10 +1896,19 @@ export default class SoumissionController {
         return;
       }
 
+      const fileUrl = `/exports/${compagneId}/${fileName}`;
+
+      await prisma.exportHistory.create({
+        data: {
+          compagneId: compagneId,
+          file: fileUrl,
+        },
+      });
+
       // Retourne le chemin du fichier pour téléchargement
       res.status(200).json({
         message: "Export réussi",
-        file: `/uploads/exports/${compagneId}/${fileName}`,
+        file: fileUrl,
       });
     } catch (error) {
       console.error(error);
