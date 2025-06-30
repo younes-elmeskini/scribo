@@ -290,11 +290,35 @@ export default class SoumissionController {
               },
             },
           },
-          Call: true,
           Email: true,
           Notes: true,
-          Task: true,
-          appointment: true,
+          Task: {
+            select: {
+              id:true,
+              titleTask:true,
+              client:{
+                select:{
+                  firstName:true,
+                  lastName:true,
+                  profilImage:true,
+                }
+              }
+            }
+          },
+          appointment:{
+            select: {
+              id:true,
+              adress:true,
+              date:true,
+              client:{
+                select:{
+                  firstName:true,
+                  lastName:true,
+                  profilImage:true,
+                }
+              }
+            }
+          },
         },
       });
 
@@ -316,7 +340,6 @@ export default class SoumissionController {
 
       // Count activities
       const activitiesCount = {
-        calls: soumission.Call.length,
         emails: soumission.Email.length,
         notes: soumission.Notes.length,
         tasks: soumission.Task.length,
@@ -332,7 +355,6 @@ export default class SoumissionController {
           activities: {
             counts: activitiesCount,
             details: {
-              calls: soumission.Call,
               emails: soumission.Email,
               notes: soumission.Notes,
               tasks: soumission.Task,
