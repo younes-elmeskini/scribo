@@ -320,10 +320,36 @@ export default class CompagneController {
         where: {
           compagneId,
         },
+        select: {
+          titleTask: true,
+          description: true,
+          status: true,
+          client: {
+            select: {
+              firstName: true,
+              lastName: true,
+              profilImage: true,
+            },
+          },
+        },
       });
       const appointment = await prisma.appointment.findMany({
         where: {
           compagneId,
+        },
+        select: {
+          id: true,
+          date: true,
+          adress: true,
+          commentaire: true,
+          createdAt: true,
+          client: {
+            select: {
+              firstName: true,
+              lastName: true,
+              profilImage: true,
+            },
+          },
         },
       });
       res.status(200).json({
