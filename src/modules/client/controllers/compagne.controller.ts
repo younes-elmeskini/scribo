@@ -325,6 +325,7 @@ export default class CompagneController {
           titleTask: true,
           description: true,
           status: true,
+          createdAt:true,
           client: {
             select: {
               firstName: true,

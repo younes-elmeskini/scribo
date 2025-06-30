@@ -298,6 +298,9 @@ export default class SoumissionController {
             select: {
               id:true,
               titleTask:true,
+              createdAt:true,
+              description: true,
+              status: true,
               client:{
                 select:{
                   firstName:true,
@@ -1793,10 +1796,19 @@ export default class SoumissionController {
 
       // Génère les données à exporter
       const exportData = soumissions.map((soumission) => {
-        const answers = soumission.answer.map((a) => ({
+        let answersToFilter = soumission.answer;
+
+        if (fields && Array.isArray(fields) && fields.length > 0) {
+          answersToFilter = answersToFilter.filter((a) =>
+            fields.includes(a.formFieldId)
+          );
+        }
+
+        const answers = answersToFilter.map((a) => ({
           formFieldName: a.formField.label || a.formField.name,
           valeu: a.valeu,
         }));
+
         return {
           soumissionId: soumission.id,
           dateSoumission: soumission.createdAt.toISOString(),
@@ -1832,28 +1844,45 @@ export default class SoumissionController {
       } else if (format === "json") {
         fs.writeFileSync(filePath, JSON.stringify(exportData, null, 2), "utf8");
       } else if (format === "xlsx" || format === "excel") {
-        // On aplatit les réponses pour chaque soumission (une colonne par champ)
-        const allFieldNames = Array.from(
-          new Set(
-            soumissions.flatMap((s) =>
-              s.answer
-                .map((a) => a.formField.label || a.formField.name)
-                .filter((name) => !!name)
-            )
-          )
+        const allFieldsFromSubmissions = soumissions.flatMap((s) =>
+          s.answer.map((a) => ({
+            id: a.formFieldId,
+            name: a.formField.label || a.formField.name,
+          }))
         );
+
+        let fieldHeaders: { id: string; name: string }[];
+
+        if (fields && Array.isArray(fields) && fields.length > 0) {
+          const uniqueFields = [
+            ...new Map(
+              allFieldsFromSubmissions.map((item) => [item.id, item])
+            ).values(),
+          ];
+          fieldHeaders = fields
+            .map((id) => {
+              const foundField = uniqueFields.find((f) => f.id === id);
+              return { id, name: foundField ? foundField.name : id };
+            })
+            .filter((f): f is { id: string; name: string } => !!f.name);
+        } else {
+          fieldHeaders = [
+            ...new Map(
+              allFieldsFromSubmissions.map((item) => [item.id, item])
+            ).values(),
+          ].filter((f): f is { id: string; name: string } => !!f.name);
+        }
 
         const excelData = soumissions.map((soumission) => {
           const row: Record<string, any> = {
             soumissionId: soumission.id,
             dateSoumission: soumission.createdAt.toISOString(),
           };
-          allFieldNames.forEach((fieldName) => {
-            if (!fieldName) return; // Ignore les noms nuls
+          fieldHeaders.forEach((header) => {
             const answer = soumission.answer.find(
-              (a) => (a.formField.label || a.formField.name) === fieldName
+              (a) => a.formFieldId === header.id
             );
-            row[fieldName] = answer ? answer.valeu : "";
+            row[header.name] = answer ? answer.valeu : "";
           });
           return row;
         });
