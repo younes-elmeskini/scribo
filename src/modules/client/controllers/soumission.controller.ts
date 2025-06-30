@@ -1556,6 +1556,7 @@ export default class SoumissionController {
   }
   static async getExportSoummision(req: Request, res: Response): Promise<void> {
     try {
+      const { filters } = req.body; // Récupère les filtres depuis la requête
       const compagneId = req.params.id;
       const clientId = req.client?.id;
       if (!clientId) {
@@ -1598,48 +1599,7 @@ export default class SoumissionController {
         };
       }
 
-      const soumissions = await prisma.soumission.findMany({
-        where,
-        include: {
-          answer: {
-            include: {
-              formField: {
-                select: {
-                  label: true,
-                  name: true,
-                  fields: { select: { type: true } },
-                },
-              },
-            },
-          },
-        },
-        orderBy: { createdAt: "desc" },
-      });
-
-      res.status(200).json(soumissions);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
-    }
-  }
-
-  static async exportSoumissionsFiltrees(
-    req: Request,
-    res: Response
-  ): Promise<void> {
-    try {
-      const compagneId = req.params.id;
-      const clientId = req.client?.id;
-      const { filters, fields, format } = req.body; // Les filtres, champs et format envoyés par le frontend
-
-      if (!clientId) {
-        res.status(401).json({ message: "Non autorisé" });
-        return;
-      }
-
-      // Reprise de la logique de getCompagneSoumissions
-      const where: any = { AND: [{ compagneId }] };
-
+      // Recherche texte globale (sans champ spécifique) ajout 01
       if (filters?.favorite !== undefined) {
         where.AND.push({ favorite: filters.favorite === true });
       }
@@ -1714,6 +1674,52 @@ export default class SoumissionController {
         }
       }
 
+      const soumissions = await prisma.soumission.findMany({
+        where,
+        include: {
+          answer: {
+            include: {
+              formField: {
+                select: {
+                  label: true,
+                  name: true,
+                  fields: { select: { type: true } },
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      res.status(200).json(soumissions);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
+  static async exportSoumissions(req: Request, res: Response): Promise<void> {
+    try {
+      const compagneId = req.params.id;
+      const clientId = req.client?.id;
+      const { filters, fields, format } = req.body; // Les filtres, champs et format envoyés par le frontend
+
+      if (!clientId) {
+        res.status(401).json({ message: "Non autorisé" });
+        return;
+      }
+
+      // Reprise de la logique de getCompagneSoumissions
+      const where: any = { AND: [{ compagneId }] };
+      if (filters?.startDate && filters?.endDate) {
+        where.AND.push({
+          createdAt: {
+            gte: new Date(filters.startDate),
+            lte: new Date(filters.endDate),
+          },
+        });
+      }
       // Récupère les soumissions filtrées
       const soumissions = await prisma.soumission.findMany({
         where,
@@ -1741,15 +1747,18 @@ export default class SoumissionController {
       });
 
       // Détermine le nom et le chemin du fichier
+      const exportDir = path.join(
+        __dirname,
+        "../../../uploads/exports",
+        compagneId
+      );
+      if (!fs.existsSync(exportDir)) {
+        fs.mkdirSync(exportDir, { recursive: true });
+      }
       const fileName = `export_soumissions_${Date.now()}.${
         format === "xlsx" || format === "excel" ? "xlsx" : format
       }`;
-      const filePath = path.join(__dirname, "../../../uploads", fileName);
-
-      const uploadsDir = path.join(__dirname, "../../../uploads");
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-      }
+      const filePath = path.join(exportDir, fileName);
 
       if (format === "csv") {
         // Pour le CSV, answers est stringifié
@@ -1803,7 +1812,7 @@ export default class SoumissionController {
       // Retourne le chemin du fichier pour téléchargement
       res.status(200).json({
         message: "Export réussi",
-        file: `/uploads/${fileName}`,
+        file: `/uploads/exports/${compagneId}/${fileName}`,
       });
     } catch (error) {
       console.error(error);

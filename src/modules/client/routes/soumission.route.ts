@@ -8,7 +8,7 @@ router.post("/:id/notes", authenticate, SoumissionController.createNote);
 router.post("/:id/email",authenticate, SoumissionController.sendEmail)
 router.post("/:id/appointment", authenticate, SoumissionController.createAppointment)
 router.post("/:id/task", authenticate, SoumissionController.createTask)
-router.post( "/compagne/:id/export", authenticate, SoumissionController.exportSoumissionsFiltrees);
+router.post( "/compagne/:id/export", authenticate, SoumissionController.exportSoumissions);
 
 router.get("/compagne/:id", authenticate, SoumissionController.getCompagneSoumissions);
 router.get("/:id", authenticate, SoumissionController.getSoumissionDetails);
