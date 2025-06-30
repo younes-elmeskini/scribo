@@ -1743,7 +1743,7 @@ export default class FormController {
   }
   static async getFormFieldsWithOptions(req: Request, res: Response): Promise<void> {
     try {
-      const formId = req.params.id;
+      const compagneId = req.params.id;
       const clientId = req.client?.id;
 
       if (!clientId) {
@@ -1751,15 +1751,15 @@ export default class FormController {
         return;
       }
 
-      if (!formId) {
-        res.status(400).json({ message: "L'ID du formulaire est requis" });
+      if (!compagneId) {
+        res.status(400).json({ message: "L'ID du compagne est requis" });
         return;
       }
 
       // Check if form exists and user has access
       const form = await prisma.form.findFirst({
         where: {
-          id: formId,
+          id: compagneId,
           compagne: {
             OR: [
               { clientId: clientId.toString() },
@@ -1784,7 +1784,7 @@ export default class FormController {
 
       const formFieldsWithOptions = await prisma.formField.findMany({
         where: {
-          formId: formId,
+          formId: form.id,
           fields: {
             type: {
               in: ['select', 'radio', 'checkbox']
