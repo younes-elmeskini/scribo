@@ -28,6 +28,7 @@ export default class SoumissionController {
       // Vérifier si la campagne existe et si l'utilisateur a accès
       const compagne = await prisma.compagne.findFirst({
         where: {
+          deletedAt: null,
           id: compagneId,
           OR: [
             { clientId: clientId.toString() },
@@ -264,6 +265,7 @@ export default class SoumissionController {
       // Vérifier si la soumission existe et si l'utilisateur a accès
       const soumission = await prisma.soumission.findFirst({
         where: {
+          deletedAt: null,
           id: soumissionId,
           compagne: {
             OR: [
@@ -671,6 +673,7 @@ export default class SoumissionController {
       // Vérifier si la soumission existe et si l'utilisateur a accès
       const soumission = await prisma.soumission.findFirst({
         where: {
+          deletedAt: null,
           id: soumissionId,
           compagne: {
             OR: [
@@ -919,6 +922,7 @@ export default class SoumissionController {
       // Vérifier l'accès à la soumission
       const soumission = await prisma.soumission.findFirst({
         where: {
+          deletedAt: null,
           id: soumissionId,
           compagne: {
             OR: [
@@ -1091,6 +1095,7 @@ export default class SoumissionController {
         .status(201)
         .json({ message: "Rendez-vous ajouté", data: appointment });
     } catch (error) {
+      console.error(error)
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
@@ -1109,6 +1114,7 @@ export default class SoumissionController {
 
       const appointment = await prisma.appointment.findFirst({
         where: {
+          deletedAt: null,
           id: appointmentId,
           compagne: {
             OR: [
@@ -1177,6 +1183,7 @@ export default class SoumissionController {
       }
       const soumission = await prisma.soumission.findFirst({
         where: {
+          deletedAt: null,
           id: soumissionId,
           compagne: {
             OR: [
@@ -1359,6 +1366,7 @@ export default class SoumissionController {
       }
       const soumission = await prisma.soumission.findFirst({
         where: {
+          deletedAt: null,
           id: soumissionId,
           compagne: {
             OR: [

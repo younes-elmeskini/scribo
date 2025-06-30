@@ -369,6 +369,7 @@ export default class CompagneController {
       // Check if the compagne exists and user has access to it
       const compagne = await prisma.compagne.findFirst({
         where: {
+          deletedAt: null,
           id: compagneId,
           OR: [
             {
