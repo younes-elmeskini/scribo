@@ -49,7 +49,7 @@ export default class CompagneController {
 
       // Parse pagination parameters
       const page = parseInt(req.query.page as string) || 1;
-      const limit = 3;
+      const limit = 12;
 
       // Validate pagination parameters
       if (page < 1) {
@@ -153,6 +153,7 @@ export default class CompagneController {
 
       const campagnes = await prisma.compagne.findMany({
         where: {
+          deletedAt:null,
           OR: [
             {
               clientId: clientId.toString(), // Owner
