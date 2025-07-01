@@ -66,7 +66,7 @@ export default class SoumissionController {
         startDate,
         endDate,
       } = req.query;
-      const where: any = { AND: [{ compagneId }] };
+      const where: any = { AND: [{ compagneId }]   };
 
       // Filtre favori
       if (favorite !== undefined) {
@@ -117,6 +117,7 @@ export default class SoumissionController {
       if (fieldOption && selectedValue) {
         const formField = await prisma.formField.findFirst({
           where: {
+            disable:false,
             name: fieldOption as string,
             form: {
               compagneId: compagneId,
@@ -188,6 +189,9 @@ export default class SoumissionController {
         where: { compagneId },
         include: {
           FormField: {
+            where:{
+              disable:false
+            },
             select: {
               id: true,
               label: true,
