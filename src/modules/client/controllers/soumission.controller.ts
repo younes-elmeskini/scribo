@@ -1743,7 +1743,7 @@ export default class SoumissionController {
     try {
       const compagneId = req.params.id;
       const clientId = req.client?.id;
-      const { filters, fields, format } = req.body; // Les filtres, champs et format envoyés par le frontend
+      const { selectedIds,filters, fields, format } = req.body; // Les filtres, champs et format envoyés par le frontend
 
       if (!clientId) {
         res.status(401).json({ message: "Non autorisé" });
@@ -1753,6 +1753,9 @@ export default class SoumissionController {
       // Reprise de la logique de getCompagneSoumissions
       const where: any = { AND: [{ compagneId }] };
 
+      if (selectedIds && Array.isArray(selectedIds) && selectedIds.length > 0) {
+        where.AND.push({ id: { in: selectedIds } });
+      }
       if (filters) {
         if (filters.startDate && filters.endDate) {
           where.AND.push({
@@ -1761,9 +1764,6 @@ export default class SoumissionController {
               lte: new Date(filters.endDate),
             },
           });
-        }
-        if (filters.selectedIds && Array.isArray(filters.selectedIds) && filters.selectedIds.length > 0) {
-          where.AND.push({ id: { in: filters.selectedIds } });
         }
         if (filters.favorite !== undefined) {
           where.AND.push({ favorite: filters.favorite === true });
