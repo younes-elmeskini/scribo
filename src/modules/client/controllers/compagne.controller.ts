@@ -60,6 +60,7 @@ export default class CompagneController {
       // Get total count for pagination metadata
       const totalCount = await prisma.compagne.count({
         where: {
+          deletedAt:null,
           OR: [
             {
               clientId: clientId.toString(), // Owner
