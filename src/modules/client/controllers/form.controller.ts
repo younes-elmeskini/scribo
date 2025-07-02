@@ -1797,6 +1797,7 @@ export default class FormController {
         select: {
           id: true,
           label: true,
+          name:true,
           fields: {
             select: {
               type: true
@@ -1819,7 +1820,8 @@ export default class FormController {
 
       const formattedData = formFieldsWithOptions.map(field => ({
         id:field.id,
-        name: field.label,
+        label:field.label,
+        name: field.name,
         type: field.fields.type,
         valeux: field.FormFieldOption.map(option => ({ id: option.id, content: option.content }))
       }));
