@@ -1833,4 +1833,69 @@ export default class FormController {
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
+  static async getFormFieldsByCompagneId(req: Request, res: Response): Promise<void> {
+    try {
+      const compagneId = req.params.id;
+      const clientId = req.client?.id;
+  
+      if (!clientId) {
+        res.status(401).json({ message: "Non autorisé" });
+        return;
+      }
+  
+      // Vérifier l'accès à la campagne
+      const compagne = await prisma.compagne.findFirst({
+        where: {
+          id: compagneId,
+          OR: [
+            { clientId: clientId.toString() },
+            {
+              TeamCompagne: {
+                some: {
+                  teamMember: {
+                    membreId: clientId.toString(),
+                  },
+                },
+              },
+            },
+          ],
+        },
+      });
+      if (!compagne) {
+        res.status(404).json({ message: "Campagne non trouvée ou accès refusé" });
+        return;
+      }
+  
+      // Récupérer les champs de formulaire de la campagne
+      const form = await prisma.form.findFirst({
+        where: { compagneId },
+        select: {
+          FormField: {
+            select: {
+              id: true,
+              label: true,
+              name: true,
+              ordre: true,
+              fields: {
+                select: {
+                  type: true,
+                  icon: true,
+                },
+              },
+            },
+            orderBy: { ordre: "asc" }
+          }
+        }
+      });
+  
+      if (!form || !form.FormField || form.FormField.length === 0) {
+        res.status(404).json({ message: "Aucun champ trouvé pour cette campagne" });
+        return;
+      }
+  
+      res.status(200).json({ data: form.FormField });
+    } catch (error) {
+      res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
 }
