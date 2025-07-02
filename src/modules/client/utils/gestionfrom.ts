@@ -107,19 +107,6 @@ export default class GestionForm {
     return formFieldsData;
   }
 
-  /**
-   * Génère un message d'erreur par défaut en fonction du type de champ et de son statut obligatoire
-   * @param fieldType Type du champ
-   * @param fieldName Nom du champ
-   * @param isRequired Indique si le champ est obligatoire
-   * @returns Message d'erreur approprié
-   */
-
-  /**
-   * Génère les messages de validation par défaut pour un formulaire
-   * @param formId ID du formulaire
-   * @returns Tableau d'objets contenant les messages de validation par défaut
-   */
   static generateDefaultValidationMessages(formId: string): Array<{ formId: string, validationName: string, validationValeu: string }> {
     return [
       {

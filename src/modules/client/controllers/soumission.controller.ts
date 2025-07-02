@@ -202,6 +202,9 @@ export default class SoumissionController {
                 },
               },
             },
+            orderBy:{
+              ordre:"asc"
+            }
           },
         },
       });
