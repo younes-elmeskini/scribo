@@ -24,6 +24,7 @@ router.get("/", authenticate, CompagneController.getAllCompagne);
 router.get("/sidebar", authenticate, CompagneController.getsideBarData);
 router.get("/:id", authenticate, CompagneController.getCompagneById);
 router.get('/team/:id', authenticate, CompagneController.getTeam);
+router.get("/:id/history-export",authenticate ,CompagneController.getExportHistory)
 
 router.put("/:id/favorite", authenticate, CompagneController.favoriteCompagne);
 router.put("/:id", authenticate, CompagneController.updateCompagne)

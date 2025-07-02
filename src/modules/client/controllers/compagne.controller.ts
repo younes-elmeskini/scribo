@@ -1307,79 +1307,56 @@ export default class CompagneController {
     }
   }
 
-  static async exportSoumissions(req: Request, res: Response): Promise<void> {
+  static async getExportHistory(req: Request, res: Response): Promise<void> {
     try {
       const compagneId = req.params.id;
       const clientId = req.client?.id;
-      const { fields, format, filters } = req.body;
 
       if (!clientId) {
         res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
-      // Construction dynamique des filtres
-      const where: any = { compagneId };
-      if (filters?.status) where.status = filters.status;
-      if (filters?.favorite !== undefined) where.favorite = filters.favorite;
-      if (filters?.startDate && filters?.endDate) {
-        where.createdAt = {
-          gte: new Date(filters.startDate),
-          lte: new Date(filters.endDate),
-        };
-      }
-      if (filters?.search && filters?.field) {
-        where.answer = {
-          some: {
-            formField: { label: filters.field },
-            valeu: { contains: filters.search, mode: "insensitive" },
-          },
-        };
-      }
-
-      // Récupérer les soumissions avec les réponses
-      const soumissions = await prisma.soumission.findMany({
-        where,
-        include: {
-          answer: {
-            include: {
-              formField: true,
+      // Vérifier l'accès à la campagne
+      const compagne = await prisma.compagne.findFirst({
+        where: {
+          id: compagneId,
+          OR: [
+            { clientId: clientId.toString() },
+            {
+              TeamCompagne: {
+                some: {
+                  teamMember: {
+                    membreId: clientId.toString(),
+                  },
+                },
+              },
             },
-          },
+          ],
         },
-        orderBy: { createdAt: "desc" },
       });
-
-      // Générer les données à exporter selon les champs sélectionnés
-      const exportData = soumissions.map((soumission) => {
-        const row: Record<string, any> = {};
-        for (const field of fields) {
-          // Chercher la réponse correspondant au champ demandé
-          const answer = soumission.answer.find(
-            (a) => a.formField.label === field || a.formField.name === field
-          );
-          row[field] = answer ? answer.valeu : "";
-        }
-        row["Date de soumission"] = soumission.createdAt.toISOString();
-        return row;
-      });
-
-      // Générer le fichier selon le format demandé
-      if (format === "csv") {
-        const parser = new Json2csvParser({ fields });
-        const csv = parser.parse(exportData);
-        res.header("Content-Type", "text/csv");
-        res.attachment("export_soumissions.csv");
-        res.send(csv);
-      } else if (format === "json") {
-        res.header("Content-Type", "application/json");
-        res.attachment("export_soumissions.json");
-        res.send(JSON.stringify(exportData, null, 2));
-      } else {
-        res.status(400).json({ message: "Format d'export non supporté" });
+      if (!compagne) {
+        res.status(404).json({ message: "Campagne non trouvée ou accès refusé" });
+        return;
       }
+
+      const history = await prisma.exportHistory.findMany({
+        where: { compagneId },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          file: true,
+          createdAt:true,
+        },
+      });
+      const data = history.map(h => ({
+        id: h.id,
+        file: h.file,
+        name: `${compagne.compagneName.replace(/\s+/g, '_')}${h.id}`,
+        createdAt: h.createdAt
+      }));
+      res.status(200).json({ data });
     } catch (error) {
-      console.error(error);
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
