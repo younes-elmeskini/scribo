@@ -1916,7 +1916,10 @@ export default class SoumissionController {
         let delimiter = ",";
         if (req.body.delimiter) {
           if (req.body.delimiter === "tab") delimiter = "\t";
-          else if (req.body.delimiter === "espace") delimiter = " ";
+          else if (req.body.delimiter === "space") delimiter = " ";
+          else if (req.body.delimiter === "virgule") delimiter = ",";
+          else if (req.body.delimiter === "dotVirgule") delimiter = ";";
+          else if (req.body.delimiter === "pipe") delimiter = "|";
           else delimiter = req.body.delimiter;
         }
         // Pour le CSV, answers est stringifié
