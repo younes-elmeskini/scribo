@@ -60,7 +60,7 @@ export default class CompagneController {
       // Get total count for pagination metadata
       const totalCount = await prisma.compagne.count({
         where: {
-          deletedAt:null,
+          deletedAt: null,
           OR: [
             {
               clientId: clientId.toString(), // Owner
@@ -154,13 +154,19 @@ export default class CompagneController {
 
       const campagnes = await prisma.compagne.findMany({
         where: {
-          deletedAt:null,
+          deletedAt: null,
           OR: [
             {
               clientId: clientId.toString(), // Owner
             },
             {
-              clientId: clientId.toString(), // Member
+              TeamCompagne: {
+                some: {
+                  teamMember: {
+                    membreId: clientId.toString(), // Membre
+                  },
+                },
+              },
             },
           ],
         },
@@ -204,7 +210,7 @@ export default class CompagneController {
         where: {
           id: compagneId,
           deletedAt: null,
-           OR: [
+          OR: [
             {
               clientId: clientId.toString(), // Owner
             },
@@ -1039,7 +1045,13 @@ export default class CompagneController {
               clientId: clientId.toString(), // Owner
             },
             {
-              clientId: clientId.toString(), // Member
+              TeamCompagne: {
+                some: {
+                  teamMember: {
+                    membreId: clientId.toString(), // Membre
+                  },
+                },
+              },
             },
           ],
         },
@@ -1078,14 +1090,7 @@ export default class CompagneController {
       const compagne = await prisma.compagne.findUnique({
         where: {
           id: compagneId.toString(),
-          OR: [
-            {
-              clientId: clientId.toString(), // Owner
-            },
-            {
-              clientId: clientId.toString(), // Member
-            },
-          ],
+          clientId: clientId.toString(), // Owner
         },
       });
       if (!compagne) {
@@ -1154,11 +1159,9 @@ export default class CompagneController {
 
       // Check if the authenticated client is the owner of the campaign
       if (teamCompagne.compagne.clientId !== clientId.toString()) {
-        res
-          .status(403)
-          .json({
-            message: "Access denied: you are not the owner of the campaign.",
-          });
+        res.status(403).json({
+          message: "Access denied: you are not the owner of the campaign.",
+        });
         return;
       }
 
@@ -1342,7 +1345,9 @@ export default class CompagneController {
         },
       });
       if (!compagne) {
-        res.status(404).json({ message: "Campagne non trouvée ou accès refusé" });
+        res
+          .status(404)
+          .json({ message: "Campagne non trouvée ou accès refusé" });
         return;
       }
 
@@ -1352,14 +1357,14 @@ export default class CompagneController {
         select: {
           id: true,
           file: true,
-          createdAt:true,
+          createdAt: true,
         },
       });
-      const data = history.map(h => ({
+      const data = history.map((h) => ({
         id: h.id,
         file: h.file,
-        name: `${compagne.compagneName.replace(/\s+/g, '_')}${h.id}`,
-        createdAt: h.createdAt
+        name: `${compagne.compagneName.replace(/\s+/g, "_")}${h.id}`,
+        createdAt: h.createdAt,
       }));
       res.status(200).json({ data });
     } catch (error) {
