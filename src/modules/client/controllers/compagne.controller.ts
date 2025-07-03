@@ -204,12 +204,18 @@ export default class CompagneController {
         where: {
           id: compagneId,
           deletedAt: null,
-          OR: [
+           OR: [
             {
               clientId: clientId.toString(), // Owner
             },
             {
-              clientId: clientId.toString(), // Member
+              TeamCompagne: {
+                some: {
+                  teamMember: {
+                    membreId: clientId.toString(), // Membre
+                  },
+                },
+              },
             },
           ],
         },
