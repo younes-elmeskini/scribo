@@ -1879,6 +1879,7 @@ export default class FormController {
               fields: {
                 select: {
                   type: true,
+                  fieldName:true,
                   icon: true,
                 },
               },
