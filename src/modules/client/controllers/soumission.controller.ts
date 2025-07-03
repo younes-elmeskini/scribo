@@ -1746,7 +1746,7 @@ export default class SoumissionController {
     try {
       const compagneId = req.params.id;
       const clientId = req.client?.id;
-      const { selectedIds,filters, fields, format } = req.body; // Les filtres, champs et format envoyés par le frontend
+      const { selectedIds,filters, fields, format, sinceLastExport } = req.body; // Les filtres, champs et format envoyés par le frontend
 
       if (!clientId) {
         res.status(401).json({ message: "Non autorisé" });
@@ -1755,6 +1755,20 @@ export default class SoumissionController {
 
       // Reprise de la logique de getCompagneSoumissions
       const where: any = { AND: [{ compagneId }] };
+
+      // Ajout du filtre depuis le dernier export (par id)
+      let lastSoumissionId: string | null = null;
+      if (sinceLastExport) {
+        const lastExport = await prisma.exportHistory.findFirst({
+          where: { compagneId },
+          orderBy: { createdAt: "desc" },
+          select: { lastSoumissionId: true },
+        });
+        if (lastExport && lastExport.lastSoumissionId) {
+          lastSoumissionId = lastExport.lastSoumissionId;
+          where.AND.push({ id: { gt: lastSoumissionId } });
+        }
+      }
 
       if (selectedIds && Array.isArray(selectedIds) && selectedIds.length > 0) {
         where.AND.push({ id: { in: selectedIds } });
@@ -1992,10 +2006,18 @@ export default class SoumissionController {
 
       const fileUrl = `/exports/${compagneId}/${fileName}`;
 
+      // Lors de la création de l'export, enregistrer le dernier id de soumission exporté
+      let lastExportedId: string | null = null;
+      if (soumissions.length > 0) {
+        // On prend l'id de la dernière soumission (la plus récente dans l'ordre du findMany)
+        lastExportedId = soumissions[0].id;
+      }
+
       await prisma.exportHistory.create({
         data: {
           compagneId: compagneId,
           file: fileUrl,
+          lastSoumissionId: lastExportedId,
         },
       });
 
