@@ -1867,7 +1867,7 @@ export default class SoumissionController {
       });
 
       if (soumissions.length === 0) {
-        res.status(200).json({
+        res.status(404).json({
           message:
             "Aucune soumission ne correspond aux filtres sélectionnés. Aucun fichier n'a été généré.",
           file: null,
