@@ -1898,6 +1898,13 @@ export default class SoumissionController {
       const filePath = path.join(exportDir, fileName);
 
       if (format === "csv") {
+        // Gestion du séparateur
+        let delimiter = ",";
+        if (req.body.delimiter) {
+          if (req.body.delimiter === "tab") delimiter = "\t";
+          else if (req.body.delimiter === "espace") delimiter = " ";
+          else delimiter = req.body.delimiter;
+        }
         // Pour le CSV, answers est stringifié
         const flatExportData = exportData.map((row) => ({
           ...row,
@@ -1905,6 +1912,7 @@ export default class SoumissionController {
         }));
         const parser = new Json2csvParser({
           fields: ["soumissionId", "dateSoumission", "answers"],
+          delimiter,
         });
         const csv = parser.parse(flatExportData);
         fs.writeFileSync(filePath, csv, "utf8");
