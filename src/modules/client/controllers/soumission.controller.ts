@@ -1958,6 +1958,25 @@ export default class SoumissionController {
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Soumissions");
         XLSX.writeFile(workbook, filePath);
+      } else if (format === "xml") {
+        // Génération du XML
+        let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<submissions>\n';
+        exportData.forEach((row) => {
+          xml += `  <submission>\n`;
+          xml += `    <soumissionId>${row.soumissionId}</soumissionId>\n`;
+          xml += `    <dateSoumission>${row.dateSoumission}</dateSoumission>\n`;
+          xml += `    <answers>\n`;
+          row.answers.forEach((ans: any) => {
+            xml += `      <answer>\n`;
+            xml += `        <formFieldName>${ans.formFieldName}</formFieldName>\n`;
+            xml += `        <valeu>${ans.valeu}</valeu>\n`;
+            xml += `      </answer>\n`;
+          });
+          xml += `    </answers>\n`;
+          xml += `  </submission>\n`;
+        });
+        xml += '</submissions>\n';
+        fs.writeFileSync(filePath, xml, "utf8");
       } else {
         res.status(400).json({ message: "Format d'export non supporté" });
         return;
