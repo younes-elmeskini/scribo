@@ -324,21 +324,25 @@ export default class CompagneController {
       const calls = await prisma.call.count({
         where: {
           compagneId,
+          deletedAt:null
         },
       });
       const notes = await prisma.notes.count({
         where: {
           compagneId,
+          deletedAt:null
         },
       });
       const emails = await prisma.email.count({
         where: {
           compagneId,
+          deletedAt:null
         },
       });
       const tasks = await prisma.task.findMany({
         where: {
           compagneId,
+          deletedAt:null
         },
         select: {
           id: true,
@@ -358,6 +362,7 @@ export default class CompagneController {
       const appointment = await prisma.appointment.findMany({
         where: {
           compagneId,
+          deletedAt:null
         },
         select: {
           id: true,
