@@ -2034,4 +2034,77 @@ export default class SoumissionController {
       res.status(500).json({ message: "Erreur lors de l'export", error });
     }
   }
+
+  static async getMembresCompagne(req: Request, res: Response): Promise<void> {
+    try {
+      const compagneId = req.params.id;
+      const clientId = req.client?.id;
+
+      if (!clientId) {
+        res.status(401).json({ message: "Non autorisé" });
+        return;
+      }
+
+      // Vérifier l'accès à la compagne
+      const compagne = await prisma.compagne.findFirst({
+        where: {
+          id: compagneId,
+          OR: [
+            { clientId: clientId.toString() },
+            {
+              TeamCompagne: {
+                some: {
+                  teamMember: {
+                    membreId: clientId.toString(),
+                  },
+                },
+              },
+            },
+          ],
+        },
+      });
+
+      if (!compagne) {
+        res.status(404).json({ message: "Campagne non trouvée ou accès refusé" });
+        return;
+      }
+
+      // Récupérer les membres assignés à la compagne
+      const teamCompagne = await prisma.teamCompagne.findMany({
+        where: { compagneId },
+        select: {
+          teamMember: {
+            include: {
+              member: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      // Inclure aussi le propriétaire de la compagne
+      const owner = await prisma.client.findFirst({
+        where: { id: compagne.clientId },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+        },
+      });
+
+      let membres = teamCompagne.map(tc => tc.teamMember.member);
+      if (owner) {
+        membres = [owner, ...membres.filter(m => m.id !== owner.id)];
+      }
+
+      res.status(200).json({ data: membres });
+    } catch (error) {
+      res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
 }
