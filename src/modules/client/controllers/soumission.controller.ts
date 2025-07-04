@@ -66,7 +66,7 @@ export default class SoumissionController {
         startDate,
         endDate,
       } = req.query;
-      const where: any = { AND: [{ compagneId }]   };
+      const where: any = { AND: [{ compagneId }] };
 
       // Filtre favori
       if (favorite !== undefined) {
@@ -117,7 +117,7 @@ export default class SoumissionController {
       if (fieldOption && selectedValue) {
         const formField = await prisma.formField.findFirst({
           where: {
-            disable:false,
+            disable: false,
             name: fieldOption as string,
             form: {
               compagneId: compagneId,
@@ -162,7 +162,10 @@ export default class SoumissionController {
       const totalCount = await prisma.soumission.count({ where });
 
       const soumissions = await prisma.soumission.findMany({
-        where,
+        where: {
+          ...where,
+          deletedAt: null
+        },
         include: {
           answer: {
             include: {
@@ -189,8 +192,8 @@ export default class SoumissionController {
         where: { compagneId },
         include: {
           FormField: {
-            where:{
-              disable:false
+            where: {
+              disable: false,
             },
             select: {
               id: true,
@@ -202,9 +205,9 @@ export default class SoumissionController {
                 },
               },
             },
-            orderBy:{
-              ordre:"asc"
-            }
+            orderBy: {
+              ordre: "asc",
+            },
           },
         },
       });
@@ -303,33 +306,33 @@ export default class SoumissionController {
           Notes: true,
           Task: {
             select: {
-              id:true,
-              titleTask:true,
-              createdAt:true,
+              id: true,
+              titleTask: true,
+              createdAt: true,
               description: true,
               status: true,
-              client:{
-                select:{
-                  firstName:true,
-                  lastName:true,
-                  profilImage:true,
-                }
-              }
-            }
+              client: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  profilImage: true,
+                },
+              },
+            },
           },
-          appointment:{
+          appointment: {
             select: {
-              id:true,
-              adress:true,
-              date:true,
-              client:{
-                select:{
-                  firstName:true,
-                  lastName:true,
-                  profilImage:true,
-                }
-              }
-            }
+              id: true,
+              adress: true,
+              date: true,
+              client: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  profilImage: true,
+                },
+              },
+            },
           },
         },
       });
@@ -1119,7 +1122,7 @@ export default class SoumissionController {
         .status(201)
         .json({ message: "Rendez-vous ajouté", data: appointment });
     } catch (error) {
-      console.error(error)
+      console.error(error);
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
@@ -1352,7 +1355,7 @@ export default class SoumissionController {
           clientId: representantId.toString(),
         },
         select: {
-          id:true,
+          id: true,
           titleTask: true,
           description: true,
           status: true,
@@ -1613,7 +1616,7 @@ export default class SoumissionController {
           from: true,
           to: true,
           type: true,
-          createdAt:true
+          createdAt: true,
         },
       });
 
@@ -1643,7 +1646,11 @@ export default class SoumissionController {
             },
           });
         }
-        if (filters.selectedIds && Array.isArray(filters.selectedIds) && filters.selectedIds.length > 0) {
+        if (
+          filters.selectedIds &&
+          Array.isArray(filters.selectedIds) &&
+          filters.selectedIds.length > 0
+        ) {
           where.AND.push({ id: { in: filters.selectedIds } });
         }
         if (filters.favorite !== undefined) {
@@ -1746,7 +1753,8 @@ export default class SoumissionController {
     try {
       const compagneId = req.params.id;
       const clientId = req.client?.id;
-      const { selectedIds,filters, fields, format, sinceLastExport } = req.body; // Les filtres, champs et format envoyés par le frontend
+      const { selectedIds, filters, fields, format, sinceLastExport } =
+        req.body; // Les filtres, champs et format envoyés par le frontend
 
       if (!clientId) {
         res.status(401).json({ message: "Non autorisé" });
@@ -2000,7 +2008,7 @@ export default class SoumissionController {
           xml += `    </answers>\n`;
           xml += `  </submission>\n`;
         });
-        xml += '</submissions>\n';
+        xml += "</submissions>\n";
         fs.writeFileSync(filePath, xml, "utf8");
       } else {
         res.status(400).json({ message: "Format d'export non supporté" });
@@ -2065,7 +2073,9 @@ export default class SoumissionController {
       });
 
       if (!compagne) {
-        res.status(404).json({ message: "Campagne non trouvée ou accès refusé" });
+        res
+          .status(404)
+          .json({ message: "Campagne non trouvée ou accès refusé" });
         return;
       }
 
@@ -2097,9 +2107,9 @@ export default class SoumissionController {
         },
       });
 
-      let membres = teamCompagne.map(tc => tc.teamMember.member);
+      let membres = teamCompagne.map((tc) => tc.teamMember.member);
       if (owner) {
-        membres = [owner, ...membres.filter(m => m.id !== owner.id)];
+        membres = [owner, ...membres.filter((m) => m.id !== owner.id)];
       }
 
       res.status(200).json({ data: membres });
