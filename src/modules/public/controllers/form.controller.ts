@@ -61,11 +61,7 @@ export default class FormController {
           { type: field.fields.type },
         ])
       );
-      
-      console.log("Expected FormFieldIDs:", Array.from(formFieldMap.keys()));
-      console.log("Received body:", req.body);
-      console.log("Received files:", req.files);
-
+    
       const { answers } = req.body;
 
       // Check for unique email if required
