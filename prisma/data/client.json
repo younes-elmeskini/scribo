@@ -1,7 +1,26 @@
-[{
+[
+  {
+    "id": "cmcope20g0005kyryl31ob451",
     "firstName": "client",
     "lastName": "client",
     "email": "client@cleint.com",
     "password": "client@12",
-    "profilImage": "cleint.png"
-}]
+    "profilImage": "/clients/client.png"
+  },
+  {
+    "id": "cmcowsqjx0000ky223937b2lc",
+    "lastName": "enopps",
+    "firstName": "Company",
+    "email": "company@enopps.com",
+    "password": "enopps@2025",
+    "profilImage": "/clients/enopps.png"
+  },
+  {
+    "id": "cmcowsqqw0001ky22dksjk5o3",
+    "lastName": "client2",
+    "firstName": "test",
+    "email": "client2@enopps.com",
+    "password": "client@12",
+    "profilImage": "/clients/client.png"
+  }
+]

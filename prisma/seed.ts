@@ -186,6 +186,64 @@ async function main() {
     }
   }
   console.log("✅ Clients insérés avec succès");
+
+  const clientIds = await prisma.client.findMany().then(c => c.map(c => c.id));
+
+  const teamMenbersToCreate = [
+    {
+      owenrId: "cmcowsqjx0000ky223937b2lc",
+      membreId: "cmcope20g0005kyryl31ob451",
+      clientId: "cmcowsqjx0000ky223937b2lc" // exemple de champ à mettre à jour
+    },
+    {
+      owenrId: "cmcowsqjx0000ky223937b2lc",
+      membreId: "cmcowsqqw0001ky22dksjk5o3",
+      clientId: "cmcowsqjx0000ky223937b2lc"
+    },
+    {
+      owenrId: "cmcope20g0005kyryl31ob451",
+      membreId: "cmcowsqjx0000ky223937b2lc",
+      clientId: "cmcope20g0005kyryl31ob451"
+    },
+    {
+      owenrId: "cmcope20g0005kyryl31ob451",
+      membreId: "cmcowsqqw0001ky22dksjk5o3",
+      clientId: "cmcope20g0005kyryl31ob451"
+    }
+  ];
+
+  for (const member of teamMenbersToCreate) {
+    // Vérifie que les deux IDs existent dans la table Client
+    if (
+      clientIds.includes(member.owenrId) &&
+      clientIds.includes(member.membreId)
+    ) {
+      // Cherche si la relation existe déjà
+      const exists = await prisma.teamMenber.findFirst({
+        where: {
+          owenrId: member.owenrId,
+          membreId: member.membreId
+        }
+      });
+      if (exists) {
+        // Met à jour la relation existante
+        await prisma.teamMenber.update({
+          where: { id: exists.id },
+          data: member
+        });
+        console.log(`Mise à jour de la relation TeamMenber ${exists.id}`);
+      } else {
+        // Crée la relation si elle n'existe pas
+        await prisma.teamMenber.create({ data: member });
+        console.log(`Création d'une nouvelle relation TeamMenber`);
+      }
+    } else {
+      // Skip si les IDs ne sont pas valides
+      console.log(
+        `Relation ignorée (IDs invalides) : owner=${member.owenrId}, membre=${member.membreId}`
+      );
+    }
+  }
 }
 
 main()
