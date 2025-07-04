@@ -28,7 +28,7 @@ router.put("/task/:taskId", authenticate, SoumissionController.updateTask);
 
 router.delete("/note/:noteId", authenticate, SoumissionController.deleteNote);
 router.delete("/email/:emailId", authenticate, SoumissionController.deleteEmail);
-router.delete("/soumission/:id", authenticate, SoumissionController.deleteSoumission);
+router.delete("/:id", authenticate, SoumissionController.deleteSoumission);
 router.delete("/appointment/:appointmentId", authenticate, SoumissionController.deleteAppointment);
 router.delete("/task/:taskId", authenticate, SoumissionController.deleteTask);
 
