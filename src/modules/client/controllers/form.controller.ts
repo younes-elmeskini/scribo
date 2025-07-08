@@ -1520,31 +1520,11 @@ export default class FormController {
   static async getValidationForm(req: Request, res: Response): Promise<void> {
     try {
       const formId = req.params.id;
-      const clientId = req.client?.id;
-
-      if (!clientId) {
-        res.status(401).json({ message: "Non autorisé" });
-        return;
-      }
 
       // Check if form exists and user has access
       const form = await prisma.form.findFirst({
         where: {
           id: formId,
-          compagne: {
-            OR: [
-              { clientId: clientId.toString() },
-              {
-                TeamCompagne: {
-                  some: {
-                    teamMember: {
-                      membreId: clientId.toString(),
-                    },
-                  },
-                },
-              },
-            ],
-          },
         },
       });
 
