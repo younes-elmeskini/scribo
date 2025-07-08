@@ -15,7 +15,7 @@ router.get("/model", FormController.getAllModelForms);
 router.get("/fonts",FormController.getTextStyle)
 router.get("/:id", FormController.getformByCompagneId);
 router.get("/configuration/:id", authenticate, FormController.getFormConfiguration);
-router.get("/validation/:id", authenticate, FormController.getValidationForm);
+router.get("/validation/:id", FormController.getValidationForm);
 router.get("/:id/fields-with-options", authenticate, FormController.getFormFieldsWithOptions);
 router.get("/:id/formfiel-exports", authenticate, FormController.getFormFieldsByCompagneId);
 
