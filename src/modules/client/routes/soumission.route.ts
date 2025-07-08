@@ -19,6 +19,7 @@ router.get("/:id/task", authenticate, SoumissionController.getTask)
 router.get("/:id/history", authenticate, SoumissionController.getCompagneHistory);
 router.get('/compagne/:id/membres', authenticate, SoumissionController.getMembresCompagne);
 router.get("/compagne/:id/export", authenticate, SoumissionController.getExportSoummision);
+router.get("/emails/received", authenticate, SoumissionController.getReceivedEmailsViaGmailAPI);
 
 router.put("/:id/favorite", authenticate, SoumissionController.toggleSoumissionFavorite);
 router.put("/soumission/:id/answers", authenticate, SoumissionController.updateSoumissionAnswers);
