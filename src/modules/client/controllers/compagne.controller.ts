@@ -8,6 +8,8 @@ import multer from "multer";
 import GestionForm from "../utils/gestionfrom";
 import { Parser as Json2csvParser } from "json2csv";
 import { title } from "process";
+import OpenAI from "openai";
+import fs from "fs";
 
 type createCompagne = z.infer<typeof CompagneValidation.createCompagneSchema>;
 type updateCompagne = z.infer<typeof CompagneValidation.updatecompagne>;
@@ -1374,6 +1376,128 @@ export default class CompagneController {
       res.status(200).json({ data });
     } catch (error) {
       res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+  }
+
+  static async createCompagneWithAI(req: Request, res: Response): Promise<void> {
+    try {
+      const { prompt, compagneName } = req.body;
+      const clientId = req.client?.id;
+      if (!clientId) {
+        res.status(401).json({ message: "Non autorisé" });
+        return;
+      }
+      if (!prompt || !compagneName) {
+        res.status(400).json({ message: "Prompt et nom de campagne requis" });
+        return;
+      }
+      // Charger les types de champs disponibles
+      const fieldsData: Array<{ fieldName: string; id: string; type: string }> = JSON.parse(fs.readFileSync("prisma/data/fields.json", "utf-8"));
+      // Préparer le prompt pour OpenAI
+      const systemPrompt = `Tu es un assistant qui génère des formulaires. À partir d'un sujet donné, propose une liste de champs pertinents pour un formulaire, en utilisant uniquement ces types :\n${fieldsData.map((f) => `${f.fieldName} (${f.type})`).join(", ")}.\nRéponds au format JSON : [{label, type, required, options?}].`;
+      // Appel OpenAI
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.2,
+        max_tokens: 600
+      });
+      const aiContent = completion.choices[0].message?.content;
+      let fieldsAI: Array<{ label: string; type: string; required?: boolean; options?: string[] }>;
+      try {
+        fieldsAI = JSON.parse(aiContent || "[]");
+      } catch (e) {
+        res.status(500).json({ message: "Erreur lors de la génération des champs par l'IA" });
+        return;
+      }
+      // Mapper les champs IA sur les champs existants
+      const mappedFields = fieldsAI.map((f: { label: string; type: string; required?: boolean; options?: string[] }, i: number) => {
+        const found = fieldsData.find((fd) => fd.type === f.type || fd.fieldName.toLowerCase() === f.label.toLowerCase());
+        return found ? {
+          fieldName: found.fieldName,
+          id: found.id,
+          type: found.type,
+          label: f.label,
+          quantity: 1,
+          required: f.required || false,
+          options: f.options || [],
+          ordre: i + 1
+        } : null;
+      }).filter(Boolean);
+      if (mappedFields.length === 0) {
+        res.status(400).json({ message: "Aucun champ valide généré par l'IA" });
+        return;
+      }
+      // Créer la compagne et le formulaire comme dans createCompagne
+      const compagne = await prisma.compagne.create({
+        data: {
+          compagneName,
+          clientId: clientId.toString(),
+        },
+      });
+      const form = await prisma.form.create({
+        data: {
+          compagneId: compagne.id,
+        },
+      });
+      // Générer les données pour GestionForm
+      const fieldCountsData = mappedFields.map((f: any) => ({
+        fieldName: f.fieldName,
+        id: f.id,
+        count: 1
+      }));
+      const formFieldsData = GestionForm.generateFormFieldsData(fieldCountsData, fieldsData, form.id);
+      // Ajouter les options IA si besoin
+      formFieldsData.forEach((ff: any, idx: number) => {
+        if (mappedFields[idx]?.options && ff.options && ff.options.length > 0) {
+          ff.options = mappedFields[idx].options.map((opt: string, i: number) => ({
+            ordre: i + 1,
+            content: opt,
+            desactivatedAt: false
+          }));
+        }
+        if (typeof mappedFields[idx]?.required === "boolean") {
+          ff.requird = mappedFields[idx].required;
+        }
+      });
+      // Générer les validations par défaut
+      const defaultValidations = GestionForm.generateDefaultValidationMessages(form.id);
+      await prisma.$transaction(async (tx) => {
+        for (const fieldData of formFieldsData) {
+          const { options, ...fieldWithoutOptions } = fieldData;
+          const createdField = await tx.formField.create({ data: fieldWithoutOptions });
+          if (options && options.length > 0) {
+            for (const option of options) {
+              await tx.formFieldOption.create({
+                data: {
+                  formFieldId: createdField.id,
+                  ordre: option.ordre,
+                  content: option.content,
+                  desactivedAt: option.desactivatedAt || false,
+                },
+              });
+            }
+          }
+        }
+        for (const validation of defaultValidations) {
+          await tx.validationForm.create({ data: validation });
+        }
+      });
+      res.status(201).json({
+        message: "Campagne créée avec succès par IA",
+        data: {
+          compagneId: compagne.id,
+          formId: form.id,
+          fields: mappedFields
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Erreur lors de la création de la campagne par IA" });
     }
   }
 }

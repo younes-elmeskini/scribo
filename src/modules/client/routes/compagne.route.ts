@@ -19,6 +19,7 @@ router.post(
 );
 router.post("/:compagneId/teamcompagne", authenticate, CompagneController.addToTeamCompagne)
 router.post("/:id/duplicate", authenticate, CompagneController.duplicateCompagne);
+router.post("/ai", authenticate, CompagneController.createCompagneWithAI);
 
 router.get("/", authenticate, CompagneController.getAllCompagne);
 router.get("/sidebar", authenticate, CompagneController.getsideBarData);
