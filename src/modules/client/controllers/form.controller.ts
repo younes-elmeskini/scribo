@@ -35,7 +35,7 @@ export default class FormController {
       res.status(200).json({ data: fields });
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async getAllModelForms(req: Request, res: Response): Promise<void> {
@@ -88,7 +88,7 @@ export default class FormController {
       res.status(200).json({ data: result });
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async getformByCompagneId(req: Request, res: Response): Promise<void> {
@@ -161,7 +161,7 @@ export default class FormController {
       res.status(200).json({ data: form });
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async updateForm(req: Request, res: Response): Promise<void> {
@@ -171,12 +171,12 @@ export default class FormController {
       const clientId = req.client?.id;
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
       if (!formId) {
-        res.status(400).json({ message: "Form ID is required" });
+        res.status(400).json({ message: "L'identifiant du formulaire est requis" });
         return;
       }
 
@@ -202,7 +202,7 @@ export default class FormController {
       });
 
       if (!form) {
-        res.status(404).json({ message: "Form not found or access denied" });
+        res.status(404).json({ message: "Formulaire non trouvé ou accès refusé" });
         return;
       }
 
@@ -217,7 +217,7 @@ export default class FormController {
         });
 
         if (!titleStyleExists) {
-          res.status(400).json({ message: "Invalid title style" });
+          res.status(400).json({ message: "Style de titre invalide" });
           return;
         }
       }
@@ -228,7 +228,7 @@ export default class FormController {
         });
 
         if (!formStyleExists) {
-          res.status(400).json({ message: "Invalid form style" });
+          res.status(400).json({ message: "Style de formulaire invalide" });
           return;
         }
       }
@@ -247,7 +247,7 @@ export default class FormController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async updateFormField(req: Request, res: Response): Promise<void> {
@@ -257,12 +257,12 @@ export default class FormController {
       const clientId = req.client?.id;
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
       if (!formFieldId) {
-        res.status(400).json({ message: "Form Field ID is required" });
+        res.status(400).json({ message: "L'identifiant du champ de formulaire est requis" });
         return;
       }
 
@@ -354,7 +354,7 @@ export default class FormController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async updateOrderFormField(
@@ -370,12 +370,12 @@ export default class FormController {
       );
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
       if (!formFieldId) {
-        res.status(400).json({ message: "Form Field ID is required" });
+        res.status(400).json({ message: "L'identifiant du champ de formulaire est requis" });
         return;
       }
 
@@ -455,7 +455,7 @@ export default class FormController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async updateTypeformField(req: Request, res: Response): Promise<void> {
@@ -480,7 +480,7 @@ export default class FormController {
       }
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
       
@@ -538,7 +538,7 @@ export default class FormController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async addFormFieldOption(req: Request, res: Response): Promise<void> {
@@ -548,12 +548,12 @@ export default class FormController {
       const { content } = req.body;
       
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
       
       if (!formFieldId) {
-        res.status(400).json({ message: "Form Field ID is required" });
+        res.status(400).json({ message: "L'identifiant du champ de formulaire est requis" });
         return;
       }
       
@@ -638,7 +638,7 @@ export default class FormController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async updateFormFieldOption(req: Request, res: Response): Promise<void> {
@@ -648,7 +648,7 @@ export default class FormController {
       const updateData: updateOption  = FormValidation.updateOptionSchema.parse(req.body);
       
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
       
@@ -768,7 +768,7 @@ export default class FormController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async deleteFormFieldOption(req: Request, res: Response): Promise<void> {
@@ -778,7 +778,7 @@ export default class FormController {
       const { optionId } = req.body;
       
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
       
@@ -862,7 +862,7 @@ export default class FormController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async deleteFormField(req: Request, res: Response): Promise<void> {
@@ -871,12 +871,12 @@ export default class FormController {
       const clientId = req.client?.id;
       
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
       
       if (!formFieldId) {
-        res.status(400).json({ message: "Form Field ID is required" });
+        res.status(400).json({ message: "L'identifiant du champ de formulaire est requis" });
         return;
       }
       
@@ -975,7 +975,7 @@ export default class FormController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async duplicateFormField(req: Request, res: Response): Promise<void> {
@@ -984,12 +984,12 @@ export default class FormController {
       const clientId = req.client?.id;
       
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
       
       if (!formFieldId) {
-        res.status(400).json({ message: "Form Field ID is required" });
+        res.status(400).json({ message: "L'identifiant du champ de formulaire est requis" });
         return;
       }
       
@@ -1137,7 +1137,7 @@ export default class FormController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async addFormField(req: Request, res: Response): Promise<void> {
@@ -1146,12 +1146,12 @@ export default class FormController {
       const clientId = req.client?.id;
       
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
       
       if (!formId) {
-        res.status(400).json({ message: "Form ID is required" });
+        res.status(400).json({ message: "L'identifiant du formulaire est requis" });
         return;
       }
       
@@ -1301,7 +1301,7 @@ export default class FormController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async updateFormConfiguration(req: Request, res: Response): Promise<void> {
@@ -1311,7 +1311,7 @@ export default class FormController {
       const clientId = req.client?.id;
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
@@ -1443,7 +1443,7 @@ export default class FormController {
       const clientId = req.client?.id;
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
@@ -1514,7 +1514,7 @@ export default class FormController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async getValidationForm(req: Request, res: Response): Promise<void> {
@@ -1523,7 +1523,7 @@ export default class FormController {
       const clientId = req.client?.id;
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
@@ -1573,7 +1573,7 @@ export default class FormController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async updateValidationValues(req: Request, res: Response): Promise<void> {
@@ -1583,7 +1583,7 @@ export default class FormController {
       const validations = req.body.validations;
       
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
       
@@ -1651,7 +1651,7 @@ export default class FormController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async getTextStyle(req: Request, res: Response): Promise<void> {
@@ -1674,7 +1674,7 @@ export default class FormController {
       })
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async uploadCoverImage(req: Request, res: Response): Promise<void> {

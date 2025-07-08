@@ -21,7 +21,7 @@ export default class SoumissionController {
       const clientId = req.client?.id;
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
@@ -48,7 +48,7 @@ export default class SoumissionController {
       if (!compagne) {
         res
           .status(404)
-          .json({ message: "Campagne not found or access denied" });
+          .json({ message: "Campagne non trouvée ou accès refusé" });
         return;
       }
 
@@ -255,7 +255,7 @@ export default class SoumissionController {
       });
     } catch (error) {
       console.error("Error fetching submissions:", error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
 
@@ -268,7 +268,7 @@ export default class SoumissionController {
       const clientId = req.client?.id;
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
@@ -340,7 +340,7 @@ export default class SoumissionController {
       if (!soumission) {
         res
           .status(404)
-          .json({ message: "Submission not found or access denied" });
+          .json({ message: "Soumission non trouvée ou accès refusé" });
         return;
       }
 
@@ -380,7 +380,7 @@ export default class SoumissionController {
       });
     } catch (error) {
       console.error("Error fetching submission details:", error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
 
@@ -394,7 +394,7 @@ export default class SoumissionController {
       const answers = req.body.answers;
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
@@ -485,7 +485,7 @@ export default class SoumissionController {
       const clientId = req.client?.id;
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
@@ -538,7 +538,7 @@ export default class SoumissionController {
       const clientId = req.client?.id;
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
@@ -566,7 +566,7 @@ export default class SoumissionController {
       if (!soumission) {
         res
           .status(404)
-          .json({ message: "Submission not found or access denied" });
+          .json({ message: "Soumission non trouvée ou accès refusé" });
         return;
       }
 
@@ -597,7 +597,7 @@ export default class SoumissionController {
       const clientId = req.client?.id;
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
@@ -624,14 +624,14 @@ export default class SoumissionController {
       if (!soumission) {
         res
           .status(404)
-          .json({ message: "Submission not found or access denied" });
+          .json({ message: "Soumission non trouvée ou accès refusé" });
         return;
       }
       const parsedData: createNote =
         SoumissionValidation.createNotesSchema.parse(req.body);
 
       if (!parsedData) {
-        res.status(400).json({ message: "Notes content is required" });
+        res.status(400).json({ message: "Le contenu de la note est requis" });
         return;
       }
 
@@ -645,7 +645,7 @@ export default class SoumissionController {
         },
       });
       if (!newNote) {
-        res.status(400).json({ message: "Note not created" });
+        res.status(400).json({ message: "Note non créée" });
         return;
       }
 
@@ -664,7 +664,7 @@ export default class SoumissionController {
         },
       });
       res.status(201).json({
-        message: "Note created successfully",
+        message: "Note créée avec succès",
         data: newNote,
       });
     } catch (error) {
@@ -679,7 +679,7 @@ export default class SoumissionController {
       const clientId = req.client?.id;
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
@@ -708,7 +708,7 @@ export default class SoumissionController {
       if (!soumission) {
         res
           .status(404)
-          .json({ message: "Submission not found or access denied" });
+          .json({ message: "Soumission non trouvée ou accès refusé" });
         return;
       }
 
@@ -739,7 +739,7 @@ export default class SoumissionController {
       });
     } catch (error) {
       console.error("Error fetching notes:", error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
 
@@ -749,7 +749,7 @@ export default class SoumissionController {
       const clientId = req.client?.id;
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
@@ -762,13 +762,13 @@ export default class SoumissionController {
       });
 
       if (!note) {
-        res.status(404).json({ message: "Note not found or access denied" });
+        res.status(404).json({ message: "Note non trouvée ou accès refusé" });
         return;
       }
       const parsedData: createNote =
         SoumissionValidation.createNotesSchema.parse(req.body);
       if (!parsedData) {
-        res.status(400).json({ message: "Notes content is required" });
+        res.status(400).json({ message: "Le contenu de la note est requis" });
         return;
       }
       const updatedNote = await prisma.notes.update({
@@ -793,7 +793,7 @@ export default class SoumissionController {
       const clientId = req.client?.id;
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
@@ -805,7 +805,7 @@ export default class SoumissionController {
       });
 
       if (!note) {
-        res.status(404).json({ message: "Note not found or access denied" });
+        res.status(404).json({ message: "Note non trouvée ou accès refusé" });
         return;
       }
 
@@ -835,7 +835,7 @@ export default class SoumissionController {
       );
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
@@ -928,7 +928,7 @@ export default class SoumissionController {
       const clientId = req.client?.id;
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
@@ -991,7 +991,7 @@ export default class SoumissionController {
       const clientId = req.client?.id;
 
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
 
@@ -1098,7 +1098,7 @@ export default class SoumissionController {
         },
       });
       if (!appointment) {
-        res.status(400).json({ message: "appointment not created" });
+        res.status(400).json({ message: "Rendez-vous non créé" });
         return;
       }
 
@@ -1370,7 +1370,7 @@ export default class SoumissionController {
       });
 
       if (!task) {
-        res.status(400).json({ message: "task not created" });
+        res.status(400).json({ message: "Tâche non créée" });
         return;
       }
 
@@ -1389,7 +1389,7 @@ export default class SoumissionController {
           type: "TASK",
         },
       });
-      res.status(201).json({ message: "task ajouté", data: task });
+      res.status(201).json({ message: "Tâche ajoutée", data: task });
     } catch (error) {
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
@@ -1492,7 +1492,7 @@ export default class SoumissionController {
 
       const taskId = req.params.taskId;
       if (!taskId) {
-        res.status(400).json({ message: "taskId requis" });
+        res.status(400).json({ message: "L'identifiant de la tâche est requis" });
         return;
       }
       const task = await prisma.task.update({
@@ -1548,7 +1548,7 @@ export default class SoumissionController {
         },
       });
       if (!task) {
-        res.status(404).json({ message: "Task non trouvée ou accès refusé" });
+        res.status(404).json({ message: "Tâche non trouvée ou accès refusé" });
         return;
       }
 
@@ -1557,7 +1557,7 @@ export default class SoumissionController {
         data: { deletedAt: new Date() },
       });
 
-      res.status(200).json({ message: "Task supprimé" });
+      res.status(200).json({ message: "Tâche supprimée" });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Erreur interne du serveur" });

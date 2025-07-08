@@ -25,7 +25,7 @@ export default class CompagneController {
       res.status(201).json(field);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur lors de la création du champ" });
     }
   }
   static async getFields(req: Request, res: Response): Promise<void> {
@@ -46,7 +46,7 @@ export default class CompagneController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur lors de la récupération des champs" });
     }
   }
 }

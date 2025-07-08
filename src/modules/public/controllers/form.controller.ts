@@ -19,14 +19,14 @@ export default class FormController {
         },
       });
       if (!form) {
-        res.status(404).json({ message: "Form not found" });
+        res.status(404).json({ message: "Formulaire non trouvé" });
         return;
       }
 
       res.status(200).json({ form, message: "Form retrieved successfully" });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
 
@@ -51,7 +51,7 @@ export default class FormController {
       });
 
       if (!form) {
-        res.status(404).json({ message: "Form not found" });
+        res.status(404).json({ message: "Formulaire non trouvé" });
         return;
       }
 
@@ -162,7 +162,7 @@ export default class FormController {
         .json({ message: "Form submitted successfully", data: createdAnswers });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
 }

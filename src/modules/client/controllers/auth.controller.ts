@@ -22,7 +22,7 @@ export default class AuthController {
         where: { email: parsedData.email },
       });
       if (clientExists) {
-        res.status(409).json({ message: "User already exists" });
+        res.status(409).json({ message: "Utilisateur déjà existant" });
         return;
       }
       const hashedPassword: string = await argon2.hash(parsedData.password);
@@ -36,7 +36,7 @@ export default class AuthController {
       });
       res.status(201).json(client);
     } catch (error) {
-      res.status(500).json({ message: "Authentication failed" });
+      res.status(500).json({ message: "Échec de l'authentification" });
     }
   }
   static async login(req: Request, res: Response): Promise<void> {
@@ -50,7 +50,7 @@ export default class AuthController {
       });
 
       if (!client) {
-        res.status(404).json({ message: "Invalid email" });
+        res.status(404).json({ message: "Email invalide" });
         return;
       }
 
@@ -59,12 +59,12 @@ export default class AuthController {
         parsedData.password
       );
       if (!isPasswordValid) {
-        res.status(401).json({ message: "Invalid credentials" });
+        res.status(401).json({ message: "Identifiants invalides" });
         return;
       }
       const token = generateToken(client);
       if (!token) {
-        res.status(401).json({ message: "Invalid credentials" });
+        res.status(401).json({ message: "Identifiants invalides" });
         return;
       }
       const isProduction = process.env.NODE_ENV === "production";
@@ -83,14 +83,14 @@ export default class AuthController {
       });
     } catch (error) {
       console.error("Login error:", error);
-      res.status(500).json({ message: "Authentication failed" });
+      res.status(500).json({ message: "Échec de l'authentification" });
     }
   }
   static async clientData(req: Request, res: Response): Promise<void> {
     try {
       const clientId = req.client?.id;
       if (!clientId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Non autorisé" });
         return;
       }
       const client = await prisma.client.findUnique({
@@ -104,17 +104,17 @@ export default class AuthController {
         },
       });
       if (!client) {
-        res.status(404).json({ message: "User not found" });
+        res.status(404).json({ message: "Utilisateur non trouvé" });
         return;
       }
       res.status(200).json({ data: client });
     } catch (error) {
       console.error("Error fetching Teacher data:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async logout(req: Request, res: Response) {
     res.clearCookie("token");
-    res.status(200).json({ message: "Logout successful" });
+    res.status(200).json({ message: "Déconnexion réussie" });
   }
 }

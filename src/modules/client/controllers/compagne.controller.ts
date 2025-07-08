@@ -141,7 +141,7 @@ export default class CompagneController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async getsideBarData(req: Request, res: Response): Promise<void> {
@@ -195,7 +195,7 @@ export default class CompagneController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
   static async getCompagneById(req: Request, res: Response): Promise<void> {
@@ -400,7 +400,7 @@ export default class CompagneController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
 
@@ -465,7 +465,7 @@ export default class CompagneController {
       });
     } catch (error) {
       console.error("Error favoriting compagne:", error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
 
@@ -583,7 +583,7 @@ export default class CompagneController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
 
@@ -1079,7 +1079,7 @@ export default class CompagneController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
 
@@ -1137,7 +1137,7 @@ export default class CompagneController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
 
@@ -1176,7 +1176,7 @@ export default class CompagneController {
       res.status(200).json({ message: "teamCompagne successfully deleted" });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
 
