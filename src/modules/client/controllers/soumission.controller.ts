@@ -314,6 +314,7 @@ export default class SoumissionController {
               status: true,
               client: {
                 select: {
+                  id:true,
                   firstName: true,
                   lastName: true,
                   profilImage: true,
@@ -328,6 +329,7 @@ export default class SoumissionController {
               date: true,
               client: {
                 select: {
+                  id:true,
                   firstName: true,
                   lastName: true,
                   profilImage: true,

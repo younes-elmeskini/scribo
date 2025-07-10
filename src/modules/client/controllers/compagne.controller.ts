@@ -354,6 +354,7 @@ export default class CompagneController {
           createdAt: true,
           client: {
             select: {
+              id:true,
               firstName: true,
               lastName: true,
               profilImage: true,
@@ -374,6 +375,7 @@ export default class CompagneController {
           createdAt: true,
           client: {
             select: {
+              id:true,
               firstName: true,
               lastName: true,
               profilImage: true,
