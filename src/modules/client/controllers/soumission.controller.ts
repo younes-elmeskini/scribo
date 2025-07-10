@@ -2169,4 +2169,90 @@ export default class SoumissionController {
       res.status(500).json({ message: "Erreur lors de la récupération des emails via Gmail API", error });
     }
   }
+
+  // Récupérer les emails reçus via Gmail API, filtrés par campagne et par destinataires des emails envoyés
+  static async getFilteredReceivedEmailsViaGmailAPI(req: Request, res: Response): Promise<void> {
+    const clientId = req.client?.id;
+    const compagneId = req.params.compagneId;
+    if (!clientId) {
+      res.status(401).json({ message: "Non autorisé" });
+      return;
+    }
+    if (!compagneId) {
+      res.status(400).json({ message: "compagneId requis" });
+      return;
+    }
+    // Chemins des fichiers d'authentification
+    const CREDENTIALS_PATH = "client_secret.json";
+    const TOKEN_PATH = "token.json";
+    try {
+      // 1. Récupérer les emails envoyés pour cette campagne
+      const sentEmails = await prisma.email.findMany({
+        where: { compagneId, deletedAt: null },
+        select: { email: true },
+      });
+      const sentToAddresses = sentEmails.map(e => e.email.toLowerCase().trim());
+      if (sentToAddresses.length === 0) {
+        res.status(200).json({ data: [] });
+        return;
+      }
+      // 2. Authentification Gmail API
+      const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, "utf8"));
+      const { client_secret, client_id, redirect_uris } = credentials.web;
+      const oAuth2Client = new google.auth.OAuth2(
+        client_id,
+        client_secret,
+        redirect_uris[0]
+      );
+      const token = JSON.parse(fs.readFileSync(TOKEN_PATH, "utf8"));
+      oAuth2Client.setCredentials(token);
+      const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
+      // 3. Récupérer les 30 derniers messages reçus (pour avoir un échantillon plus large)
+      const messagesList = await gmail.users.messages.list({
+        userId: "me",
+        maxResults: 30,
+        labelIds: ["INBOX"],
+      });
+      const messages = messagesList.data.messages || [];
+      const emails = [];
+      for (const msg of messages) {
+        const msgData = await gmail.users.messages.get({ userId: "me", id: msg.id! });
+        const payload = msgData.data.payload;
+        const headers = payload?.headers || [];
+        const getHeader = (name: string) => headers.find((h) => h.name === name)?.value || null;
+        const from = getHeader("From");
+        // Extraire l'adresse email de l'expéditeur (ex: "Nom <email@domaine.com>")
+        const match = from ? from.match(/<(.+?)>/) : null;
+        const fromEmail = match ? match[1].toLowerCase().trim() : (from ? from.toLowerCase().trim() : null);
+        // On ne garde que si l'expéditeur est dans la liste des destinataires envoyés pour cette campagne
+        if (fromEmail && sentToAddresses.includes(fromEmail)) {
+          // Extraction du corps du message (texte brut)
+          let message = "";
+          if (payload?.parts && Array.isArray(payload.parts)) {
+            // multipart : chercher la partie text/plain
+            const part = payload.parts.find(p => p.mimeType === "text/plain");
+            if (part && part.body && part.body.data) {
+              message = Buffer.from(part.body.data, 'base64').toString('utf8');
+              message = message.split(/\r?\nOn .+wrote:|Le .+ a écrit :/)[0].trim();
+            }
+          } else if (payload?.body && payload.body.data) {
+            // single part
+            message = Buffer.from(payload.body.data, 'base64').toString('utf8');
+            message = message.split(/\r?\nOn .+wrote:|Le .+ a écrit :/)[0].trim();
+          }
+          emails.push({
+            from,
+            to: getHeader("To"),
+            subject: getHeader("Subject"),
+            message,
+            date: getHeader("Date")
+          });
+        }
+      }
+      res.status(200).json({ data: emails });
+    } catch (error) {
+      console.error("Erreur lors de la récupération des emails filtrés via Gmail API:", error);
+      res.status(500).json({ message: "Erreur lors de la récupération des emails filtrés via Gmail API", error });
+    }
+  }
 }
