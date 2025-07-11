@@ -327,6 +327,7 @@ export default class SoumissionController {
               id: true,
               adress: true,
               date: true,
+              commentaire:true,
               client: {
                 select: {
                   id:true,
