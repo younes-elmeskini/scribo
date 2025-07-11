@@ -2121,55 +2121,6 @@ export default class SoumissionController {
     }
   }
 
-  // Récupérer les emails reçus via l'API Gmail officielle (OAuth2)
-  static async getReceivedEmailsViaGmailAPI(req: Request, res: Response): Promise<void> {
-    const clientId = req.client?.id;
-    if (!clientId) {
-      res.status(401).json({ message: "Non autorisé" });
-      return;
-    }
-    // Chemins des fichiers d'authentification
-    const CREDENTIALS_PATH = "client_secret.json";;
-    const TOKEN_PATH = "token.json";
-    try {
-      const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, "utf8"));
-      const { client_secret, client_id, redirect_uris } = credentials.web;
-      const oAuth2Client = new google.auth.OAuth2(
-        client_id,
-        client_secret,
-        redirect_uris[0]
-      );
-      // Charger le token d'accès
-      const token = JSON.parse(fs.readFileSync(TOKEN_PATH, "utf8"));
-      oAuth2Client.setCredentials(token);
-      const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
-      // Récupérer les 10 derniers messages reçus
-      const messagesList = await gmail.users.messages.list({
-        userId: "me",
-        maxResults: 10,
-        labelIds: ["INBOX"],
-      });
-      const messages = messagesList.data.messages || [];
-      const emails = [];
-      for (const msg of messages) {
-        const msgData = await gmail.users.messages.get({ userId: "me", id: msg.id! });
-        const payload = msgData.data.payload;
-        const headers = payload?.headers || [];
-        const getHeader = (name: string) => headers.find((h) => h.name === name)?.value || null;
-        emails.push({
-          from: getHeader("From"),
-          to: getHeader("To"),
-          subject: getHeader("Subject"),
-          date: getHeader("Date"),
-        });
-      }
-      res.status(200).json({ data: emails });
-    } catch (error) {
-      console.error("Erreur lors de la récupération des emails via Gmail API:", error);
-      res.status(500).json({ message: "Erreur lors de la récupération des emails via Gmail API", error });
-    }
-  }
-
   // Récupérer les emails reçus via Gmail API, filtrés par campagne et par destinataires des emails envoyés
   static async getFilteredReceivedEmailsViaGmailAPI(req: Request, res: Response): Promise<void> {
     const clientId = req.client?.id;
