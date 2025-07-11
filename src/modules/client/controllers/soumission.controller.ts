@@ -1516,7 +1516,7 @@ export default class SoumissionController {
           message: "task not created",
         });
       }
-      res.status(201).json({ message: "task ajouté", data: task });
+      res.status(200).json({ message: "tâche modifiée", data: task });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Erreur interne du serveur", error });
