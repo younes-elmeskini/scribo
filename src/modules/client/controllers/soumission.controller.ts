@@ -1758,7 +1758,7 @@ export default class SoumissionController {
       const compagneId = req.params.id;
       const clientId = req.client?.id;
       const { selectedIds, filters, fields, format, sinceLastExport } =
-        req.body; // Les filtres, champs et format envoyés par le frontend
+        req.body; 
 
       if (!clientId) {
         res.status(401).json({ message: "Non autorisé" });
@@ -1924,26 +1924,44 @@ export default class SoumissionController {
       const filePath = path.join(exportDir, fileName);
 
       if (format === "csv") {
-        // Gestion du séparateur
-        let delimiter = ",";
-        if (req.body.delimiter) {
-          if (req.body.delimiter === "tab") delimiter = "\t";
-          else if (req.body.delimiter === "space") delimiter = " ";
-          else if (req.body.delimiter === "virgule") delimiter = ",";
-          else if (req.body.delimiter === "dotVirgule") delimiter = ";";
-          else if (req.body.delimiter === "pipe") delimiter = "|";
-          else delimiter = req.body.delimiter;
-        }
-        // Pour le CSV, answers est stringifié
-        const flatExportData = exportData.map((row) => ({
-          ...row,
-          answers: JSON.stringify(row.answers),
-        }));
-        const parser = new Json2csvParser({
-          fields: ["soumissionId", "dateSoumission", "answers"],
-          delimiter,
+        // 1. Récupérer tous les noms de champs uniques (fieldName)
+        const allFieldsFromSubmissions = soumissions.flatMap((s) =>
+          s.answer
+            .map((a) => ({
+              id: a.formFieldId,
+              name: a.formField.label || a.formField.name || `Champ_${a.formFieldId}`,
+            }))
+            .filter((item) => !!item.name)
+        );
+        // En-tête unique et ordonnée
+        const uniqueFields = [
+          ...new Map(allFieldsFromSubmissions.map((item) => [item.id, item])).values(),
+        ];
+        const fieldHeaders = uniqueFields.map((f) => f.name);
+        // 2. Construire les données à exporter
+        const csvData = soumissions.map((soumission) => {
+          // Associer chaque champ à sa valeur
+          const answersByFieldName: Record<string, any> = {};
+          soumission.answer.forEach((answer) => {
+            const fieldName = answer.formField.label || answer.formField.name || `Champ_${answer.formFieldId}`;
+            answersByFieldName[fieldName] = answer.valeu;
+          });
+          // Générer la ligne avec toutes les colonnes
+          const row: Record<string, any> = {
+            soumissionId: soumission.id,
+            dateSoumission: soumission.createdAt.toISOString(),
+          };
+          fieldHeaders.forEach((field) => {
+            row[field] = answersByFieldName[field] || "";
+          });
+          return row;
         });
-        const csv = parser.parse(flatExportData);
+        // 3. Générer le CSV avec l'en-tête complète
+        const parser = new Json2csvParser({
+          fields: ["soumissionId", "dateSoumission", ...fieldHeaders],
+          delimiter: req.body.delimiter === "tab" ? "\t" : req.body.delimiter || ",",
+        });
+        const csv = parser.parse(csvData);
         fs.writeFileSync(filePath, csv, "utf8");
       } else if (format === "json") {
         fs.writeFileSync(filePath, JSON.stringify(exportData, null, 2), "utf8");
