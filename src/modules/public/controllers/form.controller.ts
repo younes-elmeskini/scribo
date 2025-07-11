@@ -9,12 +9,63 @@ export default class FormController {
       const formId = req.params.id;
       const form = await prisma.form.findUnique({
         where: { id: formId },
-        include: {
-          formField: {
-            where: { disable: false },
-            include: {
-              fields: true,
+        select: {
+          id: true,
+          title: true,
+          Description: true,
+          coverColor: true,
+          coverImage: true,
+          mode: true,
+          desactivatedAt: true,
+          FormField: {
+            select: {
+              id: true,
+              fieldId: true,
+              name: true,
+              label: true,
+              requird: true,
+              disable: true,
+              style: true,
+              ordre: true,
+              selectId:true,
+              placeholdre: true,
+              FormFieldOption: {
+                select: {
+                  id: true,
+                  ordre: true,
+                  content: true,
+                  desactivedAt: true,
+                  default: true,
+                },
+                orderBy: {
+                  ordre: "asc",
+                },
+              },
+              min: true,
+              max: true,
+              fileType: true,
+              instruction: true,
+              fields: {
+                select: {
+                  id: true,
+                  icon: true,
+                  fieldName: true,
+                  type: true,
+                },
+              },
+              FormFieldMap:{
+                select:{
+                  id:true,
+                  lat:true,    
+                  lng:true,       
+                  zoom:true,  
+                  height:true,
+                }
+              }
             },
+            orderBy:{
+              ordre:"asc"
+            }
           },
         },
       });

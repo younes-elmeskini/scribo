@@ -2139,7 +2139,6 @@ export default class SoumissionController {
       res.status(500).json({ message: "Erreur interne du serveur" });
     }
   }
-
   // Récupérer les emails reçus via Gmail API, filtrés par campagne et par destinataires des emails envoyés
   static async getFilteredReceivedEmailsViaGmailAPI(req: Request, res: Response): Promise<void> {
     const clientId = req.client?.id;
